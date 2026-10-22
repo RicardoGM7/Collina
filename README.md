@@ -11,7 +11,7 @@ Aplicação web integrada para automação e gestão dos fluxos operacionais, fi
 ## 🛠️ Tecnologias Utilizadas
 
 * **Back-end:** Java 21, Spring Boot 3, Spring Data JPA, Spring Security, Flyway Migration, Lombok.
-* **Front-end:** React, TypeScript, Vite.
+* **Front-end:** React 18, TypeScript, Vite, React Router DOM, Axios, Lucide React.
 * **Banco de Dados:** PostgreSQL 16+.
 * **Autenticação:** Firebase Auth (Identity Provider) integrado ao Spring Security.
 
@@ -34,6 +34,43 @@ Todas as classes do back-end devem ser criadas dentro de `backend/src/main/java/
 * 📁 **`dto/`** ➔ **Dados de Entrada e Saída:** Classes simples (Records ou classes comuns) que definem o que o front-end pode enviar (Request) e o que a API devolve (Response). Evita expor diretamente a entidade do banco na API.
 * 📁 **`exception/`** ➔ **Tratamento Global de Erros:** Onde criamos exceções personalizadas e o `@RestControllerAdvice` para capturar falhas e devolver mensagens amigáveis em JSON ao front-end (ex: erro 400 ou 404 estruturado).
 * 📁 **`config/`** ➔ **Configurações Gerais:** Onde configuramos os Beans do sistema, filtros do Spring Security, integração com o Firebase e permissões de CORS para o front-end.
+
+---
+
+## 💻 Arquitetura do Front-end (Como usar as pastas)
+
+O front-end utiliza uma **Arquitetura Modular baseada em Features (Domínios)**. Isso permite que os 7 integrantes desenvolvam telas e componentes simultaneamente sem causar conflitos de código no Git.
+
+Tudo fica dentro de `frontend/src/`:
+
+* 📁 **`features/`** ➔ **🚀 O coração do projeto (Módulos do Clube):**  
+  Cada módulo do sistema tem sua própria pasta isolada:
+  * 📂 `auth/`: Telas e formulários de login e recuperação de senha.
+  * 📂 `associados/`: Gestão de associados titulares, dependentes e planos.
+  * 📂 `financeiro/`: Mensalidades, fluxo de caixa e relatórios.
+  * 📂 `reservas/`: Grade de horários e agendamento de espaços esportivos.
+  * 📂 `estoque/`: Produtos, pedidos e movimentação de inventário.
+  * 📂 `funcionarios/`: Gestão de colaboradores, escalas e turnos.  
+  *(Dentro da pasta da sua feature, você pode criar suas próprias telas e componentes específicos sem mexer na pasta do colega!)*
+
+* 📁 **`components/`** ➔ **Componentes Visuais Globais (Reutilizáveis):**  
+  Elementos de interface padrão que são usados em vários lugares do sistema para manter o visual uniforme (ex: `Button/`, `Input/`, `Modal/`, `Table/`, `Navbar/`, `Sidebar/`).
+
+* 📁 **`routes/`** ➔ **Navegação e Proteção por Perfil (RBAC):**  
+  * `index.tsx`: Onde declaramos todas as rotas da aplicação via `react-router-dom`.
+  * `ProtectedRoute.tsx`: Componente que verifica o perfil do usuário logado (ex: `ADMIN`, `FINANCEIRO`, `ASSOCIADO`) e impede que uma pessoa acesse telas que não são do seu perfil.
+
+* 📁 **`services/`** ➔ **Comunicação com o Back-end:**  
+  * `api.ts`: Instância do Axios que aponta para `http://localhost:8080` e possui um interceptor para anexar automaticamente o token do Firebase em cada requisição.
+
+* 📁 **`config/`** ➔ **Configurações Externas:**  
+  * `firebase.ts`: Inicialização das credenciais do Firebase Auth.
+
+* 📁 **`context/`** ➔ **Estado Global:**  
+  * `AuthContext.tsx`: Mantém na memória quem é o usuário logado, seu token e seu perfil para que qualquer tela possa consultar.
+
+* 📁 **`types/`** ➔ **Tipagens Globais TypeScript:**  
+  Definições de interfaces e tipos comuns (ex: tipos de usuário e enum de perfis).
 
 ---
 
