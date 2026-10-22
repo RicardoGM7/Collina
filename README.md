@@ -10,7 +10,7 @@ Aplicação web integrada para automação e gestão dos fluxos operacionais, fi
 
 ## 🛠️ Tecnologias Utilizadas
 
-* **Back-end:** Java 21, Spring Boot 3, Spring Data JPA, Spring Security, Flyway Migration, Lombok.
+* **Back-end:** Java 21, Spring Boot, Spring Data JPA, Spring Security, Flyway Migration, Lombok.
 * **Front-end:** React 18, TypeScript, Vite, React Router DOM, Axios, Lucide React.
 * **Banco de Dados:** PostgreSQL 16+.
 * **Autenticação:** Firebase Auth (Identity Provider) integrado ao Spring Security.
