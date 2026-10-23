@@ -1,99 +1,99 @@
-# ⚽ Collina — Sistema de Gestão de Clube Poliesportivo
+﻿# âš½ Collina â€” Sistema de GestÃ£o de Clube Poliesportivo
 
-Aplicação web integrada para automação e gestão dos fluxos operacionais, financeiros, administrativos, de associados, reservas de espaços e escalas de um clube poliesportivo.
+AplicaÃ§Ã£o web integrada para automaÃ§Ã£o e gestÃ£o dos fluxos operacionais, financeiros, administrativos, de associados, reservas de espaÃ§os e escalas de um clube poliesportivo.
 
-> **Projeto Acadêmico**  
-> Universidade Federal de Sergipe (UFS) — Departamento de Computação (DCOMP)  
-> **Arquitetura:** Monólito Modular em Camadas (Spring Boot + React + PostgreSQL)
+> **Projeto AcadÃªmico**  
+> Universidade Federal de Sergipe (UFS) â€” Departamento de ComputaÃ§Ã£o (DCOMP)  
+> **Arquitetura:** MonÃ³lito Modular em Camadas (Spring Boot + React + PostgreSQL)
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## ðŸ› ï¸ Tecnologias Utilizadas
 
-* **Back-end:** Java 21, Spring Boot, Spring Data JPA, Spring Security, Flyway Migration, Lombok.
+* **Back-end:** Java 21, Spring Boot, Spring Data JPA, Spring Security, Hibernate DDL (Auto-update), Lombok.
 * **Front-end:** React 18, TypeScript, Vite, React Router DOM, Axios, Lucide React.
 * **Banco de Dados:** PostgreSQL 16+.
-* **Autenticação:** Firebase Auth (Identity Provider) integrado ao Spring Security.
+* **AutenticaÃ§Ã£o:** Firebase Auth (Identity Provider) integrado ao Spring Security.
 
 ---
 
-## 🏛️ Arquitetura do Back-end (Como usar as pastas)
+## ðŸ›ï¸ Arquitetura do Back-end (Como usar as pastas)
 
-O fluxo de dados da nossa API segue uma divisão clara de responsabilidades:
+O fluxo de dados da nossa API segue uma divisÃ£o clara de responsabilidades:
 
-$$\text{Requisição HTTP (Front-end)} \longrightarrow \text{Controller} \longrightarrow \text{Service} \longrightarrow \text{Repository} \longrightarrow \text{PostgreSQL (Model)}$$
+$$\text{RequisiÃ§Ã£o HTTP (Front-end)} \longrightarrow \text{Controller} \longrightarrow \text{Service} \longrightarrow \text{Repository} \longrightarrow \text{PostgreSQL (Model)}$$
 
 Todas as classes do back-end devem ser criadas dentro de `backend/src/main/java/br/ufs/dcomp/collina/` nas seguintes camadas:
 
-* 📁 **`controller/`** ➔ **Porta de entrada da API:** Recebe as requisições HTTP do front-end (`@GetMapping`, `@PostMapping`, etc.), faz validações básicas de parâmetros e chama a Service correspondente.  
-  *⚠️ Não coloque regras de negócio ou cálculos aqui!*
-* 📁 **`service/`** ➔ **Cérebro da aplicação:** Onde ficam todas as regras de negócio e validações lógicas (`@Service`).  
-  *Exemplo:* Verificar se o associado está inadimplente antes de confirmar uma reserva; calcular o total de uma mensalidade.
-* 📁 **`repository/`** ➔ **Comunicação com o Banco:** Interfaces do Spring Data JPA (`JpaRepository`). Onde ficam as operações de persistência e consultas (`findById`, `save`, queries personalizadas).
-* 📁 **`model/`** ➔ **Tabelas do Banco:** Nossas entidades JPA (`@Entity`). Representam as tabelas físicas do PostgreSQL (ex: `Associado.java`, `Espaco.java`, `Mensalidade.java`).
-* 📁 **`dto/`** ➔ **Dados de Entrada e Saída:** Classes simples (Records ou classes comuns) que definem o que o front-end pode enviar (Request) e o que a API devolve (Response). Evita expor diretamente a entidade do banco na API.
-* 📁 **`exception/`** ➔ **Tratamento Global de Erros:** Onde criamos exceções personalizadas e o `@RestControllerAdvice` para capturar falhas e devolver mensagens amigáveis em JSON ao front-end (ex: erro 400 ou 404 estruturado).
-* 📁 **`config/`** ➔ **Configurações Gerais:** Onde configuramos os Beans do sistema, filtros do Spring Security, integração com o Firebase e permissões de CORS para o front-end.
+* ðŸ“ **`controller/`** âž” **Porta de entrada da API:** Recebe as requisiÃ§Ãµes HTTP do front-end (`@GetMapping`, `@PostMapping`, etc.), faz validaÃ§Ãµes bÃ¡sicas de parÃ¢metros e chama a Service correspondente.  
+  *âš ï¸ NÃ£o coloque regras de negÃ³cio ou cÃ¡lculos aqui!*
+* ðŸ“ **`service/`** âž” **CÃ©rebro da aplicaÃ§Ã£o:** Onde ficam todas as regras de negÃ³cio e validaÃ§Ãµes lÃ³gicas (`@Service`).  
+  *Exemplo:* Verificar se o associado estÃ¡ inadimplente antes de confirmar uma reserva; calcular o total de uma mensalidade.
+* ðŸ“ **`repository/`** âž” **ComunicaÃ§Ã£o com o Banco:** Interfaces do Spring Data JPA (`JpaRepository`). Onde ficam as operaÃ§Ãµes de persistÃªncia e consultas (`findById`, `save`, queries personalizadas).
+* ðŸ“ **`model/`** âž” **Tabelas do Banco:** Nossas entidades JPA (`@Entity`). Representam as tabelas fÃ­sicas do PostgreSQL (ex: `Associado.java`, `Espaco.java`, `Mensalidade.java`).
+* ðŸ“ **`dto/`** âž” **Dados de Entrada e SaÃ­da:** Classes simples (Records ou classes comuns) que definem o que o front-end pode enviar (Request) e o que a API devolve (Response). Evita expor diretamente a entidade do banco na API.
+* ðŸ“ **`exception/`** âž” **Tratamento Global de Erros:** Onde criamos exceÃ§Ãµes personalizadas e o `@RestControllerAdvice` para capturar falhas e devolver mensagens amigÃ¡veis em JSON ao front-end (ex: erro 400 ou 404 estruturado).
+* ðŸ“ **`config/`** âž” **ConfiguraÃ§Ãµes Gerais:** Onde configuramos os Beans do sistema, filtros do Spring Security, integraÃ§Ã£o com o Firebase e permissÃµes de CORS para o front-end.
 
 ---
 
-## 💻 Arquitetura do Front-end (Como usar as pastas)
+## ðŸ’» Arquitetura do Front-end (Como usar as pastas)
 
-O front-end utiliza uma **Arquitetura Modular baseada em Features (Domínios)**. Isso permite que os 7 integrantes desenvolvam telas e componentes simultaneamente sem causar conflitos de código no Git.
+O front-end utiliza uma **Arquitetura Modular baseada em Features (DomÃ­nios)**. Isso permite que os 7 integrantes desenvolvam telas e componentes simultaneamente sem causar conflitos de cÃ³digo no Git.
 
 Tudo fica dentro de `frontend/src/`:
 
-* 📁 **`features/`** ➔ **🚀 O coração do projeto (Módulos do Clube):**  
-  Cada módulo do sistema tem sua própria pasta isolada:
-  * 📂 `auth/`: Telas e formulários de login e recuperação de senha.
-  * 📂 `associados/`: Gestão de associados titulares, dependentes e planos.
-  * 📂 `financeiro/`: Mensalidades, fluxo de caixa e relatórios.
-  * 📂 `espacos/`: Gestão de espaços físicos, quadras, grade de horários e agendamento de reservas.
-  * 📂 `estoque/`: Produtos, pedidos e movimentação de inventário.
-  * 📂 `funcionarios/`: Gestão de colaboradores, escalas e turnos.  
-  *(Dentro da pasta da sua feature, você pode criar suas próprias telas e componentes específicos sem mexer na pasta do colega!)*
+* ðŸ“ **`features/`** âž” **ðŸš€ O coraÃ§Ã£o do projeto (MÃ³dulos do Clube):**  
+  Cada mÃ³dulo do sistema tem sua prÃ³pria pasta isolada:
+  * ðŸ“‚ `auth/`: Telas e formulÃ¡rios de login e recuperaÃ§Ã£o de senha.
+  * ðŸ“‚ `associados/`: GestÃ£o de associados titulares, dependentes e planos.
+  * ðŸ“‚ `financeiro/`: Mensalidades, fluxo de caixa e relatÃ³rios.
+  * ðŸ“‚ `espacos/`: GestÃ£o de espaÃ§os fÃ­sicos, quadras, grade de horÃ¡rios e agendamento de reservas.
+  * ðŸ“‚ `estoque/`: Produtos, pedidos e movimentaÃ§Ã£o de inventÃ¡rio.
+  * ðŸ“‚ `funcionarios/`: GestÃ£o de colaboradores, escalas e turnos.  
+  *(Dentro da pasta da sua feature, vocÃª pode criar suas prÃ³prias telas e componentes especÃ­ficos sem mexer na pasta do colega!)*
 
-* 📁 **`components/`** ➔ **Componentes Visuais Globais (Reutilizáveis):**  
-  Elementos de interface padrão que são usados em vários lugares do sistema para manter o visual uniforme (ex: `Button/`, `Input/`, `Modal/`, `Table/`, `Navbar/`, `Sidebar/`).
+* ðŸ“ **`components/`** âž” **Componentes Visuais Globais (ReutilizÃ¡veis):**  
+  Elementos de interface padrÃ£o que sÃ£o usados em vÃ¡rios lugares do sistema para manter o visual uniforme (ex: `Button/`, `Input/`, `Modal/`, `Table/`, `Navbar/`, `Sidebar/`).
 
-* 📁 **`routes/`** ➔ **Navegação e Proteção por Perfil (RBAC):**  
-  * `index.tsx`: Onde declaramos todas as rotas da aplicação via `react-router-dom`.
-  * `ProtectedRoute.tsx`: Componente que verifica o perfil do usuário logado (ex: `ADMIN`, `FINANCEIRO`, `ASSOCIADO`) e impede que uma pessoa acesse telas que não são do seu perfil.
+* ðŸ“ **`routes/`** âž” **NavegaÃ§Ã£o e ProteÃ§Ã£o por Perfil (RBAC):**  
+  * `index.tsx`: Onde declaramos todas as rotas da aplicaÃ§Ã£o via `react-router-dom`.
+  * `ProtectedRoute.tsx`: Componente que verifica o perfil do usuÃ¡rio logado (ex: `ADMIN`, `FINANCEIRO`, `ASSOCIADO`) e impede que uma pessoa acesse telas que nÃ£o sÃ£o do seu perfil.
 
-* 📁 **`services/`** ➔ **Comunicação com o Back-end:**  
-  * `api.ts`: Instância do Axios que aponta para `http://localhost:8080` e possui um interceptor para anexar automaticamente o token do Firebase em cada requisição.
+* ðŸ“ **`services/`** âž” **ComunicaÃ§Ã£o com o Back-end:**  
+  * `api.ts`: InstÃ¢ncia do Axios que aponta para `http://localhost:8080` e possui um interceptor para anexar automaticamente o token do Firebase em cada requisiÃ§Ã£o.
 
-* 📁 **`config/`** ➔ **Configurações Externas:**  
-  * `firebase.ts`: Inicialização das credenciais do Firebase Auth.
+* ðŸ“ **`config/`** âž” **ConfiguraÃ§Ãµes Externas:**  
+  * `firebase.ts`: InicializaÃ§Ã£o das credenciais do Firebase Auth.
 
-* 📁 **`context/`** ➔ **Estado Global:**  
-  * `AuthContext.tsx`: Mantém na memória quem é o usuário logado, seu token e seu perfil para que qualquer tela possa consultar.
+* ðŸ“ **`context/`** âž” **Estado Global:**  
+  * `AuthContext.tsx`: MantÃ©m na memÃ³ria quem Ã© o usuÃ¡rio logado, seu token e seu perfil para que qualquer tela possa consultar.
 
-* 📁 **`types/`** ➔ **Tipagens Globais TypeScript:**  
-  Definições de interfaces e tipos comuns (ex: tipos de usuário e enum de perfis).
+* ðŸ“ **`types/`** âž” **Tipagens Globais TypeScript:**  
+  DefiniÃ§Ãµes de interfaces e tipos comuns (ex: tipos de usuÃ¡rio e enum de perfis).
 
 ---
 
-## ⚙️ Pré-requisitos para Rodar o Projeto
+## âš™ï¸ PrÃ©-requisitos para Rodar o Projeto
 
-Antes de executar, certifique-se de ter instalado em sua máquina:
+Antes de executar, certifique-se de ter instalado em sua mÃ¡quina:
 1. **Java JDK 21**
 2. **Node.js 20+** e **npm**
 3. **PostgreSQL 16+**
 
-### 🗄️ Configuração do Banco de Dados Local
-Para garantir que o código funcione em todas as máquinas sem alterar arquivos de configuração, usem as seguintes credenciais locais no PostgreSQL:
+### ðŸ—„ï¸ ConfiguraÃ§Ã£o do Banco de Dados Local
+Para garantir que o cÃ³digo funcione em todas as mÃ¡quinas sem alterar arquivos de configuraÃ§Ã£o, usem as seguintes credenciais locais no PostgreSQL:
 
 * **Porta:** `5432`
-* **Nome do Banco:** `collina_db` *(crie essa base no pgAdmin antes da primeira execução)*
-* **Usuário:** `postgres`
+* **Nome do Banco:** `collina_db` *(crie essa base no pgAdmin antes da primeira execuÃ§Ã£o)*
+* **UsuÃ¡rio:** `postgres`
 * **Senha:** `postgres`
 
-> As migrações de tabelas são gerenciadas automaticamente pelo **Flyway** a partir de scripts `.sql` em `src/main/resources/db/migration/`.
+> As tabelas sÃ£o criadas e atualizadas automaticamente pelo **Hibernate / Spring Data JPA** (`ddl-auto=update`) a partir das classes anotadas com `@Entity`.
 
 ---
 
-## 🚀 Como Executar
+## ðŸš€ Como Executar
 
 ### 1. Back-end (Spring Boot)
 Entre na pasta `backend`:
@@ -102,7 +102,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 *(Ou execute a classe `CollinaApiApplication.java` diretamente pelo Play da sua IDE).*  
-A API estará rodando em: `http://localhost:8080`.
+A API estarÃ¡ rodando em: `http://localhost:8080`.
 
 ### 2. Front-end (React + Vite)
 Entre na pasta `frontend`:
@@ -111,18 +111,18 @@ cd frontend
 npm install
 npm run dev
 ```
-Acesse a aplicação no navegador pelo endereço indicado (geralmente `http://localhost:5173`).
+Acesse a aplicaÃ§Ã£o no navegador pelo endereÃ§o indicado (geralmente `http://localhost:5173`).
 
 ---
 
-## 🌿 Fluxo de Trabalho do Time (Git & GitHub)
+## ðŸŒ¿ Fluxo de Trabalho do Time (Git & GitHub)
 
-Para mantermos o projeto organizado e evitarmos conflitos de código entre os 7 integrantes:
+Para mantermos o projeto organizado e evitarmos conflitos de cÃ³digo entre os 7 integrantes:
 
-1. **Nunca faça commit direto na branch `main`:** A branch `main` sempre deve conter código estável.
+1. **Nunca faÃ§a commit direto na branch `main`:** A branch `main` sempre deve conter cÃ³digo estÃ¡vel.
 2. **Crie uma branch para cada tarefa:**
    * `feat/associados-cadastro-titular`
    * `feat/financeiro-emissao-mensalidade`
    * `feat/reservas-grade-horarios`
    * `fix/ajuste-validacao-cpf`
-3. **Abra um Pull Request (PR):** Quando terminar a funcionalidade, abra um PR para a `main` e peça a revisão de pelo menos um colega do grupo antes de realizar o merge.
+3. **Abra um Pull Request (PR):** Quando terminar a funcionalidade, abra um PR para a `main` e peÃ§a a revisÃ£o de pelo menos um colega do grupo antes de realizar o merge.

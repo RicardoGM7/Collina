@@ -1,5 +1,0 @@
--- ======================================================
--- V1__init.sql
--- Script de migração inicial do Sistema Collina
--- Adicione aqui as primeiras tabelas (ex: usuarios, associados)
--- ======================================================
