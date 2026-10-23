@@ -48,7 +48,7 @@ Tudo fica dentro de `frontend/src/`:
   * 📂 `auth/`: Telas e formulários de login e recuperação de senha.
   * 📂 `associados/`: Gestão de associados titulares, dependentes e planos.
   * 📂 `financeiro/`: Mensalidades, fluxo de caixa e relatórios.
-  * 📂 `reservas/`: Grade de horários e agendamento de espaços esportivos.
+  * 📂 `espacos/`: Gestão de espaços físicos, quadras, grade de horários e agendamento de reservas.
   * 📂 `estoque/`: Produtos, pedidos e movimentação de inventário.
   * 📂 `funcionarios/`: Gestão de colaboradores, escalas e turnos.  
   *(Dentro da pasta da sua feature, você pode criar suas próprias telas e componentes específicos sem mexer na pasta do colega!)*
