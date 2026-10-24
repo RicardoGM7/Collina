@@ -97,15 +97,13 @@ Para garantir que o código funcione em todas as máquinas sem alterar arquivos 
 
 ### 1. Back-end (Spring Boot)
 Entre na pasta `backend`:
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-*(Ou execute a classe `CollinaApiApplication.java` diretamente pelo Play da sua IDE).*  
+
+*execute a classe `CollinaApiApplication.java` diretamente pelo Play da sua IDE.*  
 A API estará rodando em: `http://localhost:8080`.
 
 ### 2. Front-end (React + Vite)
 Entre na pasta `frontend`:
+
 ```bash
 cd frontend
 npm install
