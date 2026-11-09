@@ -68,6 +68,17 @@ Content-Type: application/json
   "categoriaIds": [2],
   "estoqueMinimo": 5
 }
+###
+POST {{baseUrl}}/produtos
+Content-Type: application/json
+
+{
+  "nome": "X-Burguer Com fritas",
+  "descricao": "Pão brioche, hambúrguer 160g,queijo e fritas",
+  "preco": 28.50,
+  "categoriaIds": [2],
+  "estoqueMinimo": 5
+}
 
 ### 2.3 Listar Todos os Produtos (200 OK)
 GET {{baseUrl}}/produtos

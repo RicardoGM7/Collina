@@ -1,0 +1,188 @@
+### ====================================================================
+### TESTES DO CHAT COM IA (GOOGLE GEMINI + SPRING AI)
+### Módulo: Collina Chat
+### ====================================================================
+
+@baseUrl = http://localhost:8080/api/chat
+
+### 1. Apresentação inicial (sem conversaId - o backend gera automaticamente)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "mensagem": "Olá! Quem é você e o que você pode fazer por aqui?"
+}
+
+###
+
+### 2. Cardápio - Buscar apenas produtos DISPONÍVEIS (com estoque > 0)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-mesa-1",
+  "mensagem": "Me mostre o cardápio do clube com o que vocês têm disponível para pedir agora."
+}
+
+###
+
+### 2.1. Cardápio Filtrado por Categoria (ex: apenas Bebidas)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-mesa-1",
+  "mensagem": "O que vocês têm de bebidas disponíveis?"
+}
+
+###
+
+### 3. Catálogo Geral - Buscar TODOS os produtos cadastrados (inclusive esgotados)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-admin",
+  "mensagem": "Pode me listar todos os produtos cadastrados no sistema, até os sem estoque?"
+}
+
+###
+
+### 4. Buscar produto específico pelo nome
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-mesa-1",
+  "mensagem": "Vocês têm coca-cola?"
+}
+
+###
+
+### 5. Teste de Memória - Passo 1: Pedir item SEM informar o número do pedido
+# A IA deve notar a ausência do pedido e perguntar cordialmente em qual pedido incluir!
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-mesa-1",
+  "mensagem": "Quero adicionar duas cocas, por favor."
+}
+
+###
+
+### 6. Teste de Memória - Passo 2: Responder apenas o número do pedido
+# A IA usará o histórico da 'sessao-mesa-1' para lembrar das 'duas cocas' e adicionar ao pedido 1!
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-mesa-1",
+  "mensagem": "No pedido 1"
+}
+
+###
+
+### 7. Comando direto em frase única
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-garcom-balcao",
+  "mensagem": "Adicione 1 unidade de coca no pedido 1"
+}
+
+###
+
+### 8. Criar um novo pedido do zero
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-novo-cliente",
+  "mensagem": "Por favor, abra um novo pedido para mim com 2 cocas."
+}
+
+###
+
+### 9. Consultar extrato/detalhes de um pedido existente
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-novo-cliente",
+  "mensagem": "O que tem no meu pedido 1 e quanto está dando a conta?"
+}
+
+###
+
+### 10. Alterar quantidade de um item no pedido
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-novo-cliente",
+  "mensagem": "No pedido 1, altere a quantidade de cocas para apenas 1 unidade."
+}
+
+###
+
+### 11. Remover item do pedido
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-novo-cliente",
+  "mensagem": "Remova a coca do pedido 1."
+}
+
+###
+
+### 12. Consultar estoque de um produto
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-estoque",
+  "mensagem": "Quantas cocas ainda temos em estoque?"
+}
+
+###
+
+### 13. Chat livre
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-Ricardo",
+  "mensagem": "bom dia, pode me passar o cardapio?"
+}
+
+
+###
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-Ricardo",
+  "mensagem": "adicione 1 bolo no pedido um"
+}
+
+###
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "conversaId": "sessao-Ricardo",
+  "mensagem": "me mostre o cardapio de bebidas"
+}
+
+###
+
+### 14. Teste de Validação Bean Validation (Mensagem vazia -> 400 Bad Request)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "mensagem": ""
+}
