@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import br.ufs.dcomp.collina.service.financeiro.MovimentacaoFinanceiraService;
 import br.ufs.dcomp.collina.dto.financeiro.MovimentacaoFinanceiraResponseDTO;
 import br.ufs.dcomp.collina.dto.financeiro.MovimentacaoFinanceiraRequestDTO;
@@ -18,7 +19,7 @@ public class MovimentacaoFinanceiraController {
     // Registrar Movimentacao
     @PostMapping
     public ResponseEntity<MovimentacaoFinanceiraResponseDTO> registrar(
-            @RequestBody MovimentacaoFinanceiraRequestDTO dados, 
+            @Valid @RequestBody MovimentacaoFinanceiraRequestDTO dados, 
             @RequestHeader("funcionarioId") Long funcionarioId) {
 
         MovimentacaoFinanceiraResponseDTO response = movimentacaoService.registrar(dados, funcionarioId);
@@ -29,7 +30,7 @@ public class MovimentacaoFinanceiraController {
     @PutMapping("/{id}")
     public ResponseEntity<MovimentacaoFinanceiraResponseDTO> editar(
             @PathVariable Long id,
-            @RequestBody MovimentacaoFinanceiraRequestDTO dados,
+            @Valid @RequestBody MovimentacaoFinanceiraRequestDTO dados,
             @RequestHeader("funcionarioId") Long funcionarioId) {
 
         MovimentacaoFinanceiraResponseDTO response = movimentacaoService.editar(id, dados, funcionarioId);

@@ -19,7 +19,7 @@ public record MovimentacaoFinanceiraRequestDTO (
 
             @NotNull(message = "A movimentação deve ter um valor.")
             @Positive(message = "A movimentação não pode ter preço nulo ou negativo")
-            @Digits(integer = 15, fraction = 2, message = "O valor deve ter no máximo 2 casas decimais.")
+            @Digits(integer = 13, fraction = 2, message = "O valor deve ter no máximo 2 casas decimais.")
             BigDecimal valor,
 
             String descricao,

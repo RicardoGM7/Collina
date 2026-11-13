@@ -14,9 +14,11 @@ public record MovimentacaoFinanceiraResponseDTO (
             OrigemMovimentacaoEnum origem,
             BigDecimal valor,
             String descricao,
+            String motivoCancelamento,
             LocalDateTime dataHora,
             SituacaoMovimentacaoEnum situacao,
-            Long pagamentoId
+            Long pagamentoId,
+            Long funcionarioId
 ) {
     public MovimentacaoFinanceiraResponseDTO(
             MovimentacaoFinanceira movimentacao) {
@@ -25,10 +27,12 @@ public record MovimentacaoFinanceiraResponseDTO (
             movimentacao.getTipo(),
             movimentacao.getOrigem(),
             movimentacao.getValor(),
-            movimentacao.getDescricao() != null ? movimentacao.getDescricao() : null,
+            movimentacao.getDescricao(),
+            movimentacao.getMotivoCancelamento(),
             movimentacao.getDataHora(),
             movimentacao.getSituacao(),
-            movimentacao.getPagamentoId()
+            movimentacao.getPagamentoId(),
+            movimentacao.getFuncionarioId()
         );
     }
 }

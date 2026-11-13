@@ -52,6 +52,15 @@ public class MovimentacaoFinanceiraService {
         if (funcionarioId == null) {
             throw new IllegalArgumentException("O id do funcionário é obrigatório.");
         }
+        if (dados.pagamentoId() == null) {
+            throw new IllegalArgumentException("O id do pagamento é obrigatório");
+        }
+        if (dados.origem() == OrigemMovimentacaoEnum.PAGAMENTO) {
+            throw new IllegalArgumentException("Uma operação de pagamento não pode ser registrada.");
+        }
+        if (dados.origem() == OrigemMovimentacaoEnum.SOLICITACAO_GASTO && dados.solicitacaoId() == null) {
+            throw new IllegalArgumentException("Movimentações de Solicitação de Gasto exigem o ID da solicitação.");
+        }
 
         // Saída só é feita se houver saldo suficiente
         SaldoClube saldo = obterSaldoParaAtualizar();
@@ -65,7 +74,7 @@ public class MovimentacaoFinanceiraService {
                 throw new IllegalArgumentException(
                         "Para efetivar uma solicitação de gasto, a movimentação deve ser uma SAIDA.");
             }
-            solicitacaoService.marcarComoEfetivada(dados.solicitacaoId());
+            solicitacaoService.marcarComoEfetivada(dados.solicitacaoId(), dados.valor());
         }
 
         aplicarVariacao(saldo, variacao);
@@ -115,7 +124,11 @@ public class MovimentacaoFinanceiraService {
 
         // Verifica se a transação está ativa
         if (mov.getSituacao() == SituacaoMovimentacaoEnum.CANCELADO) {
-            throw new IllegalArgumentException("A transação deve estar ativa para poder ser editada.");
+            throw new IllegalStateException("A transação deve estar ativa para poder ser editada.");
+        }
+        // Verifica se a origem é um pagamento
+        if (mov.getOrigem() == OrigemMovimentacaoEnum.PAGAMENTO) {
+            throw new IllegalStateException("Um pagamento confirmado não pode ser editado.");
         }
 
         // Desfaz o efeito da movimentação antiga e aplica o da nova em uma única variação.
@@ -126,12 +139,8 @@ public class MovimentacaoFinanceiraService {
             aplicarVariacao(obterSaldoParaAtualizar(), variacao);
         }
 
-        mov.setTipo(dados.tipo());
-        mov.setOrigem(dados.origem());
-        mov.setValor(dados.valor().setScale(2, RoundingMode.UNNECESSARY));
-        mov.setDescricao(dados.descricao());
-        mov.setDataHora(dados.dataHora());
-        mov.setPagamentoId(dados.pagamentoId());
+        mov.atualizar(dados.descricao(), dados.valor().setScale(2, RoundingMode.UNNECESSARY));
+        mov.setFuncionarioId(funcionarioId);
 
         return new MovimentacaoFinanceiraResponseDTO(movimentacaoRepository.save(mov));
     }
@@ -144,6 +153,9 @@ public class MovimentacaoFinanceiraService {
         if (id == null) {
             throw new IllegalArgumentException("O id da movimentação é obrigatório");
         }
+        if (funcionarioId == null) {
+            throw new IllegalArgumentException("O id do funcionário é obrigatório.");
+        }
         if (motivo == null || motivo.isBlank()) {
             throw new IllegalArgumentException("O motivo do cancelamento é obrigatório.");
         }
@@ -152,13 +164,17 @@ public class MovimentacaoFinanceiraService {
                 .orElseThrow(() -> new ResourceNotFoundException("Movimentacao financeira não encontrada."));
 
         if (mov.getSituacao() == SituacaoMovimentacaoEnum.CANCELADO) {
-            throw new IllegalArgumentException("Esta movimentação já foi cancelada");
+            throw new IllegalStateException("Esta movimentação já foi cancelada");
+        }
+        if (mov.getOrigem() == OrigemMovimentacaoEnum.PAGAMENTO) {
+            throw new IllegalStateException("Movimentações geradas por pagamentos não podem ser canceladas.");
         }
 
         // Aplica o efeito contrário ao da movimentação
         BigDecimal estorno = efeito(mov.getTipo(), mov.getValor()).negate();
         aplicarVariacao(obterSaldoParaAtualizar(), estorno);
 
+        mov.setFuncionarioId(funcionarioId);
         mov.cancelar(motivo);
 
         return new MovimentacaoFinanceiraResponseDTO(movimentacaoRepository.save(mov));

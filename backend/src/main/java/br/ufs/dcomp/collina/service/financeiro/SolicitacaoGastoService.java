@@ -32,21 +32,7 @@ public class SolicitacaoGastoService {
                     SolicitacaoGastoRequestDTO dados, Long funcionarioId) {
 
         // Verificação dos dados
-        if (dados.descricao() == null || dados.descricao().trim().isBlank()) {
-            throw new IllegalArgumentException("A descrição é obrigatoria.");
-        }
-         if (dados.valor() == null || dados.valor().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("O valor deve ser maior que zero.");
-        }
-        if (dados.prioridade() == null) {
-            throw new IllegalArgumentException("A prioridade da solicitação não pode ser nula.");
-        }
-        if (dados.dataSolicitacao() == null) {
-            throw new IllegalArgumentException("A data da solicitação não pode ser nula.");
-        }
-        if (funcionarioId == null) {
-            throw new IllegalArgumentException("O id do funcionário é obrigatório.");
-        }
+        validarDados(dados, funcionarioId);
 
         // Criacao da nova solicitacao de gasto
         SolicitacaoGasto solicitacao = new SolicitacaoGasto();
@@ -74,7 +60,7 @@ public class SolicitacaoGastoService {
     }
 
     // RF-F19 - Marcar Operações Registradas como Efetivada
-    public void marcarComoEfetivada(Long id){
+    public void marcarComoEfetivada(Long id, BigDecimal valorEfetivado) {
         SolicitacaoGasto solicitacao = solicitacaoRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
                     "Solicitação de gasto não encontrada com ID: " + id));
@@ -83,7 +69,38 @@ public class SolicitacaoGastoService {
             throw new IllegalStateException("Só solicitações pendentes podem ser efetivadas.");
         }
 
+        // Valida se o valor da movimentação bate com o da solicitação
+        if (solicitacao.getValor().compareTo(valorEfetivado) != 0) {
+            throw new IllegalArgumentException("O valor da movimentação (" + valorEfetivado + 
+                    ") não corresponde ao valor original da solicitação (" + solicitacao.getValor() + ").");
+        }
+
         solicitacao.efetivar();
         solicitacaoRepository.save(solicitacao);
+    }
+
+    public void validarDados(SolicitacaoGastoRequestDTO dados, Long funcionarioId) {
+        // Validacao dos dados
+         if (dados == null) {
+            throw new IllegalArgumentException("Os dados da movimentação são obrigatórios.");
+        }
+        if (dados.descricao() == null || dados.descricao().trim().isBlank()) {
+            throw new IllegalArgumentException("A descrição é obrigatoria.");
+        }
+        if (dados.valor() == null || dados.valor().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor deve ser maior que zero.");
+        }
+        if (dados.valor().stripTrailingZeros().scale() > 2) {
+            throw new IllegalArgumentException("O valor deve ter no máximo 2 casas decimais.");
+        }
+        if (dados.prioridade() == null) {
+            throw new IllegalArgumentException("A prioridade da solicitação não pode ser nula.");
+        }
+        if (dados.dataSolicitacao() == null) {
+            throw new IllegalArgumentException("A data da solicitação não pode ser nula.");
+        }
+        if (funcionarioId == null) {
+            throw new IllegalArgumentException("O id do funcionário é obrigatório.");
+        }
     }
 }

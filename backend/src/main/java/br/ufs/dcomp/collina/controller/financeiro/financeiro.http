@@ -14,7 +14,7 @@
 ###      /api/financeiro/movimentacoes            (POST, PUT, DELETE)
 ###      /api/financeiro/solicitacoes-gasto       (POST, GET /prioridade)
 ###      /api/financeiro/consulta-operacoes       (GET /saldo, GET /historico)
-###      /api/financeiro/relatorio-financeiro     (GET /fechamento)
+###      /api/financeiro/relatorio    (GET /fechamento)
 ### ============================================================================
 
 @host = http://localhost:8080
@@ -490,3 +490,41 @@ funcionarioId: {{funcionarioId}}
 ### 8.10 Conferir o saldo (200) -> segue 1250.00
 ### Conferência opcional no banco: SELECT * FROM tb_saldo_clube; -> continua 1 linha (id 1)
 GET {{consulta}}/saldo
+
+### ============================================================================
+### 8. VALIDAÇÕES DAS NOVAS EXCEÇÕES (DEVE RETORNAR 400)
+### ============================================================================
+
+### 9.1 Sem o header funcionarioId
+POST {{financeiro}}/movimentacoes
+Content-Type: application/json
+
+{
+  "tipo": "ENTRADA",
+  "origem": "RECEITA_AVULSA",
+  "valor": 10.00,
+  "dataHora": "2026-11-12T10:00:00"
+}
+
+### 9.2 Valor inválido em um enum do corpo (tipo inexistente)
+POST {{financeiro}}/movimentacoes
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "tipo": "TRANSFERENCIA",
+  "origem": "RECEITA_AVULSA",
+  "valor": 10.00,
+  "dataHora": "2026-11-12T10:00:00"
+}
+
+### 9.3 Cancelar sem o parâmetro motivo
+DELETE {{financeiro}}/movimentacoes/1
+funcionarioId: {{funcionarioId}}
+
+### 9.4 Relatório sem o parâmetro competencia
+GET {{relatorio}}/fechamento
+
+### 9.5 Id que não é número no caminho
+DELETE {{financeiro}}/movimentacoes/abc?motivo=Teste
+funcionarioId: {{funcionarioId}}
