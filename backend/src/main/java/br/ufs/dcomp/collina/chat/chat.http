@@ -165,7 +165,7 @@ Content-Type: application/json
 
 {
   "conversaId": "sessao-Ricardo",
-  "mensagem": "adicione 1 bolo no pedido um"
+  "mensagem": "me mostre o pedido 1"
 }
 
 ###
@@ -174,7 +174,7 @@ Content-Type: application/json
 
 {
   "conversaId": "sessao-Ricardo",
-  "mensagem": "me mostre o cardapio de bebidas"
+  "mensagem": "adicione 1 coca no pedido 1"
 }
 
 ###
