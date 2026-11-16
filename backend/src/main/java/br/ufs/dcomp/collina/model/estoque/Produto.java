@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,9 +24,14 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false)
     private String nome;
+
     private String descricao;
-    private Double preco;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal preco;
 
     @OneToMany(mappedBy = "produto")
     private List<ItemPedido> itemPedidoList = new ArrayList<>();
@@ -39,6 +45,6 @@ public class Produto {
     private Set<Categoria> categorias = new HashSet<>();
 
 
-    @OneToOne(mappedBy = "produto", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private Estoque estoque;
 }

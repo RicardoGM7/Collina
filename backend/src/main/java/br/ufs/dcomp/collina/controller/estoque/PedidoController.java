@@ -1,16 +1,21 @@
 package br.ufs.dcomp.collina.controller.estoque;
 
+import br.ufs.dcomp.collina.dto.estoque.PagamentoPedidoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.PagamentoPedidoResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoResponseDTO;
+import br.ufs.dcomp.collina.model.estoque.StatusTransacaoEnum;
 import br.ufs.dcomp.collina.service.estoque.PedidoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -37,10 +42,13 @@ public class PedidoController {
         return ResponseEntity.created(location).body(novoPedido);
     }
 
-    // RF-E16 e RF-E17: Listar todos os pedidos (200 OK)
+    // RF-E16 e RF-E17: Listar pedidos com filtros opcionais de status e período (200 OK)
     @GetMapping
-    public ResponseEntity<List<PedidoResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(pedidoService.listarTodos());
+    public ResponseEntity<List<PedidoResponseDTO>> listarTodos(
+            @RequestParam(required = false) StatusTransacaoEnum status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        return ResponseEntity.ok(pedidoService.listarComFiltro(status, dataInicio, dataFim));
     }
 
     // Buscar pedido por ID (200 OK)
@@ -63,13 +71,12 @@ public class PedidoController {
     @PostMapping("/{id}/itens")
     public ResponseEntity<PedidoResponseDTO.ItemPedidoResponseDTO> adicionarItem(
             @PathVariable Integer id,
-            @RequestParam Integer produtoId,
-            @RequestParam Integer quantidade) {
-        PedidoResponseDTO.ItemPedidoResponseDTO itemSalvo = pedidoService.adicionarItemAoPedido(id, produtoId, quantidade);
+            @Valid @RequestBody PedidoRequestDTO.ItemPedidoRequestDTO dto) {
+        PedidoResponseDTO.ItemPedidoResponseDTO itemSalvo = pedidoService.adicionarItemAoPedido(id, dto.produtoId(), dto.quantidade());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{itemId}")
-                .buildAndExpand(itemSalvo.produtoId())
+                .buildAndExpand(itemSalvo.id())
                 .toUri();
 
         return ResponseEntity.created(location).body(itemSalvo);
@@ -80,8 +87,8 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO.ItemPedidoResponseDTO> alterarQuantidadeItem(
             @PathVariable Integer id,
             @PathVariable Integer itemId,
-            @RequestParam Integer novaQuantidade) {
-        return ResponseEntity.ok(pedidoService.alterarQuantidadeItem(id, itemId, novaQuantidade));
+            @Valid @RequestBody PedidoRequestDTO.AtualizarQuantidadeItemRequestDTO dto) {
+        return ResponseEntity.ok(pedidoService.alterarQuantidadeItem(id, itemId, dto.novaQuantidade()));
     }
 
     // RF-E15: Remover item de um pedido (204 No Content)
@@ -103,10 +110,13 @@ public class PedidoController {
     // 3. Pagamento do Pedido
     // ==========================================
 
-    // RF-E05 e RF-E06: Confirmar pagamento e dar baixa automática de estoque (200 OK)
-    @PostMapping("/{id}/pagar")
-    public ResponseEntity<PagamentoPedidoResponseDTO> pagar(@PathVariable Integer id) {
-        return ResponseEntity.ok(pedidoService.confirmarPagamento(id));
+    // RF-E05, RF-E06 e RF-F22: Confirmar pagamento e dar baixa automática de estoque (200 OK)
+    @PostMapping("/{id}/pagamento")
+    public ResponseEntity<PagamentoPedidoResponseDTO> pagar(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) PagamentoPedidoRequestDTO dto) {
+        BigDecimal valorPago = dto != null ? dto.valorPago() : null;
+        return ResponseEntity.ok(pedidoService.confirmarPagamento(id, valorPago));
     }
 
     // Consultar dados do pagamento do pedido (200 OK)

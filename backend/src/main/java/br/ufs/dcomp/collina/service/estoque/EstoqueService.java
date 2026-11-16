@@ -109,6 +109,11 @@ public class EstoqueService {
             throw new IllegalArgumentException("A quantidade movimentada deve ser maior que zero.");
         }
 
+        // RF-E05: Movimentações de VENDA só ocorrem automaticamente na confirmação do pagamento de pedido
+        if (dto.tipo() == MovimentacaoEstoqueEnum.VENDA) {
+            throw new IllegalArgumentException("Movimentações do tipo VENDA são geradas automaticamente na confirmação de pagamento do pedido.");
+        }
+
         Estoque estoque = estoqueRepository.findByProdutoId(dto.produtoID())
                 .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o produto com ID: " + dto.produtoID()));
 
@@ -116,12 +121,15 @@ public class EstoqueService {
 
         // Processa o saldo conforme o tipo de movimentação
         if (dto.tipo() == MovimentacaoEstoqueEnum.COMPRA_FORNECEDOR) {
-            // ENTRADA: soma no saldo
+            // ENTRADA (RF-E11): soma no saldo
             estoque.setQuantidade(saldoAtual + dto.quantidade());
         } else {
-            // SAÍDA (VENDA, USO_INTERNO, PERDA_DANO): valida disponibilidade (RF-E04)
+            // SAÍDA MANUAL (USO_INTERNO, PERDA_DANO - RF-E12): exige motivo e valida disponibilidade
+            if (dto.observacao() == null || dto.observacao().trim().isBlank()) {
+                throw new IllegalArgumentException("O motivo (observação) da saída é obrigatório para movimentações do tipo " + dto.tipo() + ".");
+            }
             if (saldoAtual < dto.quantidade()) {
-                throw new IllegalArgumentException("Saldo insuficiente em estoque. Saldo atual: "
+                throw new IllegalStateException("Saldo insuficiente em estoque. Saldo atual: "
                         + saldoAtual + ", quantidade solicitada: " + dto.quantidade());
             }
             estoque.setQuantidade(saldoAtual - dto.quantidade());

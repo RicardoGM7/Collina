@@ -5,6 +5,7 @@ import br.ufs.dcomp.collina.dto.estoque.CategoriaResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.estoque.Categoria;
 import br.ufs.dcomp.collina.repository.estoque.CategoriaRepository;
+import br.ufs.dcomp.collina.repository.estoque.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,9 @@ public class CategoriaService {
 
     @Autowired
     private CategoriaRepository categoriaRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
 
     // 1. Cadastrar nova categoria
     @Transactional
@@ -96,7 +100,7 @@ public class CategoriaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada com o ID: " + id));
 
         // Regra de integridade: não permitir deletar categoria se houver produtos associados
-        if (categoria.getProdutos() != null && !categoria.getProdutos().isEmpty()) {
+        if (produtoRepository.existsByCategoriasId(id)) {
             throw new IllegalStateException("Não é possível remover uma categoria que possui produtos vinculados.");
         }
 

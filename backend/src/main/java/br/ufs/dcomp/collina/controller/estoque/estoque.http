@@ -87,7 +87,7 @@ GET {{baseUrl}}/estoques
 GET {{baseUrl}}/estoques/produto/1
 
 ### 3.3 Dar Entrada no Estoque - Compra de Fornecedor (+50 unidades) (201 Created)
-POST {{baseUrl}}/estoques/movimentar
+POST {{baseUrl}}/estoques/movimentacoes
 Content-Type: application/json
 
 {
@@ -98,7 +98,7 @@ Content-Type: application/json
 }
 
 ### 3.4 Dar Entrada no Produto 2 (+20 unidades) (201 Created)
-POST {{baseUrl}}/estoques/movimentar
+POST {{baseUrl}}/estoques/movimentacoes
 Content-Type: application/json
 
 {
@@ -111,11 +111,22 @@ Content-Type: application/json
 ### 3.5 Alerta de Produtos com Estoque Baixo (200 OK)
 GET {{baseUrl}}/estoques/baixo
 
-### 3.6 Extrato Geral de Todas as Movimentações (200 OK)
+### 3.6 Atualizar Estoque Mínimo do Produto 1 (200 OK)
+PATCH {{baseUrl}}/estoques/produto/1/minimo
+Content-Type: application/json
+
+{
+  "novoMinimo": 15
+}
+
+### 3.7 Extrato Geral de Todas as Movimentações (200 OK)
 GET {{baseUrl}}/estoques/movimentacoes
 
-### 3.7 Histórico/Extrato de Movimentações do Produto 1 (200 OK)
-GET {{baseUrl}}/estoques/produto/1/historico
+### 3.8 Filtrar Movimentações por Tipo (200 OK)
+GET {{baseUrl}}/estoques/movimentacoes?tipo=COMPRA_FORNECEDOR
+
+### 3.9 Histórico/Extrato de Movimentações do Produto 1 (200 OK)
+GET {{baseUrl}}/estoques/produto/1/movimentacoes
 
 
 ### ========================================================
@@ -146,18 +157,37 @@ GET {{baseUrl}}/pedidos
 GET {{baseUrl}}/pedidos/1
 
 ### 4.4 Adicionar Mais um Item ao Pedido 1 (201 Created)
-POST {{baseUrl}}/pedidos/1/itens?produtoId=1&quantidade=1
+POST {{baseUrl}}/pedidos/1/itens
+Content-Type: application/json
 
-### 4.5 Listar Apenas os Itens do Pedido 1 (200 OK)
+{
+  "produtoId": 1,
+  "quantidade": 1
+}
+
+### 4.5 Alterar Quantidade de um Item do Pedido 1 (200 OK)
+PATCH {{baseUrl}}/pedidos/1/itens/1
+Content-Type: application/json
+
+{
+  "novaQuantidade": 3
+}
+
+### 4.6 Listar Apenas os Itens do Pedido 1 (200 OK)
 GET {{baseUrl}}/pedidos/1/itens
 
-### 4.6 Pagar o Pedido 1 (Baixa automática de estoque e saída de venda) (200 OK)
-POST {{baseUrl}}/pedidos/1/pagar
+### 4.7 Pagar o Pedido 1 (Baixa automática de estoque e saída de venda) (200 OK)
+POST {{baseUrl}}/pedidos/1/pagamento
+Content-Type: application/json
 
-### 4.7 Consultar Comprovante do Pagamento do Pedido 1 (200 OK)
+{
+  "valorPago": 46.50
+}
+
+### 4.8 Consultar Comprovante do Pagamento do Pedido 1 (200 OK)
 GET {{baseUrl}}/pedidos/1/pagamento
 
-### 4.8 Conferir Novo Saldo do Estoque após a Venda (200 OK)
+### 4.9 Conferir Novo Saldo do Estoque após a Venda (200 OK)
 GET {{baseUrl}}/estoques/produto/1
 
 
@@ -178,4 +208,4 @@ Content-Type: application/json
 }
 
 ### 5.3 Teste 409 Conflict (Tentar pagar novamente pedido já pago)
-POST {{baseUrl}}/pedidos/1/pagar
+POST {{baseUrl}}/pedidos/1/pagamento
