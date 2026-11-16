@@ -1,5 +1,6 @@
 package br.ufs.dcomp.collina.controller.estoque;
 
+import br.ufs.dcomp.collina.dto.estoque.EstoqueMinimoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.EstoqueResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.MovimentacaoEstoqueRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.MovimentacaoEstoqueResponseDTO;
@@ -53,8 +54,8 @@ public class EstoqueController {
     @PatchMapping("/produto/{produtoId}/minimo")
     public ResponseEntity<EstoqueResponseDTO> atualizarEstoqueMinimo(
             @PathVariable Integer produtoId,
-            @RequestParam Integer novoMinimo) {
-        return ResponseEntity.ok(estoqueService.atualizarEstoqueMinimo(produtoId, novoMinimo));
+            @Valid @RequestBody EstoqueMinimoRequestDTO dto) {
+        return ResponseEntity.ok(estoqueService.atualizarEstoqueMinimo(produtoId, dto.novoMinimo()));
     }
 
     // ==========================================
@@ -62,7 +63,7 @@ public class EstoqueController {
     // ==========================================
 
     // RF-E11 e RF-E12: Registrar movimentação manual de estoque (201 Created)
-    @PostMapping("/movimentar")
+    @PostMapping("/movimentacoes")
     public ResponseEntity<MovimentacaoEstoqueResponseDTO> registrarMovimentacao(@Valid @RequestBody MovimentacaoEstoqueRequestDTO dto) {
         MovimentacaoEstoqueResponseDTO mov = estoqueService.registrarMovimentacao(dto);
 
@@ -74,9 +75,13 @@ public class EstoqueController {
         return ResponseEntity.created(location).body(mov);
     }
 
-    // Listar todas as movimentações da loja (200 OK)
+    // Listar movimentações da loja, com filtro opcional por tipo (ex: ?tipo=COMPRA_FORNECEDOR) (200 OK)
     @GetMapping("/movimentacoes")
-    public ResponseEntity<List<MovimentacaoEstoqueResponseDTO>> listarTodasMovimentacoes() {
+    public ResponseEntity<List<MovimentacaoEstoqueResponseDTO>> listarTodasMovimentacoes(
+            @RequestParam(required = false) MovimentacaoEstoqueEnum tipo) {
+        if (tipo != null) {
+            return ResponseEntity.ok(estoqueService.listarMovimentacoesPorTipo(tipo));
+        }
         return ResponseEntity.ok(estoqueService.listarTodasMovimentacoes());
     }
 
@@ -87,14 +92,8 @@ public class EstoqueController {
     }
 
     // Histórico de movimentações de um produto específico (200 OK)
-    @GetMapping("/produto/{produtoId}/historico")
+    @GetMapping("/produto/{produtoId}/movimentacoes")
     public ResponseEntity<List<MovimentacaoEstoqueResponseDTO>> listarHistoricoDoProduto(@PathVariable Integer produtoId) {
         return ResponseEntity.ok(estoqueService.listarMovimentacoesPorProduto(produtoId));
-    }
-
-    // Listar movimentações filtradas por tipo (ex: COMPRA_FORNECEDOR, VENDA, etc.) (200 OK)
-    @GetMapping("/movimentacoes/tipo/{tipo}")
-    public ResponseEntity<List<MovimentacaoEstoqueResponseDTO>> listarPorTipo(@PathVariable MovimentacaoEstoqueEnum tipo) {
-        return ResponseEntity.ok(estoqueService.listarMovimentacoesPorTipo(tipo));
     }
 }

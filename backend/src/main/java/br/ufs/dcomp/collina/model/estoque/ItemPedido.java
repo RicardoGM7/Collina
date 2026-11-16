@@ -6,8 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-import java.util.DoubleSummaryStatistics;
+import java.math.BigDecimal;
 
 
 @Getter
@@ -21,14 +20,18 @@ public class ItemPedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false)
     private Integer quantidade;
-    private Double preco;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal preco;
 
     @ManyToOne
-    @JoinColumn(name = "pedido_id")
+    @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
     @ManyToOne
-    @JoinColumn(name = "produto_id")
+    @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 }

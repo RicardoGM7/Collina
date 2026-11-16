@@ -10,11 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Service
 public class PedidoService {
+
+    private static final Instant DATA_MINIMA = LocalDate.of(1900, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
+    private static final Instant DATA_MAXIMA = LocalDate.of(9999, 12, 31).atStartOfDay().toInstant(ZoneOffset.UTC);
 
     @Autowired
     private PedidoRepository pedidoRepository;
@@ -98,6 +104,25 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarTodos() {
         return pedidoRepository.findAll()
+                .stream()
+                .map(PedidoResponseDTO::new)
+                .toList();
+    }
+
+    // RF-E17: Consultar pedidos com filtro opcional por status e período
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarComFiltro(StatusTransacaoEnum status, LocalDate dataInicio, LocalDate dataFim) {
+        if (status == null && dataInicio == null && dataFim == null) {
+            return listarTodos();
+        }
+        if (dataInicio != null && dataFim != null && dataFim.isBefore(dataInicio)) {
+            throw new IllegalArgumentException("A data final não pode ser anterior à data inicial.");
+        }
+
+        Instant inicio = dataInicio != null ? dataInicio.atStartOfDay().toInstant(ZoneOffset.UTC) : DATA_MINIMA;
+        Instant fim = dataFim != null ? dataFim.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC) : DATA_MAXIMA;
+
+        return pedidoRepository.buscarPorFiltro(status, inicio, fim)
                 .stream()
                 .map(PedidoResponseDTO::new)
                 .toList();
@@ -297,6 +322,12 @@ public class PedidoService {
     // RF-E05 e RF-E06: Confirmar pagamento do pedido e baixar estoque automaticamente
     @Transactional
     public PagamentoPedidoResponseDTO confirmarPagamento(Integer pedidoId) {
+        return confirmarPagamento(pedidoId, null);
+    }
+
+    // RF-E05, RF-E06 e RF-F22: Confirmar pagamento validando o valor pago contra o total do pedido
+    @Transactional
+    public PagamentoPedidoResponseDTO confirmarPagamento(Integer pedidoId, BigDecimal valorPago) {
         if (pedidoId == null) {
             throw new IllegalArgumentException("O ID do pedido é obrigatório.");
         }
@@ -316,8 +347,20 @@ public class PedidoService {
             throw new IllegalStateException("Não é possível confirmar pagamento de um pedido sem itens.");
         }
 
+        // RF-E03, RF-E06 e RF-F22: Calcula o valor total do pedido e valida contra o valor pago (se informado)
+        BigDecimal totalCalculado = pedido.getItens().stream()
+                .map(i -> (i.getPreco() != null && i.getQuantidade() != null)
+                        ? i.getPreco().multiply(BigDecimal.valueOf(i.getQuantidade()))
+                        : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (valorPago != null && valorPago.compareTo(totalCalculado) != 0) {
+            throw new IllegalArgumentException("O valor informado no pagamento (R$ " + valorPago
+                    + ") é diferente do total calculado do pedido (R$ " + totalCalculado + ").");
+        }
+
         // FASE 1: Validação prévia de disponibilidade de estoque
-        Map<Integer, Integer> quantidadesTotaisPorProduto = new HashMap<>();
+        Map<Integer, Integer> quantidadesTotaisPorProduto = new LinkedHashMap<>();
         for (ItemPedido item : pedido.getItens()) {
             if (item.getProduto() == null || item.getProduto().getId() == null) {
                 throw new IllegalStateException("Item do pedido inválido sem produto associado.");
@@ -325,6 +368,7 @@ public class PedidoService {
             quantidadesTotaisPorProduto.merge(item.getProduto().getId(), item.getQuantidade(), Integer::sum);
         }
 
+        Map<Integer, Estoque> estoquesPorProduto = new HashMap<>();
         for (Map.Entry<Integer, Integer> entry : quantidadesTotaisPorProduto.entrySet()) {
             Integer produtoId = entry.getKey();
             Integer qtdNecessaria = entry.getValue();
@@ -338,21 +382,23 @@ public class PedidoService {
                 throw new IllegalStateException("Estoque insuficiente para o produto '" + nomeProduto
                         + "'. Saldo disponível: " + saldoAtual + ", total necessário: " + qtdNecessaria);
             }
+            estoquesPorProduto.put(produtoId, estoque);
         }
 
         // FASE 2: Baixa do estoque e registro de auditoria
-        for (ItemPedido item : pedido.getItens()) {
-            Estoque estoque = estoqueRepository.findByProdutoId(item.getProduto().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o produto ID: " + item.getProduto().getId()));
+        for (Map.Entry<Integer, Integer> entry : quantidadesTotaisPorProduto.entrySet()) {
+            Integer produtoId = entry.getKey();
+            Integer qtdBaixada = entry.getValue();
 
+            Estoque estoque = estoquesPorProduto.get(produtoId);
             int saldoAtual = estoque.getQuantidade() != null ? estoque.getQuantidade() : 0;
-            estoque.setQuantidade(saldoAtual - item.getQuantidade());
+            estoque.setQuantidade(saldoAtual - qtdBaixada);
             estoqueRepository.save(estoque);
 
             MovimentacaoEstoque mov = new MovimentacaoEstoque();
             mov.setData(Instant.now());
             mov.setTipo(MovimentacaoEstoqueEnum.VENDA);
-            mov.setQuantidade(item.getQuantidade());
+            mov.setQuantidade(qtdBaixada);
             mov.setObservacao("Venda confirmada no Pedido #" + pedido.getId());
             mov.setEstoque(estoque);
             movimentacaoEstoqueRepository.save(mov);
@@ -361,6 +407,7 @@ public class PedidoService {
         // FASE 3: Criação do registro de pagamento e atualização do pedido
         PagamentoPedido pagamento = new PagamentoPedido();
         pagamento.setData(Instant.now());
+        pagamento.setValor(totalCalculado);
         pagamento.setPedido(pedido);
         PagamentoPedido pagamentoSalvo = pagamentoPedidoRepository.save(pagamento);
 

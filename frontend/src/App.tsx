@@ -1,8 +1,12 @@
+import { MainLayout } from './components/Layout/MainLayout'
+
 export default function App() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem', textAlign: 'center' }}>
-      <h1>⚽ Collina — Sistema de Gestão de Clube Poliesportivo</h1>
-      <p>Ambiente React + TypeScript + Vite inicializado com sucesso!</p>
-    </div>
+    <MainLayout userName="Nome do Titular" userRole="Administrador">
+      <h1>Painel Administrativo</h1>
+      <p style={{ color: '#64748B', marginTop: '6px' }}>
+        O conteúdo de cada página entra aqui dentro!
+      </p>
+    </MainLayout>
   )
 }

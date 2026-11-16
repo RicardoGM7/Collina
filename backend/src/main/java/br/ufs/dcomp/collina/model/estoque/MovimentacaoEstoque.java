@@ -19,16 +19,21 @@ public class MovimentacaoEstoque {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false)
     private Instant data;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MovimentacaoEstoqueEnum tipo;
+
+    @Column(nullable = false)
     private Integer quantidade;
     //private Funcionario responsavel;
     private String observacao;
 
     @ManyToOne
-    @JoinColumn(name = "estoque_id")
+    @JoinColumn(name = "estoque_id", nullable = false)
     private Estoque estoque;
 
 }
