@@ -30,7 +30,7 @@ public class GastoAvulso {
     @Column(nullable= false, precision= 15, scale = 2)
     private BigDecimal valor;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String descricao;
 
     @Column(nullable = false)
@@ -56,4 +56,13 @@ public class GastoAvulso {
     */
     @Column
     private Long vinculoDependecia;
+
+    public GastoAvulso(BigDecimal valor, String descricao, LocalDateTime dataLancamento, Long funcionario,
+            Long vinculoDependecia) {
+        this.valor = valor;
+        this.descricao = descricao;
+        this.dataLancamento = dataLancamento;
+        this.funcionario = funcionario;
+        this.vinculoDependecia = vinculoDependecia;
+    }
 }

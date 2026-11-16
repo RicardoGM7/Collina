@@ -144,6 +144,7 @@ public class Mensalidade {
 
         gasto.setMensalidade(this);
         this.gastosAvulsos.add(gasto);
+        this.valorFinal = this.valorFinal.add(gasto.getValor());
     }
 
     public void fechar(LocalDate vencimento){

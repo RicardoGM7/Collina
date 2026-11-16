@@ -13,7 +13,7 @@ import br.ufs.dcomp.collina.model.financeiro.StatusMensalidadeEnum;
 
 public interface MensalidadeRepository extends JpaRepository<Mensalidade, Long>{
     
-    List<Mensalidade> findByStatusMensalidadeAndDataVencimento(StatusMensalidadeEnum statusMensalidade, LocalDate data);
+    List<Mensalidade> findByStatusMensalidadeAndDataVencimentoLessThan(StatusMensalidadeEnum statusMensalidade, LocalDate data);
     
     List<Mensalidade> findByAssociadoTitularAndCompetencia(Long associadoTitular, String competencia);
 
@@ -24,6 +24,6 @@ public interface MensalidadeRepository extends JpaRepository<Mensalidade, Long>{
     }
     
     default List<Mensalidade> buscarMensalidadesPendentesVencidas(LocalDate data){
-        return findByStatusMensalidadeAndDataVencimento(StatusMensalidadeEnum.PENDENTE, data);
+        return findByStatusMensalidadeAndDataVencimentoLessThan(StatusMensalidadeEnum.PENDENTE, data);
     }
 }
