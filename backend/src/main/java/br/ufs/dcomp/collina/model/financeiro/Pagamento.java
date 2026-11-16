@@ -1,7 +1,6 @@
 package br.ufs.dcomp.collina.model.financeiro;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -14,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -55,6 +53,13 @@ public class Pagamento {
     @JoinColumn(name = "mensalidade_id", nullable = true)
     private Mensalidade mensalidade;
 
+    public Pagamento(BigDecimal valor, FormaPagamentoEnum formaPagamento, Mensalidade mensalidade) {
+        this.valor = valor;
+        this.formaPagamento = formaPagamento;
+        this.mensalidade = mensalidade;
+
+        this.status = StatusTransacaoEnum.AGUARDANDO;
+    }
 
     public void confirmar(LocalDateTime data){
         if(!this.estaAguardando()){

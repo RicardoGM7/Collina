@@ -10,14 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor 
 @NoArgsConstructor
 @Entity 
 @Table(name= "tb_cancelamento_de_mensalidade")
@@ -34,12 +32,12 @@ public class CancelamentoDeMensalidade {
 
     //FK - Mensalidade
     @OneToOne
-    @JoinColumn(name = "mensalidade_cancelada_id", nullable = false)
+    @JoinColumn(name = "mensalidade_cancelada_id", nullable = false, unique = true)
     private Mensalidade mensalidadeCancelada;
 
     //FK - Mensalidade
     @OneToOne
-    @JoinColumn(name = "mensalidade_substituta_id", nullable = false)
+    @JoinColumn(name = "mensalidade_substituta_id", nullable = false, unique = true)
     private Mensalidade mensalidadeSubstituta;
 
     //FK - Funcionario
@@ -59,7 +57,7 @@ public class CancelamentoDeMensalidade {
         if(dataCancelamento == null){throw (new IllegalArgumentException("Data de cancelamento não pode ser nula"));}
         if(funcionario == null){throw (new IllegalArgumentException("Funcionario não pode ser nulo"));}
 
-        if(!mensalidadeSubstituta.estaPendente()){throw (new IllegalStateException("Mensalidade substitua com estado invalido"));}
+        if(!mensalidadeSubstituta.estaPendente()){throw (new IllegalStateException("Mensalidade substituta com estado invalido"));}
         if(!mensalidadeCancelada.estaCancelada()){throw (new IllegalStateException("Mensalidade cancelada com estado invalido"));}
 
         this.justificativa = justificativa;

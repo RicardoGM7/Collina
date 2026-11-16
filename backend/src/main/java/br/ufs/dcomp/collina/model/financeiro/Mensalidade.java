@@ -138,6 +138,10 @@ public class Mensalidade {
             throw (new IllegalArgumentException("O valor do gasto não pode ser negativo"));
         }
 
+        if(gasto.getDataLancamento() == null){
+            throw (new IllegalArgumentException("A data de lançamento não pode ser nula"));
+        }
+
         gasto.setMensalidade(this);
         this.gastosAvulsos.add(gasto);
     }
