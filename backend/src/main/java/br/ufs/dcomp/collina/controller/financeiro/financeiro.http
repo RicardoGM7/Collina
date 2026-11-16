@@ -277,11 +277,11 @@ funcionarioId: {{funcionarioId}}
 DELETE {{financeiro}}/movimentacoes/2?motivo=Registro%20duplicado
 funcionarioId: {{funcionarioId}}
 
-### 5.3 Cancelar a MESMA movimentação de novo (400) "já foi cancelada"
+### 5.3 Cancelar a MESMA movimentação de novo (409) "já foi cancelada"
 DELETE {{financeiro}}/movimentacoes/2?motivo=Tentativa%20dupla
 funcionarioId: {{funcionarioId}}
 
-### 5.4 Editar movimentação cancelada (400) "deve estar ativa"
+### 5.4 Editar movimentação cancelada (409) "deve estar ativa"
 PUT {{financeiro}}/movimentacoes/2
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
@@ -492,7 +492,7 @@ funcionarioId: {{funcionarioId}}
 GET {{consulta}}/saldo
 
 ### ============================================================================
-### 8. VALIDAÇÕES DAS NOVAS EXCEÇÕES (DEVE RETORNAR 400)
+### 9. VALIDAÇÕES DAS NOVAS EXCEÇÕES (DEVE RETORNAR 400)
 ### ============================================================================
 
 ### 9.1 Sem o header funcionarioId

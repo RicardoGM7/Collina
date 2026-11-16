@@ -7,7 +7,11 @@ import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 public interface SaldoClubeRepository extends JpaRepository<SaldoClube, Long> {
-    // O saldo do clube é um registro único: busca o primeiro (e único) registro da tabela
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+
+    // LEITURA (sem lock): usada em consultas.
     Optional<SaldoClube> findFirstByOrderByIdAsc();
+
+    // ESCRITA (com lock): o saldo do clube é um registro único.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<SaldoClube> findTopByOrderByIdAsc();
 }

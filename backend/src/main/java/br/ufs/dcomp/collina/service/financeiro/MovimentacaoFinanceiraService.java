@@ -52,11 +52,12 @@ public class MovimentacaoFinanceiraService {
         if (funcionarioId == null) {
             throw new IllegalArgumentException("O id do funcionário é obrigatório.");
         }
-        if (dados.pagamentoId() == null) {
-            throw new IllegalArgumentException("O id do pagamento é obrigatório");
-        }
         if (dados.origem() == OrigemMovimentacaoEnum.PAGAMENTO) {
             throw new IllegalArgumentException("Uma operação de pagamento não pode ser registrada.");
+        }
+        // RF-F01: lançamentos manuais não são vinculados a pagamento de mensalidade ou pedido
+        if (dados.pagamentoId() != null) {
+            throw new IllegalArgumentException("Movimentações manuais não podem ser vinculadas a um pagamento.");
         }
         if (dados.origem() == OrigemMovimentacaoEnum.SOLICITACAO_GASTO && dados.solicitacaoId() == null) {
             throw new IllegalArgumentException("Movimentações de Solicitação de Gasto exigem o ID da solicitação.");
@@ -131,8 +132,14 @@ public class MovimentacaoFinanceiraService {
             throw new IllegalStateException("Um pagamento confirmado não pode ser editado.");
         }
 
-        // Desfaz o efeito da movimentação antiga e aplica o da nova em uma única variação.
-        BigDecimal variacao = efeito(dados.tipo(), dados.valor())
+        // RF-F23: o tipo não pode ser alterado 
+        if (dados.tipo() != mov.getTipo() || dados.origem() != mov.getOrigem()) {
+            throw new IllegalArgumentException(
+                    "O tipo e a origem da movimentação não podem ser alterados. Cancele e registre novamente.");
+        }
+
+        // Só o valor muda o saldo: desfaz o efeito do valor antigo e aplica o do novo.
+        BigDecimal variacao = efeito(mov.getTipo(), dados.valor())
                 .subtract(efeito(mov.getTipo(), mov.getValor()));
 
         if (variacao.signum() != 0) {
@@ -215,7 +222,7 @@ public class MovimentacaoFinanceiraService {
 
     // O saldo do clube é um registro único em tb_saldo_clube. 
     private SaldoClube obterSaldoParaAtualizar() {
-        return saldoRepository.findFirstByOrderByIdAsc()
+        return saldoRepository.findTopByOrderByIdAsc()
                 .orElseGet(() -> {
                     SaldoClube inicial = new SaldoClube();
                     inicial.setValor(BigDecimal.ZERO);
