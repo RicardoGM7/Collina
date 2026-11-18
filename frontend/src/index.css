@@ -1,3 +1,10 @@
+:root {
+  --modal-duration-open: 200ms;
+  --modal-duration-close: 150ms;
+  --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-control-duration: 150ms;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,7 +13,7 @@
 
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background-color: #0B1724;
-  color: #0B1724;
+  background-color: #0B1F33;
+  color: #0B1F33;
   -webkit-font-smoothing: antialiased;
 }

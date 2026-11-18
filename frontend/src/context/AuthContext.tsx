@@ -1,1 +1,1 @@
-// Contexto global de autenticaÁ„o (usu·rio, token, roles)
+// Contexto global de autentica√ß√£o (usu√°rio, token, roles)

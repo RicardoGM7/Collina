@@ -1,44 +1,31 @@
 .navbar {
-  height: 72px;
-  background-color: #0B1724;
+  height: 76px;
+  background-color: #0B1F33;
   color: #FFFFFF;
-  padding: 0 28px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
 }
 
-.navbar-spacer {
-  width: 160px;
+.navbar-left {
+  width: 180px;
 }
 
-.navbar-brand {
+.navbar-center {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
 
-.navbar-brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.navbar-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.navbar-subtitle {
-  font-size: 12px;
-  font-weight: 600;
-  color: #2BB673;
+.navbar-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
 }
 
 .navbar-profile {
-  width: 160px;
+  width: 180px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -46,10 +33,10 @@
 }
 
 .navbar-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  background-color: #13273D;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
   border: 1.5px solid #2BB673;
   color: #FFFFFF;
   display: flex;
@@ -58,14 +45,14 @@
   flex-shrink: 0;
 }
 
-.navbar-user {
+.navbar-user-info {
   display: flex;
   flex-direction: column;
   line-height: 1.25;
 }
 
 .navbar-user-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #FFFFFF;
 }

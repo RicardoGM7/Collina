@@ -1,53 +1,106 @@
-import { useState, type FormEvent } from 'react'
-import { ChevronRight, Send, Sparkles } from 'lucide-react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type TransitionEvent,
+} from 'react'
+import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import './ChatSidebar.css'
 
-interface Message {
-  id: number
-  sender: 'ai' | 'user'
-  text: string
+const SUGGESTIONS = ['Resumo do mês', 'Reservas de hoje', 'Registrar saída']
+
+function staggerStyle(index: number): CSSProperties {
+  return { '--stagger-index': index } as CSSProperties
 }
 
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: 1,
-    sender: 'ai',
-    text: 'Olá! Posso consultar reservas, estoque e finanças, e registrar movimentações. Como ajudo?',
-  },
-]
-
-const SUGGESTIONS = ['Resumo do mês', 'Reservas de hoje', 'Itens em baixa']
-
 export function ChatSidebar() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
+  const [isOpen, setIsOpen] = useState(true)
+  const [isAnimating, setIsAnimating] = useState(false)
   const [input, setInput] = useState('')
 
-  function sendMessage(text: string) {
-    const trimmed = text.trim()
-    if (!trimmed) return
+  const sidebarRef = useRef<HTMLElement>(null)
+  const minimizedRef = useRef<HTMLDivElement>(null)
+  const animTimerRef = useRef<number | null>(null)
 
-    const userMsg: Message = { id: Date.now(), sender: 'user', text: trimmed }
-    const replyMsg: Message = {
-      id: Date.now() + 1,
-      sender: 'ai',
-      text: `Recebi "${trimmed}". Depois vamos conectar esta resposta ao backend!`,
+  function handleToggle(nextOpen: boolean) {
+    if (animTimerRef.current !== null) {
+      window.clearTimeout(animTimerRef.current)
     }
+    setIsAnimating(true)
+    setIsOpen(nextOpen)
 
-    setMessages((prev) => [...prev, userMsg, replyMsg])
-    setInput('')
+    const fallbackDuration = nextOpen ? 320 : 220
+    animTimerRef.current = window.setTimeout(() => {
+      setIsAnimating(false)
+      animTimerRef.current = null
+    }, fallbackDuration)
   }
+
+  function handleSidebarTransitionEnd(event: TransitionEvent<HTMLElement>) {
+    if (event.target !== sidebarRef.current) return
+    if (event.propertyName === 'transform' || event.propertyName === 'opacity') {
+      if (animTimerRef.current !== null) {
+        window.clearTimeout(animTimerRef.current)
+        animTimerRef.current = null
+      }
+      setIsAnimating(false)
+    }
+  }
+
+  // Aplica inert via DOM ref para impedir foco no painel fechado e no card oculto
+  useEffect(() => {
+    if (sidebarRef.current) {
+      sidebarRef.current.inert = !isOpen && !isAnimating
+    }
+    if (minimizedRef.current) {
+      minimizedRef.current.inert = isOpen
+    }
+  }, [isOpen, isAnimating])
+
+  useEffect(() => {
+    return () => {
+      if (animTimerRef.current !== null) {
+        window.clearTimeout(animTimerRef.current)
+      }
+    }
+  }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    sendMessage(input)
+    if (!input.trim()) return
+    setInput('')
   }
 
   return (
-    <aside className="chat-sidebar">
-      <div className="chat-header">
+    <>
+      {/* Card flutuante visível quando o chat está fechado */}
+      <div
+        ref={minimizedRef}
+        className={`chat-minimized-card ${
+          isOpen ? 'chat-minimized-card--hidden' : 'chat-minimized-card--visible'
+        }`}
+        aria-hidden={isOpen}
+        onClick={() => handleToggle(true)}
+        title="Maximizar Carollina AI"
+      >
+        <button
+          type="button"
+          className="chat-collapse-btn"
+          aria-label="Abrir chat Carollina AI"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleToggle(true)
+          }}
+          title="Maximizar"
+        >
+          <ChevronLeft size={16} className="chat-minimized-arrow" />
+        </button>
+
         <div className="chat-brand">
           <div className="chat-logo">
-            <Sparkles size={18} />
+            <Sparkles size={17} />
           </div>
           <div>
             <span className="chat-name">Carollina AI</span>
@@ -57,50 +110,96 @@ export function ChatSidebar() {
             </span>
           </div>
         </div>
-
-        <button type="button" className="chat-collapse-btn" title="Recolher">
-          <ChevronRight size={16} />
-        </button>
       </div>
 
-      <div className="chat-messages">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`chat-bubble ${msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}`}
-          >
-            {msg.text}
+      {/* Painel lateral animado com slide horizontal + fade */}
+      <aside
+        ref={sidebarRef}
+        className={`chat-sidebar ${
+          isOpen ? 'chat-sidebar--open' : 'chat-sidebar--closed'
+        } ${isAnimating ? 'chat-sidebar--animating' : ''}`}
+        aria-hidden={!isOpen}
+        onTransitionEnd={handleSidebarTransitionEnd}
+      >
+        <div className="chat-header">
+          <div className="chat-brand">
+            <div className="chat-logo">
+              <Sparkles size={17} />
+            </div>
+            <div>
+              <span className="chat-name">Carollina AI</span>
+              <span className="chat-status">
+                <span className="chat-status-dot" />
+                Online
+              </span>
+            </div>
           </div>
-        ))}
 
-        <div className="chat-suggestions">
-          {SUGGESTIONS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="chat-chip"
-              onClick={() => sendMessage(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="chat-footer">
-        <form className="chat-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="chat-input"
-            placeholder="Escreva sua pergunta..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button type="submit" className="chat-send-btn" title="Enviar">
-            <Send size={15} />
+          <button
+            type="button"
+            className="chat-collapse-btn"
+            aria-label="Fechar chat Carollina AI"
+            onClick={() => handleToggle(false)}
+            title="Minimizar"
+          >
+            <ChevronRight size={16} className="chat-arrow-icon" />
           </button>
-        </form>
-      </div>
-    </aside>
+        </div>
+
+        <div className="chat-messages">
+          <div
+            className="chat-bubble chat-bubble-ai chat-stagger-item"
+            style={staggerStyle(0)}
+          >
+            Olá! Posso consultar reservas, estoque e finanças, e registrar
+            movimentações. Como ajudo?
+          </div>
+
+          <div
+            className="chat-bubble chat-bubble-user chat-stagger-item"
+            style={staggerStyle(1)}
+          >
+            Quais itens estão acabando?
+          </div>
+
+          <div
+            className="chat-bubble chat-bubble-ai chat-stagger-item"
+            style={staggerStyle(2)}
+          >
+            2 itens estão abaixo do mínimo: <strong>Boia de piscina</strong> (4
+            de 5) e <strong>Bolas de basquete</strong> (1 de 3). Quer registrar
+            uma entrada?
+          </div>
+
+          <div className="chat-suggestions">
+            {SUGGESTIONS.map((item, idx) => (
+              <button
+                key={item}
+                type="button"
+                className="chat-chip chat-stagger-item"
+                style={staggerStyle(3 + idx)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="chat-footer">
+          <form className="chat-form" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              className="chat-input"
+              placeholder="Escreva sua pergunta..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+            <button type="submit" className="chat-send-btn" title="Enviar">
+              <ArrowRight size={17} />
+            </button>
+          </form>
+        </div>
+      </aside>
+    </>
   )
 }
