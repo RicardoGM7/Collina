@@ -1,1 +1,1 @@
-// Configuração e inicialização do Firebase SDK
+// ConfiguraÃ§Ã£o e inicializaÃ§Ã£o do Firebase SDK

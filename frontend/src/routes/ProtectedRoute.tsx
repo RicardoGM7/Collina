@@ -1,1 +1,1 @@
-// Componente para proteção de rotas por perfil (RBAC)
+// Componente para proteÃ§Ã£o de rotas por perfil (RBAC)

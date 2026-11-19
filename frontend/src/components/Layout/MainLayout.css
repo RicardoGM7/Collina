@@ -1,0 +1,33 @@
+.app-shell {
+  height: 100vh;
+  min-height: 100vh;
+  background-color: #0B1F33;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  width: 100%;
+  background-color: #F1F6FA;
+  border-top-left-radius: 36px;
+  border-top-right-radius: 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  height: 100%;
+  padding: 32px 36px;
+  overflow-y: auto;
+}
+
+@media (max-width: 960px) {
+  .app-main {
+    padding: 24px 20px;
+  }
+}
