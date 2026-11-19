@@ -8,8 +8,8 @@ interface NavbarProps {
 }
 
 export function Navbar({
-  userName = 'Nome do Titular',
-  userRole = 'Titular',
+  userName = 'Nome do Administrador',
+  userRole = 'Administrador',
 }: NavbarProps) {
   return (
     <header className="navbar">
