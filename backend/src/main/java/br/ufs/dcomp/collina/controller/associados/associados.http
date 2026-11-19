@@ -1,0 +1,134 @@
+### ========================================================
+### TESTES DAS ROTAS DA API - MÓDULO DE ASSOCIADOS (IntelliJ HTTP Client)
+### ========================================================
+
+@baseUrl = http://localhost:8080/api
+
+
+### 1. PLANOS (/api/planos)
+
+### 1.1 Listar planos
+GET {{baseUrl}}/planos
+
+### 1.2 Atualizar parâmetros do plano (RF-AS02)
+PUT {{baseUrl}}/planos/1
+Content-Type: application/json
+
+{
+  "valorPeriodico": 150.00,
+  "limiteMensalReservas": 4,
+  "maxDependentesAtivos": 3
+}
+
+
+### 2. ASSOCIADOS (/api/associados)
+
+### 2.1 Cadastrar titular Contribuinte (201 Created)
+POST {{baseUrl}}/associados
+Content-Type: application/json
+
+{
+  "nome": "Maria Souza",
+  "cpf": "12345678901",
+  "dataNascimento": "1985-03-10",
+  "categoria": "CONTRIBUINTE",
+  "tipoPlano": "BASICO"
+}
+
+### 2.2 Cadastrar titular com plano incompatível (400)
+POST {{baseUrl}}/associados
+Content-Type: application/json
+
+{
+  "nome": "João Lima",
+  "cpf": "98765432100",
+  "dataNascimento": "1980-07-22",
+  "categoria": "CONTRIBUINTE",
+  "tipoPlano": "PROPRIETARIO"
+}
+
+### 2.3 Listar (filtro opcional por situação)
+GET {{baseUrl}}/associados?situacao=ATIVO
+
+### 2.4 Buscar por ID
+GET {{baseUrl}}/associados/1
+
+### 2.5 Buscar por CPF
+GET {{baseUrl}}/associados/cpf/12345678901
+
+### 2.6 Titular edita seus dados (RF-AS05)
+PUT {{baseUrl}}/associados/1
+Content-Type: application/json
+
+{
+  "nome": "Maria Souza Lima",
+  "dataNascimento": "1985-03-10"
+}
+
+### 2.7 Alterar plano (funcionário)
+PATCH {{baseUrl}}/associados/1/plano
+Content-Type: application/json
+
+{
+  "tipoPlano": "PLUS"
+}
+
+### 2.8 Suspender (RF-AS06)
+PATCH {{baseUrl}}/associados/1/situacao
+Content-Type: application/json
+
+{
+  "situacao": "SUSPENSO"
+}
+
+### 2.9 Inativar (inativa os vínculos de dependência)
+PATCH {{baseUrl}}/associados/1/situacao
+Content-Type: application/json
+
+{
+  "situacao": "INATIVO"
+}
+
+### 2.10 Reativar (reativa só vínculos inativados pela inativação do titular)
+PATCH {{baseUrl}}/associados/1/situacao
+Content-Type: application/json
+
+{
+  "situacao": "ATIVO"
+}
+
+
+### 3. DEPENDENTES
+
+### 3.1 Cadastrar dependente (RF-AS03)
+POST {{baseUrl}}/associados/1/dependentes
+Content-Type: application/json
+
+{
+  "nome": "Pedro Souza",
+  "cpf": "11122233344",
+  "dataNascimento": "2012-05-01",
+  "parentesco": "Filho"
+}
+
+### 3.2 Listar dependentes ativos do titular
+GET {{baseUrl}}/associados/1/dependentes?status=ATIVO
+
+### 3.3 Buscar vínculo
+GET {{baseUrl}}/dependentes/1
+
+### 3.4 Atualizar dependente
+PUT {{baseUrl}}/dependentes/1
+Content-Type: application/json
+
+{
+  "nome": "Pedro Souza Lima",
+  "dataNascimento": "2012-05-01",
+  "parentesco": "Filho"
+}
+
+### 3.5 Inativar vínculo por solicitação
+PATCH {{baseUrl}}/dependentes/1/inativar
+
+### 3.6 Rotina de inativação por idade (21 anos, RF-AS04)
+POST {{baseUrl}}/dependentes/inativar-por-idade
