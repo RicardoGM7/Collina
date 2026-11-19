@@ -1,1 +1,1 @@
-// Tipagens de Usuário, Perfis/Roles e credenciais
+// Tipagens de UsuÃ¡rio, Perfis/Roles e credenciais

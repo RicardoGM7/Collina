@@ -1,1 +1,1 @@
-// Inst‚ncia do Axios com interceptor de autenticaÁ„o
+// Inst√¢ncia do Axios com interceptor de autentica√ß√£o
