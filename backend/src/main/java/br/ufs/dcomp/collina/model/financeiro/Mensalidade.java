@@ -204,4 +204,5 @@ public class Mensalidade {
     public boolean estaPendente(){return this.statusMensalidade == StatusMensalidadeEnum.PENDENTE;}
     public boolean estaAtrasada(){return this.statusMensalidade == StatusMensalidadeEnum.ATRASADA;}
     public boolean estaEmAberto(){return this.statusMensalidade == StatusMensalidadeEnum.EM_ABERTO;}
+    public boolean estaPaga(){return this.statusMensalidade == StatusMensalidadeEnum.PAGA;}
 }
