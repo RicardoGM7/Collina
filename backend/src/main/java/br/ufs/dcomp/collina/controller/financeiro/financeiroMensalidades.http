@@ -1,0 +1,55 @@
+### ========================================================
+### TESTES DAS ROTAS DA API - FINANCEIRO (IntelliJ HTTP Client)
+### ========================================================
+
+@baseUrl = http://localhost:8080/api
+
+
+### ========================================================
+### 1. CANCELAR E REEMITIR MENSALIDADE (/api/mensalidades)
+### Pré-requisito: existir uma mensalidade PENDENTE ou ATRASADA com o id usado
+### (ainda não há endpoint de criação/fechamento; insira uma linha manualmente)
+### ========================================================
+
+### 1.1 Cancelar e reemitir a mensalidade 1 (200 OK, devolve a substituta PENDENTE)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Content-Type: application/json
+
+{
+  "justificativa": "Valor cobrado incorretamente",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.2 Repetir o mesmo cancelamento (409 Conflict: a mensalidade 1 já está CANCELADA)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Content-Type: application/json
+
+{
+  "justificativa": "Tentativa repetida",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.3 Mensalidade inexistente (404 Not Found)
+POST {{baseUrl}}/mensalidades/9999/cancelar-e-reemitir
+Content-Type: application/json
+
+{
+  "justificativa": "Teste",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.4 Validação do corpo (400 Bad Request: justificativa em branco, valor negativo, sem vencimento)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Content-Type: application/json
+
+{
+  "justificativa": "",
+  "novoValor": -10.00,
+  "funcionarioId": 1
+}
