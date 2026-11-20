@@ -1,612 +1,768 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   ArrowRight,
+  Check,
   ChevronLeft,
-  Info,
-  Minus,
-  Package,
-  Plus,
+  ChevronRight,
   Search,
-  ShoppingBag,
+  ShoppingCart,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { Modal } from '../../components/Modal/Modal'
-import { pedidoService } from '../../services/pedidoService'
-import type { PedidoCriado, Produto } from '../../types/associado'
-import { formatarMoeda, mensagemErroApi } from './associadoUtils'
+import { useAuth } from '../../context/AuthContext'
+import { getApiErrorMessage } from '../../services/api'
+import {
+  categoriasService,
+  type CategoriaDTO,
+} from '../../services/categoriasService'
+import { estoqueService, type EstoqueDTO } from '../../services/estoqueService'
+import {
+  pedidosService,
+  type PedidoDTO,
+  type PedidoStatusDTO,
+} from '../../services/pedidosService'
+import { produtosService, type ProdutoDTO } from '../../services/produtosService'
+import {
+  formatCurrency,
+  formatDateRelative,
+  getCategoryBadgeStyle,
+} from '../../utils/formatters'
 import './AssociadoPedidosPage.css'
 
-interface ProdutoComEstoque extends Produto {
-  estoqueDisponivel: number
+interface CatalogProduct extends ProdutoDTO {
+  disponivel: number
 }
 
-function classeCategoria(nome: string): string {
-  const norm = nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-  if (norm.includes('quadra')) return 'cat-quadras'
-  if (norm.includes('aquat') || norm.includes('piscin')) return 'cat-aquatico'
-  if (norm.includes('lancho') || norm.includes('bebid')) return 'cat-lanchonete'
-  if (norm.includes('recre')) return 'cat-recreacao'
-  return 'cat-lanchonete'
+const ORDER_STATUS_META: Record<
+  PedidoStatusDTO,
+  {
+    label: string
+    className: string
+    note: string
+    noteTone: 'muted' | 'success' | 'danger'
+    strikeTotal?: boolean
+  }
+> = {
+  AGUARDANDO_PAGAMENTO: {
+    label: 'AGUARDANDO PAGAMENTO',
+    className: 'assoc-order-badge--aguardando',
+    note: 'Pagamento pendente no caixa',
+    noteTone: 'muted',
+  },
+  CONFIRMADO: {
+    label: 'CONFIRMADO',
+    className: 'assoc-order-badge--confirmado',
+    note: 'Pedido confirmado no balcão',
+    noteTone: 'muted',
+  },
+  PAGO: {
+    label: 'PAGO',
+    className: 'assoc-order-badge--pago',
+    note: 'Pago — pronto para retirada no balcão',
+    noteTone: 'success',
+  },
+  ENTREGUE: {
+    label: 'ENTREGUE',
+    className: 'assoc-order-badge--confirmado',
+    note: 'Pago e retirado no balcão',
+    noteTone: 'success',
+  },
+  CANCELADO: {
+    label: 'CANCELADO',
+    className: 'assoc-order-badge--cancelado',
+    note: 'Pedido cancelado',
+    noteTone: 'danger',
+  },
+  EXPIRADO: {
+    label: 'EXPIRADO',
+    className: 'assoc-order-badge--expirado',
+    note: 'Prazo de retirada expirado',
+    noteTone: 'muted',
+    strikeTotal: true,
+  },
 }
 
 export function AssociadoPedidosPage() {
-  const [abaAtiva, setAbaAtiva] = useState<'produtos' | 'pedidos'>('produtos')
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string>('Todos')
-  const [termoBusca, setTermoBusca] = useState('')
+  const { usuario } = useAuth()
+  const storageKey = `collina_meus_pedidos_${usuario?.uid ?? 'anon'}`
 
-  const [produtos, setProdutos] = useState<ProdutoComEstoque[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [erroCarga, setErroCarga] = useState('')
+  const [activeTab, setActiveTab] = useState<'produtos' | 'pedidos'>('produtos')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<'all' | number>(
+    'all'
+  )
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const [carrinho, setCarrinho] = useState<Record<number, number>>({})
-  const [enviandoPedido, setEnviandoPedido] = useState(false)
-  const [erroPedido, setErroPedido] = useState('')
-
-  // Pedidos criados nesta sessão (o modelo Pedido do back-end ainda não tem campo de associado)
-  const [pedidosSessao, setPedidosSessao] = useState<PedidoCriado[]>([])
-  const [pedidoCriadoModal, setPedidoCriadoModal] =
-    useState<PedidoCriado | null>(null)
-  const [detalhePedidoModal, setDetalhePedidoModal] =
-    useState<PedidoCriado | null>(null)
-
-  async function carregarCatalogo() {
-    setCarregando(true)
-    setErroCarga('')
+  const [categories, setCategories] = useState<CategoriaDTO[]>([])
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [myOrders, setMyOrders] = useState<PedidoDTO[]>(() => {
     try {
-      const [listaProdutos, listaEstoques] = await Promise.all([
-        pedidoService.listarProdutos(),
-        pedidoService.listarEstoques(),
+      const saved = sessionStorage.getItem(storageKey)
+      return saved ? (JSON.parse(saved) as PedidoDTO[]) : []
+    } catch {
+      return []
+    }
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [cart, setCart] = useState<Record<number, number>>({})
+
+  // Modal de pedido criado com sucesso
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+  const [lastCreatedOrder, setLastCreatedOrder] = useState<PedidoDTO | null>(
+    null
+  )
+
+  // Modal ao clicar em "Pagar" num pedido AGUARDANDO_PAGAMENTO em Meus Pedidos
+  const [isPayInfoModalOpen, setIsPayInfoModalOpen] = useState(false)
+  const [selectedPayOrder, setSelectedPayOrder] = useState<PedidoDTO | null>(
+    null
+  )
+
+  const loadData = useCallback(async (showErrorToast = true) => {
+    try {
+      // GET /api/pedidos é restrito a ADMIN/ESTOQUE no SecurityConfig (pedidos ainda não possuem dono no backend).
+      // Por isso o associado consulta apenas catálogo + saldo, e mantém seus pedidos da sessão localmente.
+      const [cats, prods, estoques] = await Promise.all([
+        categoriasService.listar(),
+        produtosService.listar(),
+        estoqueService.listar(),
       ])
 
-      const mapaEstoque = new Map<number, number>()
-      listaEstoques.forEach((e) => {
-        if (e.produtoId != null) {
-          mapaEstoque.set(e.produtoId, e.quantidade ?? 0)
-        }
-      })
+      const estoqueMap = new Map<number, EstoqueDTO>()
+      for (const est of estoques) {
+        estoqueMap.set(est.produtoId, est)
+      }
 
-      setProdutos(
-        listaProdutos.map((p) => ({
-          ...p,
-          estoqueDisponivel: mapaEstoque.get(p.id) ?? 0,
-        })),
-      )
-    } catch (e) {
-      setErroCarga(
-        mensagemErroApi(e, 'Não foi possível carregar o catálogo de produtos.'),
-      )
+      const mergedProducts: CatalogProduct[] = prods.map((p) => ({
+        ...p,
+        preco: Number(p.preco),
+        disponivel: estoqueMap.get(p.id)?.quantidade ?? 0,
+      }))
+
+      setCategories(cats)
+      setProducts(mergedProducts)
+    } catch (error) {
+      if (showErrorToast) {
+        toast.error(
+          getApiErrorMessage(error, 'Erro ao carregar os produtos disponíveis.')
+        )
+      }
     } finally {
-      setCarregando(false)
+      setIsLoading(false)
     }
-  }
-
-  useEffect(() => {
-    void carregarCatalogo()
   }, [])
 
-  const categorias = useMemo(() => {
-    const nomes = new Set<string>()
-    produtos.forEach((p) => p.categorias.forEach((c) => nomes.add(c.nome)))
-    return ['Todos', ...Array.from(nomes).sort()]
-  }, [produtos])
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
-  const produtosFiltrados = useMemo(() => {
-    const buscaLower = termoBusca.trim().toLowerCase()
-    return produtos.filter((p) => {
-      const matchCat =
-        categoriaAtiva === 'Todos' ||
-        p.categorias.some((c) => c.nome === categoriaAtiva)
-      const matchBusca =
-        !buscaLower ||
-        p.nome.toLowerCase().includes(buscaLower) ||
-        (p.descricao ?? '').toLowerCase().includes(buscaLower)
-      return matchCat && matchBusca
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    return products.filter((product) => {
+      const matchesCat =
+        selectedCategoryId === 'all' ||
+        product.categorias.some((c) => c.id === selectedCategoryId)
+      const matchesSearch =
+        !q ||
+        product.nome.toLowerCase().includes(q) ||
+        (product.descricao ?? '').toLowerCase().includes(q)
+      return matchesCat && matchesSearch
     })
-  }, [produtos, categoriaAtiva, termoBusca])
+  }, [products, selectedCategoryId, searchQuery])
 
-  function alterarQuantidade(produtoId: number, delta: number) {
-    setErroPedido('')
-    setCarrinho((prev) => {
-      const atual = prev[produtoId] ?? 0
-      const nova = atual + delta
-      const produto = produtos.find((p) => p.id === produtoId)
-      const estoque = produto?.estoqueDisponivel ?? 0
+  const cartItems = useMemo(() => {
+    return Object.entries(cart)
+      .map(([idStr, qty]) => {
+        const prod = products.find((p) => p.id === Number(idStr))
+        if (!prod || qty <= 0) return null
+        return {
+          produtoId: prod.id,
+          nome: prod.nome,
+          preco: prod.preco,
+          quantidade: qty,
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+  }, [cart, products])
 
-      if (nova <= 0) {
+  const totalItemsCount = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.quantidade, 0),
+    [cartItems]
+  )
+
+  const cartTotal = useMemo(
+    () =>
+      cartItems.reduce((sum, item) => sum + item.preco * item.quantidade, 0),
+    [cartItems]
+  )
+
+  const handleChangeQty = (productId: number, delta: number) => {
+    const product = products.find((p) => p.id === productId)
+    if (!product) return
+
+    setCart((prev) => {
+      const current = prev[productId] ?? 0
+      const target = current + delta
+      if (target > product.disponivel) {
+        toast.error(
+          `Quantidade máxima disponível para "${product.nome}": ${product.disponivel}.`
+        )
+        return prev
+      }
+      if (target <= 0) {
         const copy = { ...prev }
-        delete copy[produtoId]
+        delete copy[productId]
         return copy
       }
-      if (nova > estoque) return prev
-      return { ...prev, [produtoId]: nova }
+      return { ...prev, [productId]: target }
     })
   }
 
-  const itensCarrinho = useMemo(() => {
-    return Object.entries(carrinho)
-      .map(([idStr, qty]) => {
-        const product = produtos.find((p) => p.id === Number(idStr))
-        if (!product) return null
-        return { product, quantity: qty }
-      })
-      .filter((it): it is { product: ProdutoComEstoque; quantity: number } =>
-        Boolean(it),
-      )
-  }, [carrinho, produtos])
+  const handleCreateOrder = async () => {
+    if (cartItems.length === 0) return
 
-  const totalCarrinho = itensCarrinho.reduce(
-    (acc, item) => acc + item.product.preco * item.quantity,
-    0,
-  )
-
-  const totalItensQtd = itensCarrinho.reduce(
-    (acc, item) => acc + item.quantity,
-    0,
-  )
-
-  async function handleCriarPedido() {
-    if (itensCarrinho.length === 0) return
-
-    setEnviandoPedido(true)
-    setErroPedido('')
+    setIsSubmitting(true)
     try {
-      const criado = await pedidoService.criarPedido(
-        itensCarrinho.map((it) => ({
-          produtoId: it.product.id,
-          quantidade: it.quantity,
-        })),
+      const created = await pedidosService.criar(
+        cartItems.map((i) => ({
+          produtoId: i.produtoId,
+          quantidade: i.quantidade,
+        }))
       )
-      setPedidosSessao((prev) => [criado, ...prev])
-      setPedidoCriadoModal(criado)
-      setCarrinho({})
-      void carregarCatalogo()
-    } catch (e) {
-      setErroPedido(
-        mensagemErroApi(e, 'Não foi possível criar o pedido. Tente novamente.'),
-      )
+
+      setLastCreatedOrder(created)
+      setMyOrders((prev) => {
+        const updated = [created, ...prev.filter((p) => p.id !== created.id)]
+        try {
+          sessionStorage.setItem(storageKey, JSON.stringify(updated))
+        } catch {
+          // ignora erro de quota do sessionStorage
+        }
+        return updated
+      })
+      setCart({})
+      setIsSuccessModalOpen(true)
+      toast.success(`Pedido #${created.id} criado com sucesso!`)
+      await loadData(false)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Não foi possível criar o pedido.'))
     } finally {
-      setEnviandoPedido(false)
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="associado-pedidos-page">
-      {/* Top Breadcrumb & Switcher */}
-      <div className="pedidos-top-bar">
-        <div className="pedidos-breadcrumb-left">
-          <Link to="/associado" className="pedidos-back-btn">
-            <ChevronLeft size={16} />
+    <div className="assoc-pedidos-page">
+      {/* 1. Barra superior: Voltar + Breadcrumb + Abas */}
+      <div className="assoc-pedidos-topbar">
+        <div className="assoc-pedidos-top-left">
+          <Link to="/associado" className="assoc-pedidos-btn-back">
+            <ChevronLeft size={14} strokeWidth={2.5} />
             <span>Voltar ao Início</span>
           </Link>
-          <div className="pedidos-breadcrumb-text">
+
+          <div className="assoc-pedidos-breadcrumb">
             <span>Visão geral</span>
-            <span className="crumb-sep">&gt;</span>
-            <span className="crumb-curr">Pedidos</span>
+            <ChevronRight size={14} />
+            <span className="assoc-pedidos-breadcrumb-active">Pedidos</span>
           </div>
         </div>
 
-        <div className="pedidos-tab-switcher">
+        <div className="assoc-pedidos-seg-tabs" role="tablist">
           <button
             type="button"
-            className={`pedidos-tab-pill ${abaAtiva === 'produtos' ? 'active' : ''}`}
-            onClick={() => setAbaAtiva('produtos')}
+            role="tab"
+            aria-selected={activeTab === 'produtos'}
+            className={`assoc-seg-btn ${
+              activeTab === 'produtos' ? 'active' : ''
+            }`}
+            onClick={() => setActiveTab('produtos')}
           >
             Produtos
           </button>
           <button
             type="button"
-            className={`pedidos-tab-pill ${abaAtiva === 'pedidos' ? 'active' : ''}`}
-            onClick={() => setAbaAtiva('pedidos')}
+            role="tab"
+            aria-selected={activeTab === 'pedidos'}
+            className={`assoc-seg-btn ${
+              activeTab === 'pedidos' ? 'active' : ''
+            }`}
+            onClick={() => setActiveTab('pedidos')}
           >
-            Meus Pedidos
-            {pedidosSessao.length > 0 ? ` (${pedidosSessao.length})` : ''}
+            Meus Pedidos ({myOrders.length})
           </button>
         </div>
       </div>
 
-      {/* ABA PRODUTOS */}
-      {abaAtiva === 'produtos' && (
-        <div className="pedidos-main-grid">
-          {/* Coluna Esquerda: Produtos Disponíveis */}
-          <div className="pedidos-catalog-card">
-            <div className="catalog-header">
-              <div className="catalog-title-group">
-                <h2 className="catalog-title">Produtos disponíveis</h2>
-                <span className="catalog-count-badge">
-                  {produtosFiltrados.length}{' '}
-                  {produtosFiltrados.length === 1 ? 'item' : 'itens'}
-                </span>
+      {/* =========================================================
+          ABA 1: PRODUTOS DISPONÍVEIS + MEU PEDIDO
+         ========================================================= */}
+      {activeTab === 'produtos' ? (
+        <div className="assoc-pedidos-split">
+          {/* Cardápio Unificado (sem ícones por produto) */}
+          <section className="assoc-catalog-card">
+            <div className="assoc-catalog-head">
+              <div className="assoc-catalog-head-top">
+                <div className="assoc-catalog-title-group">
+                  <h2 className="assoc-catalog-title">Produtos disponíveis</h2>
+                  <span className="assoc-catalog-count">
+                    {filteredProducts.length}{' '}
+                    {filteredProducts.length === 1 ? 'item' : 'itens'}
+                  </span>
+                </div>
+
+                <div className="assoc-catalog-search">
+                  <Search size={13} className="assoc-catalog-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Buscar produto..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="assoc-catalog-search-input"
+                  />
+                </div>
               </div>
 
-              <div className="catalog-search-wrap">
-                <Search size={16} className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Buscar produto..."
-                  value={termoBusca}
-                  onChange={(e) => setTermoBusca(e.target.value)}
-                  className="catalog-search-input"
-                />
-              </div>
-            </div>
-
-            {/* Categorias vindas do back-end */}
-            {categorias.length > 1 && (
-              <div className="catalog-categories-row">
-                {categorias.map((cat) => (
+              <div className="assoc-category-chips">
+                <button
+                  type="button"
+                  className={`assoc-cat-chip ${
+                    selectedCategoryId === 'all' ? 'active' : ''
+                  }`}
+                  onClick={() => setSelectedCategoryId('all')}
+                >
+                  Todos
+                </button>
+                {categories.map((category) => (
                   <button
-                    key={cat}
+                    key={category.id}
                     type="button"
-                    className={`catalog-cat-pill ${categoriaAtiva === cat ? 'active' : ''}`}
-                    onClick={() => setCategoriaAtiva(cat)}
+                    className={`assoc-cat-chip ${
+                      selectedCategoryId === category.id ? 'active' : ''
+                    }`}
+                    onClick={() => setSelectedCategoryId(category.id)}
                   >
-                    {cat}
+                    {category.nome}
                   </button>
                 ))}
               </div>
-            )}
+            </div>
 
-            {erroCarga && (
-              <div className="profile-alert error">
-                <AlertCircle size={16} />
-                <span>{erroCarga}</span>
-              </div>
-            )}
-
-            {/* Lista de produtos reais */}
-            <div className="catalog-products-list">
-              {carregando ? (
-                <div className="empty-catalog-message">
-                  Carregando produtos do estoque...
+            <div className="assoc-products-list">
+              {isLoading ? (
+                <div className="assoc-empty-products">
+                  Carregando catálogo do clube...
                 </div>
-              ) : produtosFiltrados.length > 0 ? (
-                produtosFiltrados.map((prod) => {
-                  const qtyNoCarrinho = carrinho[prod.id] ?? 0
-                  const semEstoque = prod.estoqueDisponivel <= 0
+              ) : filteredProducts.length === 0 ? (
+                <div className="assoc-empty-products">
+                  Nenhum produto encontrado para essa busca.
+                </div>
+              ) : (
+                filteredProducts.map((product) => {
+                  const qtyInCart = cart[product.id] ?? 0
+                  const isOutOfStock = product.disponivel <= 0
 
                   return (
-                    <div key={prod.id} className="product-row-card">
-                      <div className="product-info-col">
-                        <div className="product-name-cat-row">
-                          <span className="product-name">{prod.nome}</span>
-                          {prod.categorias.map((cat) => (
+                    <div key={product.id} className="assoc-product-row">
+                      <div className="assoc-product-info">
+                        <div className="assoc-product-title-line">
+                          <strong className="assoc-product-name">
+                            {product.nome}
+                          </strong>
+                          {product.categorias.map((cat) => (
                             <span
                               key={cat.id}
-                              className={`product-cat-tag ${classeCategoria(cat.nome)}`}
+                              className="assoc-cat-badge"
+                              style={getCategoryBadgeStyle(cat.cor)}
                             >
                               {cat.nome}
                             </span>
                           ))}
                         </div>
-                        {prod.descricao && (
-                          <span className="product-desc">{prod.descricao}</span>
+                        {product.descricao && (
+                          <span className="assoc-product-desc">
+                            {product.descricao}
+                          </span>
                         )}
                       </div>
 
-                      <div className="product-price-col">
-                        <span className="product-price">
-                          {formatarMoeda(prod.preco)}
-                        </span>
-                        <span className="product-stock">
-                          {semEstoque
-                            ? 'Sem estoque'
-                            : `${prod.estoqueDisponivel} disponíveis`}
-                        </span>
-                      </div>
+                      <div className="assoc-product-right">
+                        <div className="assoc-product-price-col">
+                          <strong className="assoc-product-price">
+                            {formatCurrency(product.preco)}
+                          </strong>
+                          <span className="assoc-product-stock">
+                            {isOutOfStock
+                              ? 'Indisponível'
+                              : `${product.disponivel} ${product.disponivel === 1 ? 'disponível' : 'disponíveis'}`}
+                          </span>
+                        </div>
 
-                      <div className="product-actions-col">
-                        {qtyNoCarrinho > 0 ? (
-                          <div className="quantity-counter">
+                        {qtyInCart > 0 ? (
+                          <div className="assoc-dark-stepper">
                             <button
                               type="button"
-                              className="qty-btn"
-                              onClick={() => alterarQuantidade(prod.id, -1)}
+                              onClick={() => handleChangeQty(product.id, -1)}
+                              aria-label={`Diminuir ${product.nome}`}
                             >
-                              <Minus size={14} />
+                              −
                             </button>
-                            <span className="qty-number">{qtyNoCarrinho}</span>
+                            <span>{qtyInCart}</span>
                             <button
                               type="button"
-                              className="qty-btn"
-                              onClick={() => alterarQuantidade(prod.id, 1)}
-                              disabled={qtyNoCarrinho >= prod.estoqueDisponivel}
+                              onClick={() => handleChangeQty(product.id, 1)}
+                              aria-label={`Aumentar ${product.nome}`}
                             >
-                              <Plus size={14} />
+                              +
                             </button>
                           </div>
                         ) : (
                           <button
                             type="button"
-                            className="btn-add-product"
-                            disabled={semEstoque}
-                            onClick={() => alterarQuantidade(prod.id, 1)}
+                            className="assoc-btn-add-pill"
+                            disabled={isOutOfStock}
+                            onClick={() => handleChangeQty(product.id, 1)}
                           >
-                            {semEstoque ? 'Indisponível' : '+ Adicionar'}
+                            {isOutOfStock ? 'Esgotado' : '+ Adicionar'}
                           </button>
                         )}
                       </div>
                     </div>
                   )
                 })
-              ) : (
-                <div className="empty-catalog-message">
-                  Nenhum produto cadastrado ou encontrado no estoque do clube.
-                </div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Coluna Direita: Meu Pedido */}
-          <div className="pedidos-cart-card">
-            <div className="cart-header">
-              <div className="cart-title-row">
-                <ShoppingBag size={18} className="cart-icon" />
-                <h3 className="cart-title">Meu Pedido</h3>
+          {/* Painel Lateral: Meu Pedido */}
+          <aside className="assoc-cart-card">
+            <div className="assoc-cart-header">
+              <div className="assoc-cart-header-title">
+                <ShoppingCart
+                  size={16}
+                  strokeWidth={2.4}
+                  className="assoc-cart-icon"
+                />
+                <span>Meu Pedido</span>
               </div>
-              <span className="cart-items-count-badge">
-                {totalItensQtd} {totalItensQtd === 1 ? 'item' : 'itens'}
+              <span className="assoc-cart-badge">
+                {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'itens'}
               </span>
             </div>
 
-            <div className="cart-warning-banner">
-              <Info size={16} className="warning-banner-icon" />
-              <p className="warning-banner-text">
-                Monte seu pedido aqui. O pagamento é feito somente no caixa
-                informando o número gerado.
-              </p>
-            </div>
-
-            {erroPedido && (
-              <div className="profile-alert error">
-                <AlertCircle size={16} />
-                <span>{erroPedido}</span>
-              </div>
-            )}
-
-            <div className="cart-items-list">
-              {itensCarrinho.map((item) => (
-                <div key={item.product.id} className="cart-item-row">
-                  <div className="cart-item-left">
-                    <span className="cart-item-name">{item.product.nome}</span>
-                    <span className="cart-item-calc">
-                      {item.quantity}× {formatarMoeda(item.product.preco)}
-                    </span>
-                  </div>
-
-                  <div className="cart-item-right">
-                    <div className="quantity-counter compact">
-                      <button
-                        type="button"
-                        className="qty-btn"
-                        onClick={() => alterarQuantidade(item.product.id, -1)}
-                      >
-                        <Minus size={12} />
-                      </button>
-                      <span className="qty-number">{item.quantity}</span>
-                      <button
-                        type="button"
-                        className="qty-btn"
-                        onClick={() => alterarQuantidade(item.product.id, 1)}
-                        disabled={
-                          item.quantity >= item.product.estoqueDisponivel
-                        }
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </div>
-
-                    <span className="cart-item-subtotal">
-                      {formatarMoeda(item.product.preco * item.quantity)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {itensCarrinho.length === 0 && (
-                <div className="cart-empty-state">
-                  <Package size={28} className="empty-icon" />
-                  <p>Seu pedido está vazio.</p>
-                  <span>Adicione produtos ao lado para criar um pedido.</span>
-                </div>
-              )}
-            </div>
-
-            <div className="cart-footer">
-              <div className="cart-total-row">
-                <span className="cart-total-label">Total a pagar no caixa</span>
-                <span className="cart-total-value">
-                  {formatarMoeda(totalCarrinho)}
+            <div className="assoc-cart-body">
+              <div className="assoc-caixa-notice">
+                <AlertCircle
+                  size={15}
+                  strokeWidth={2.2}
+                  className="assoc-caixa-notice-icon"
+                />
+                <span>
+                  Monte seu pedido aqui. O{' '}
+                  <strong>pagamento é feito somente no caixa</strong> informando
+                  o número gerado.
                 </span>
               </div>
 
-              <button
-                type="button"
-                className="btn-create-order"
-                disabled={itensCarrinho.length === 0 || enviandoPedido}
-                onClick={() => void handleCriarPedido()}
-              >
-                <span>{enviandoPedido ? 'Criando...' : 'Criar pedido'}</span>
-                <ArrowRight size={18} strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ABA MEUS PEDIDOS */}
-      {abaAtiva === 'pedidos' && (
-        <div className="pedidos-history-view">
-          <div className="history-header">
-            <h2 className="history-title">Meus Pedidos</h2>
-            <p className="history-sub">
-              Pedidos gerados nesta sessão para pagamento no caixa
-            </p>
-          </div>
-
-          <div className="cart-warning-banner">
-            <Info size={16} className="warning-banner-icon" />
-            <p className="warning-banner-text">
-              O vínculo de histórico persistente de pedidos por associado ainda
-              está em desenvolvimento no módulo de Estoque/Pedidos do back-end.
-              Abaixo aparecem os pedidos criados nesta sessão.
-            </p>
-          </div>
-
-          <div className="history-list">
-            {pedidosSessao.length > 0 ? (
-              pedidosSessao.map((ped) => {
-                const isAguardando = ped.statusPedido === 'AGUARDANDO_PAGAMENTO'
-                return (
-                  <div key={ped.id} className="history-order-card">
-                    <div className="order-card-header">
-                      <div className="order-card-id-date">
-                        <span className="order-number-tag">
-                          #{String(ped.id).padStart(4, '0')}
-                        </span>
-                        <span className="order-date-text">
-                          {new Date(ped.data).toLocaleString('pt-BR')}
+              <div className="assoc-cart-items">
+                {cartItems.length === 0 ? (
+                  <div className="assoc-cart-empty">
+                    Seu pedido está vazio.
+                    <br />
+                    Adicione produtos da lista ao lado.
+                  </div>
+                ) : (
+                  cartItems.map((item) => (
+                    <div key={item.produtoId} className="assoc-cart-item">
+                      <div className="assoc-cart-item-meta">
+                        <strong className="assoc-cart-item-name">
+                          {item.nome}
+                        </strong>
+                        <span className="assoc-cart-item-unit">
+                          {item.quantidade}× {formatCurrency(item.preco)}
                         </span>
                       </div>
 
+                      <div className="assoc-cart-item-right">
+                        <div className="assoc-light-stepper">
+                          <button
+                            type="button"
+                            onClick={() => handleChangeQty(item.produtoId, -1)}
+                            aria-label={`Diminuir ${item.nome}`}
+                          >
+                            −
+                          </button>
+                          <span>{item.quantidade}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleChangeQty(item.produtoId, 1)}
+                            aria-label={`Aumentar ${item.nome}`}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <strong className="assoc-cart-item-subtotal">
+                          {formatCurrency(item.preco * item.quantidade)}
+                        </strong>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="assoc-cart-footer">
+              <div className="assoc-cart-total-row">
+                <span className="assoc-cart-total-label">
+                  Total a pagar no caixa
+                </span>
+                <strong className="assoc-cart-total-value">
+                  {formatCurrency(cartTotal)}
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                className="assoc-btn-create-order"
+                disabled={cartItems.length === 0 || isSubmitting}
+                onClick={() => void handleCreateOrder()}
+              >
+                <span>{isSubmitting ? 'Criando pedido...' : 'Criar pedido'}</span>
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : (
+        /* =========================================================
+           ABA 2: MEUS PEDIDOS (CARDS EM GRID 2 COLUNAS)
+          ========================================================= */
+        <section className="assoc-orders-section">
+          <div className="assoc-orders-header">
+            <h2 className="assoc-orders-title">Pedidos do Clube</h2>
+            <p className="assoc-orders-subtitle">
+              Acompanhe seus pedidos e apresente o código no caixa para pagar
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="assoc-empty-products">Carregando pedidos...</div>
+          ) : myOrders.length === 0 ? (
+            <div className="assoc-empty-products">
+              Você ainda não possui pedidos registrados.
+            </div>
+          ) : (
+            <div className="assoc-orders-grid">
+              {myOrders.map((order) => {
+                const statusMeta = ORDER_STATUS_META[order.statusPedido]
+                const resumoItens = order.itens
+                  .map((i) => `${i.quantidade}× ${i.nomeDoProduto}`)
+                  .join(', ')
+
+                return (
+                  <div key={order.id} className="assoc-order-card">
+                    <div className="assoc-order-card-top">
+                      <div className="assoc-order-id-group">
+                        <strong className="assoc-order-id">
+                          Pedido #{order.id}
+                        </strong>
+                        <span className="assoc-order-date">
+                          {formatDateRelative(order.data)}
+                        </span>
+                      </div>
                       <span
-                        className={`order-status-badge ${isAguardando ? 'status-waiting' : 'status-paid'}`}
+                        className={`assoc-order-badge ${statusMeta.className}`}
                       >
-                        {isAguardando
-                          ? 'Aguardando Pagamento no Caixa'
-                          : ped.statusPedido}
+                        {statusMeta.label}
                       </span>
                     </div>
 
-                    <div className="order-card-items-summary">
-                      {ped.itens.map((it) => (
-                        <span key={it.id} className="order-summary-item-pill">
-                          {it.quantidade}× {it.nomeDoProduto}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="assoc-order-items-text">{resumoItens}</p>
 
-                    <div className="order-card-footer">
-                      <div className="order-total-group">
-                        <span className="order-total-label">Valor Total:</span>
-                        <span className="order-total-val">
-                          {formatarMoeda(ped.total)}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="btn-order-details"
-                        onClick={() => setDetalhePedidoModal(ped)}
+                    <div className="assoc-order-card-bottom">
+                      <span
+                        className={`assoc-order-note assoc-order-note--${statusMeta.noteTone}`}
                       >
-                        Ver detalhes
-                      </button>
+                        {statusMeta.note}
+                      </span>
+                      <div className="assoc-order-bottom-right">
+                        <strong
+                          className={`assoc-order-total ${
+                            statusMeta.strikeTotal
+                              ? 'assoc-order-total--strike'
+                              : ''
+                          } ${
+                            order.statusPedido === 'CANCELADO'
+                              ? 'assoc-order-total--muted'
+                              : ''
+                          }`}
+                        >
+                          {formatCurrency(Number(order.total ?? 0))}
+                        </strong>
+                        {order.statusPedido === 'AGUARDANDO_PAGAMENTO' && (
+                          <button
+                            type="button"
+                            className="assoc-btn-pay-card"
+                            onClick={() => {
+                              setSelectedPayOrder(order)
+                              setIsPayInfoModalOpen(true)
+                            }}
+                          >
+                            Pagar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )
-              })
-            ) : (
-              <div className="empty-catalog-message">
-                Nenhum pedido criado nesta sessão. Monte um pedido na aba
-                Produtos.
-              </div>
-            )}
-          </div>
-        </div>
+              })}
+            </div>
+          )}
+        </section>
       )}
 
-      {/* Modal de Pedido Criado com Sucesso */}
-      {pedidoCriadoModal && (
-        <Modal
-          isOpen={!!pedidoCriadoModal}
-          onClose={() => setPedidoCriadoModal(null)}
-          title="Pedido Criado com Sucesso!"
-          subtitle="Apresente este número no caixa do clube para efetuar o pagamento"
-          maxWidth={460}
-        >
-          <div className="pedido-criado-modal-body">
-            <div className="pedido-number-big-box">
-              <span className="pedido-number-title">Número do Pedido</span>
-              <span className="pedido-number-big">
-                #{String(pedidoCriadoModal.id).padStart(4, '0')}
-              </span>
-              <span className="pedido-number-tip">
-                Informe este número no caixa para pagar
+      {/* =========================================================
+          MODAL: PEDIDO CRIADO COM SUCESSO (CÓDIGO PARA O CAIXA)
+         ========================================================= */}
+      <Modal
+        isOpen={isSuccessModalOpen && lastCreatedOrder !== null}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Pedido criado com sucesso!"
+        hideHeader
+        maxWidth={430}
+      >
+        {lastCreatedOrder && (
+          <div className="assoc-confirm-modal">
+            <div className="assoc-confirm-check">
+              <Check size={28} strokeWidth={2.8} />
+            </div>
+
+            <div className="assoc-confirm-head">
+              <h3 className="assoc-confirm-title">
+                Pedido criado com sucesso!
+              </h3>
+              <span className="assoc-confirm-subtitle">
+                Seu pedido foi enviado para o balcão do clube
               </span>
             </div>
 
-            <div className="pedido-items-summary-box">
-              <span className="summary-box-title">Itens solicitados:</span>
-              {pedidoCriadoModal.itens.map((item) => (
-                <div key={item.id} className="summary-item-line">
+            <span className="assoc-order-badge assoc-order-badge--aguardando">
+              AGUARDANDO PAGAMENTO
+            </span>
+
+            <div className="assoc-ticket-pass">
+              <span className="assoc-ticket-label">
+                SEU CÓDIGO PARA O CAIXA
+              </span>
+              <strong className="assoc-ticket-code">
+                #{lastCreatedOrder.id}
+              </strong>
+              <p className="assoc-ticket-note">
+                Apresente este código no caixa para efetuar o pagamento e
+                retirar seus itens.
+              </p>
+            </div>
+
+            <div className="assoc-confirm-summary">
+              {lastCreatedOrder.itens.map((item) => (
+                <div key={item.id} className="assoc-confirm-line">
                   <span>
                     {item.quantidade}× {item.nomeDoProduto}
                   </span>
-                  <span>{formatarMoeda(item.subTotal)}</span>
+                  <strong>{formatCurrency(Number(item.subTotal))}</strong>
                 </div>
               ))}
-              <div className="summary-total-line">
-                <span>Total a Pagar no Caixa:</span>
-                <strong>{formatarMoeda(pedidoCriadoModal.total)}</strong>
+              <div className="assoc-confirm-divider" />
+              <div className="assoc-confirm-total">
+                <span>Total a pagar no caixa</span>
+                <strong>{formatCurrency(Number(lastCreatedOrder.total))}</strong>
               </div>
             </div>
 
-            <div className="pedido-modal-actions">
+            <div className="assoc-confirm-actions">
               <button
                 type="button"
-                className="btn-create-order"
+                className="assoc-btn-modal-outline"
+                onClick={() => setIsSuccessModalOpen(false)}
+              >
+                Continuar
+              </button>
+              <button
+                type="button"
+                className="assoc-btn-modal-green"
                 onClick={() => {
-                  setPedidoCriadoModal(null)
-                  setAbaAtiva('pedidos')
+                  setIsSuccessModalOpen(false)
+                  setActiveTab('pedidos')
                 }}
               >
                 Ver Meus Pedidos
               </button>
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      </Modal>
 
-      {/* Modal de Detalhes de um Pedido */}
-      {detalhePedidoModal && (
-        <Modal
-          isOpen={!!detalhePedidoModal}
-          onClose={() => setDetalhePedidoModal(null)}
-          title={`Detalhes do Pedido #${String(detalhePedidoModal.id).padStart(4, '0')}`}
-          subtitle={new Date(detalhePedidoModal.data).toLocaleString('pt-BR')}
-          maxWidth={460}
-        >
-          <div className="detalhe-pedido-modal-body">
-            <div className="pedido-items-summary-box">
-              {detalhePedidoModal.itens.map((it) => (
-                <div key={it.id} className="summary-item-line">
+      {/* =========================================================
+          MODAL: PAGAR PEDIDO (EXIBE CÓDIGO PARA O CAIXA + ITENS)
+         ========================================================= */}
+      <Modal
+        isOpen={isPayInfoModalOpen && selectedPayOrder !== null}
+        onClose={() => setIsPayInfoModalOpen(false)}
+        title={
+          selectedPayOrder
+            ? `Código para o Caixa — Pedido #${selectedPayOrder.id}`
+            : 'Código para o Caixa'
+        }
+        hideHeader
+        maxWidth={420}
+      >
+        {selectedPayOrder && (
+          <div className="assoc-confirm-modal">
+            <div className="assoc-ticket-pass">
+              <span className="assoc-ticket-label">
+                SEU CÓDIGO PARA O CAIXA
+              </span>
+              <strong className="assoc-ticket-code">
+                #{selectedPayOrder.id}
+              </strong>
+              <p className="assoc-ticket-note">
+                Apresente este código no caixa para efetuar o pagamento e
+                retirar seus itens.
+              </p>
+            </div>
+
+            <div className="assoc-confirm-summary">
+              {selectedPayOrder.itens.map((item) => (
+                <div key={item.id} className="assoc-confirm-line">
                   <span>
-                    {it.quantidade}× {it.nomeDoProduto}
+                    {item.quantidade}× {item.nomeDoProduto}
                   </span>
-                  <span>{formatarMoeda(it.subTotal)}</span>
+                  <strong>{formatCurrency(Number(item.subTotal))}</strong>
                 </div>
               ))}
-              <div className="summary-total-line">
-                <span>Total:</span>
-                <strong>{formatarMoeda(detalhePedidoModal.total)}</strong>
+              <div className="assoc-confirm-divider" />
+              <div className="assoc-confirm-total">
+                <span>Total a pagar no caixa</span>
+                <strong>{formatCurrency(Number(selectedPayOrder.total))}</strong>
               </div>
             </div>
 
-            <div className="detalhes-actions">
+            <div className="assoc-confirm-actions">
               <button
                 type="button"
-                className="profile-btn-cancel"
-                onClick={() => setDetalhePedidoModal(null)}
+                className="assoc-btn-modal-outline"
+                onClick={() => setIsPayInfoModalOpen(false)}
               >
                 Fechar
               </button>
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      </Modal>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { AdminHomePage } from '../features/dashboard/AdminHomePage'
 import { EstoquePage } from '../features/estoque/EstoquePage'
+import { AdminPedidosPage } from '../features/pedidos/AdminPedidosPage'
 import { AssociadoHomePage } from '../features/associados/AssociadoHomePage'
 import { AssociadoPedidosPage } from '../features/associados/AssociadoPedidosPage'
 import { AdminAssociadosPage } from '../features/associados/AdminAssociadosPage'
@@ -91,10 +92,7 @@ export function AppRoutes() {
             {/* Estoque e pedidos */}
             <Route element={<ProtectedRoute perfis={['ADMIN', 'ESTOQUE']} />}>
               <Route path="/estoque" element={<EstoquePage />} />
-              <Route
-                path="/pedidos"
-                element={<ModulePlaceholder title="Pedidos & Comandas" />}
-              />
+              <Route path="/pedidos" element={<AdminPedidosPage />} />
             </Route>
 
             {/* Escalas e turnos */}

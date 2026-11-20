@@ -4,7 +4,7 @@ public enum StatusTransacaoEnum {
     PAGO,
     AGUARDANDO_PAGAMENTO,
     CONFIRMADO,
-    RECUSADO,
+    ENTREGUE,
     EXPIRADO,
     CANCELADO;
 }

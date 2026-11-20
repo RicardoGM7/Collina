@@ -19,12 +19,17 @@ import java.util.Set;
 @Table(name = "tb_categorias")
 public class Categoria {
 
+    public static final String COR_PADRAO = "#2BB673";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, unique = true)
     private String nome;
+
+    @Column(length = 7)
+    private String cor = COR_PADRAO;
 
     @ManyToMany(mappedBy = "categorias")
     private Set<Produto> produtos = new HashSet<>();

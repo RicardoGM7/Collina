@@ -7,7 +7,7 @@ import java.time.Instant;
 
 public record MovimentacaoEstoqueResponseDTO(
         Integer id,
-        Integer produtoID,
+        Integer produtoId,
         String nomeProduto,
         Instant data,
         MovimentacaoEstoqueEnum tipo,

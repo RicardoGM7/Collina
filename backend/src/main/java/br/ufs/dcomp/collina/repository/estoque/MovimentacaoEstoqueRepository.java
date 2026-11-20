@@ -14,6 +14,9 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     @EntityGraph(attributePaths = {"estoque", "estoque.produto"})
     List<MovimentacaoEstoque> findAll();
 
+    @EntityGraph(attributePaths = {"estoque", "estoque.produto"})
+    List<MovimentacaoEstoque> findAllByOrderByDataDesc();
+
     @Override
     @EntityGraph(attributePaths = {"estoque", "estoque.produto"})
     Optional<MovimentacaoEstoque> findById(Integer id);
@@ -24,7 +27,7 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
 
     // Lista movimentações por tipo (ex: VENDA, COMPRA_FORNECEDOR, PERDA_DANO)
     @EntityGraph(attributePaths = {"estoque", "estoque.produto"})
-    List<MovimentacaoEstoque> findByTipo(MovimentacaoEstoqueEnum tipo);
+    List<MovimentacaoEstoque> findByTipoOrderByDataDesc(MovimentacaoEstoqueEnum tipo);
 
     boolean existsByEstoqueId(Integer estoqueId);
 }

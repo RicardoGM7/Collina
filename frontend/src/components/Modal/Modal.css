@@ -74,6 +74,13 @@
   gap: 12px;
 }
 
+.collina-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .collina-modal-title {
   font-size: 16px;
   font-weight: 800;

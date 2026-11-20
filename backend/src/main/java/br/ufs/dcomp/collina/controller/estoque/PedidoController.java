@@ -63,6 +63,12 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoService.cancelarPedido(id));
     }
 
+    // Marcar pedido como entregue (200 OK)
+    @PatchMapping("/{id}/entregar")
+    public ResponseEntity<PedidoResponseDTO> entregar(@PathVariable Integer id) {
+        return ResponseEntity.ok(pedidoService.entregarPedido(id));
+    }
+
     // ==========================================
     // 2. Gerenciamento de Itens do Pedido
     // ==========================================
