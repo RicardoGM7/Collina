@@ -161,6 +161,26 @@ public class PedidoService {
         return new PedidoResponseDTO(atualizado);
     }
 
+    // Marcar pedido como entregue (somente permitido para status PAGO)
+    @Transactional
+    public PedidoResponseDTO entregarPedido(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("O ID do pedido é obrigatório.");
+        }
+
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado com o ID: " + id));
+
+        if (pedido.getStatus() != StatusTransacaoEnum.PAGO) {
+            throw new IllegalStateException("Só é permitido marcar como entregue um pedido com status PAGO. Status atual: " + pedido.getStatus());
+        }
+
+        pedido.setStatus(StatusTransacaoEnum.ENTREGUE);
+        Pedido atualizado = pedidoRepository.save(pedido);
+
+        return new PedidoResponseDTO(atualizado);
+    }
+
     // ==========================================
     // 2. Gerenciamento de Itens do Pedido (ItemPedido)
     // ==========================================

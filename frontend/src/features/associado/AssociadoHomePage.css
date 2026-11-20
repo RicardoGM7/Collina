@@ -1,0 +1,591 @@
+.assoc-home {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.assoc-home-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* 1. Banner de Boas-Vindas */
+.assoc-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 26px 30px;
+  background: linear-gradient(135deg, #0B1724 0%, #10253A 100%);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(11, 23, 36, 0.14);
+}
+
+.assoc-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.assoc-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background-color: rgba(43, 182, 115, 0.14);
+  border: 1px solid rgba(43, 182, 115, 0.34);
+  color: #2BB673;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.assoc-hero-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.assoc-hero-highlight {
+  font-size: 13px;
+  color: #CBD5E1;
+  margin-top: 2px;
+}
+
+.assoc-hero-highlight strong {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.assoc-hero-sub {
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.45;
+  max-width: 310px;
+}
+
+.assoc-hero-glow {
+  position: absolute;
+  right: -36px;
+  bottom: -58px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(43, 182, 115, 0.14) 0%,
+    rgba(43, 182, 115, 0.04) 60%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+/* 2. Ações Rápidas (Mesmo tamanho e grid dos cards do AdminHomePage) */
+.assoc-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assoc-section-heading {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0B1724;
+}
+
+.assoc-cards-grid {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.assoc-action-card {
+  border-radius: 24px;
+  padding: 22px;
+  min-height: 268px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border: none;
+  text-align: left;
+}
+
+.assoc-action-card:hover {
+  transform: translateY(-3px);
+}
+
+.assoc-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.assoc-card-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.assoc-card-subtitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.assoc-card-badge {
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.assoc-card-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.assoc-card-img {
+  height: 112px;
+  width: auto;
+  max-width: 156px;
+  object-fit: contain;
+}
+
+.assoc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.assoc-card-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Temas dos 3 cards */
+.assoc-card-green {
+  background-color: #2BB673;
+  color: #0B1724;
+  box-shadow: 0 4px 14px rgba(43, 182, 115, 0.18);
+}
+
+.assoc-card-green .assoc-card-subtitle {
+  color: rgba(11, 23, 36, 0.78);
+  font-weight: 600;
+}
+
+.assoc-card-dark {
+  background-color: #0B1724;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(11, 23, 36, 0.16);
+}
+
+.assoc-card-dark .assoc-card-subtitle {
+  color: #94A3B8;
+}
+
+.assoc-card-white {
+  background-color: #FFFFFF;
+  color: #0B1724;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.assoc-card-white .assoc-card-subtitle {
+  color: #64748B;
+}
+
+/* Badges e setas */
+.assoc-badge-dark {
+  background-color: #0B1724;
+  color: #FFFFFF;
+}
+
+.assoc-badge-rose {
+  background-color: rgba(225, 29, 72, 0.2);
+  color: #FDA4AF;
+}
+
+.assoc-arrow-white {
+  background-color: #FFFFFF;
+  color: #0B1724;
+}
+
+.assoc-arrow-green {
+  background-color: #2BB673;
+  color: #0B1724;
+}
+
+.assoc-arrow-slate {
+  background-color: #F1F5F9;
+  color: #0B1724;
+}
+
+/* 3. Card: Minhas Próximas Reservas */
+.assoc-reservations-card {
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 22px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.assoc-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.assoc-panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assoc-green-dot {
+  width: 10px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: #2BB673;
+  display: inline-block;
+}
+
+.assoc-panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0B1724;
+}
+
+.assoc-panel-link {
+  border: none;
+  background: transparent;
+  color: #2BB673;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--ui-control-duration) var(--modal-ease);
+}
+
+.assoc-panel-link:hover {
+  opacity: 0.8;
+}
+
+.assoc-reservations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assoc-reservation-row {
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.assoc-reservation-row--today {
+  background-color: #ECFDF5;
+  border: 1px solid #D1FAE5;
+}
+
+.assoc-reservation-row--upcoming {
+  background-color: #F8FAFC;
+  border: 1px solid #F1F5F9;
+}
+
+.assoc-reservation-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.assoc-date-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1.15;
+}
+
+.assoc-date-badge--green {
+  background-color: #2BB673;
+  color: #0B1724;
+}
+
+.assoc-date-badge--slate {
+  background-color: #E2E8F0;
+  color: #0B1724;
+}
+
+.assoc-date-top {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.assoc-date-bottom {
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.assoc-date-day {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.assoc-date-month {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.assoc-reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assoc-reservation-title-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assoc-reservation-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0B1724;
+}
+
+.assoc-res-status {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.assoc-res-status--confirmed {
+  background-color: #D1FAE5;
+  color: #047857;
+}
+
+.assoc-res-status--scheduled {
+  background-color: #E2E8F0;
+  color: #475569;
+}
+
+.assoc-reservation-meta {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.assoc-reservation-meta strong {
+  color: #0B1724;
+  font-weight: 700;
+}
+
+.assoc-reservation-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assoc-btn-outline {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  color: #0B1724;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--ui-control-duration) var(--modal-ease),
+    border-color var(--ui-control-duration) var(--modal-ease),
+    transform 120ms var(--modal-ease);
+}
+
+.assoc-btn-outline:hover {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.assoc-btn-outline:active {
+  transform: scale(0.98);
+}
+
+.assoc-btn-cancel-soft {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid #FECDD3;
+  background-color: #FFE4E6;
+  color: #E11D48;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--ui-control-duration) var(--modal-ease),
+    transform 120ms var(--modal-ease);
+}
+
+.assoc-btn-cancel-soft:hover {
+  background-color: #FECDD3;
+}
+
+.assoc-btn-cancel-soft:active {
+  transform: scale(0.98);
+}
+
+/* 4. Card: Acontecendo no Clube */
+.assoc-events-card {
+  width: 100%;
+  max-width: 390px;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 22px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.assoc-trophy-icon {
+  color: #D97706;
+}
+
+.assoc-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assoc-event-box {
+  background-color: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.assoc-event-tag {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.assoc-event-tag--green {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.assoc-event-tag--blue {
+  background-color: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.assoc-event-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0B1724;
+}
+
+.assoc-event-desc {
+  font-size: 11.5px;
+  color: #64748B;
+  line-height: 1.45;
+}
+
+.assoc-btn-event {
+  height: 30px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  color: #0B1724;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 2px;
+  transition:
+    background-color var(--ui-control-duration) var(--modal-ease),
+    border-color var(--ui-control-duration) var(--modal-ease),
+    transform 120ms var(--modal-ease);
+}
+
+.assoc-btn-event:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.assoc-btn-event:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 1100px) {
+  .assoc-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .assoc-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assoc-events-card {
+    max-width: 100%;
+  }
+}

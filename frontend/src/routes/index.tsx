@@ -3,13 +3,24 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { AdminHomePage } from '../features/dashboard/AdminHomePage'
+import { AssociadoHomePage } from '../features/associado/AssociadoHomePage'
+import { AssociadoPedidosPage } from '../features/associado/AssociadoPedidosPage'
 import { EstoquePage } from '../features/estoque/EstoquePage'
+import { AdminPedidosPage } from '../features/pedidos/AdminPedidosPage'
 
-function ModulePlaceholder({ title }: { title: string }) {
+function ModulePlaceholder({
+  title,
+  backTo = '/admin',
+  backLabel = '← Voltar ao Painel Administrativo',
+}: {
+  title: string
+  backTo?: string
+  backLabel?: string
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <Link
-        to="/admin"
+        to={backTo}
         style={{
           alignSelf: 'flex-start',
           padding: '8px 14px',
@@ -21,7 +32,7 @@ function ModulePlaceholder({ title }: { title: string }) {
           textDecoration: 'none',
         }}
       >
-        ← Voltar ao Painel Administrativo
+        {backLabel}
       </Link>
       <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B1F33' }}>
         {title}
@@ -50,32 +61,54 @@ export function AppRoutes() {
 
         {/* Rotas internas que usam automaticamente Navbar + fundo #F1F6FA + Carollina AI */}
         <Route element={<MainLayout />}>
-          <Route path="/admin" element={<AdminHomePage />} />
-          <Route path="/estoque" element={<EstoquePage />} />
-          <Route
-            path="/escala"
-            element={<ModulePlaceholder title="Escala de Hoje" />}
-          />
-          <Route
-            path="/financeiro"
-            element={<ModulePlaceholder title="Módulo Financeiro" />}
-          />
-          <Route
-            path="/reservas"
-            element={<ModulePlaceholder title="Reservas de Espaços" />}
-          />
-          <Route
-            path="/cadastros"
-            element={<ModulePlaceholder title="Cadastros" />}
-          />
-          <Route
-            path="/pedidos"
-            element={<ModulePlaceholder title="Pedidos & Comandas" />}
-          />
-          <Route
-            path="/associado"
-            element={<ModulePlaceholder title="Portal do Associado" />}
-          />
+          {/* Área Administrativa / Funcionários */}
+          <Route path="/admin">
+            <Route index element={<AdminHomePage />} />
+            <Route path="estoque" element={<EstoquePage />} />
+            <Route
+              path="escala"
+              element={<ModulePlaceholder title="Escala de Hoje" />}
+            />
+            <Route
+              path="financeiro"
+              element={<ModulePlaceholder title="Módulo Financeiro" />}
+            />
+            <Route
+              path="reservas"
+              element={<ModulePlaceholder title="Reservas de Espaços" />}
+            />
+            <Route
+              path="cadastros"
+              element={<ModulePlaceholder title="Cadastros" />}
+            />
+            <Route path="pedidos" element={<AdminPedidosPage />} />
+          </Route>
+
+          {/* Área do Associado */}
+          <Route path="/associado">
+            <Route index element={<AssociadoHomePage />} />
+            <Route
+              path="reservas"
+              element={
+                <ModulePlaceholder
+                  title="Reservar Espaço (Associado)"
+                  backTo="/associado"
+                  backLabel="← Voltar ao Início do Associado"
+                />
+              }
+            />
+            <Route
+              path="financeiro"
+              element={
+                <ModulePlaceholder
+                  title="Mensalidades (Associado)"
+                  backTo="/associado"
+                  backLabel="← Voltar ao Início do Associado"
+                />
+              }
+            />
+            <Route path="pedidos" element={<AssociadoPedidosPage />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

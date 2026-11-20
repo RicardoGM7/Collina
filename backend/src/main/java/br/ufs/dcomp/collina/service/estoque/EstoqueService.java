@@ -99,7 +99,7 @@ public class EstoqueService {
         if (dto == null) {
             throw new IllegalArgumentException("Os dados da movimentação são obrigatórios.");
         }
-        if (dto.produtoID() == null) {
+        if (dto.produtoId() == null) {
             throw new IllegalArgumentException("O ID do produto é obrigatório.");
         }
         if (dto.tipo() == null) {
@@ -114,8 +114,8 @@ public class EstoqueService {
             throw new IllegalArgumentException("Movimentações do tipo VENDA são geradas automaticamente na confirmação de pagamento do pedido.");
         }
 
-        Estoque estoque = estoqueRepository.findByProdutoId(dto.produtoID())
-                .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o produto com ID: " + dto.produtoID()));
+        Estoque estoque = estoqueRepository.findByProdutoId(dto.produtoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o produto com ID: " + dto.produtoId()));
 
         int saldoAtual = estoque.getQuantidade() != null ? estoque.getQuantidade() : 0;
 
@@ -153,7 +153,7 @@ public class EstoqueService {
 
     @Transactional(readOnly = true)
     public List<MovimentacaoEstoqueResponseDTO> listarTodasMovimentacoes() {
-        return movimentacaoEstoqueRepository.findAll()
+        return movimentacaoEstoqueRepository.findAllByOrderByDataDesc()
                 .stream()
                 .map(MovimentacaoEstoqueResponseDTO::new)
                 .toList();
@@ -190,7 +190,7 @@ public class EstoqueService {
             throw new IllegalArgumentException("O tipo de movimentação é obrigatório.");
         }
 
-        return movimentacaoEstoqueRepository.findByTipo(tipo)
+        return movimentacaoEstoqueRepository.findByTipoOrderByDataDesc(tipo)
                 .stream()
                 .map(MovimentacaoEstoqueResponseDTO::new)
                 .toList();

@@ -13,7 +13,9 @@ interface ModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
+  headerBadge?: ReactNode
   subtitle?: string
+  hideHeader?: boolean
   children: ReactNode
   footer?: ReactNode
   closeOnOverlayClick?: boolean
@@ -43,7 +45,9 @@ export function Modal({
   isOpen,
   onClose,
   title,
+  headerBadge,
   subtitle,
+  hideHeader = false,
   children,
   footer,
   closeOnOverlayClick = true,
@@ -288,7 +292,8 @@ export function Modal({
         ref={cardRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={hideHeader ? undefined : titleId}
+        aria-label={hideHeader ? title : undefined}
         tabIndex={-1}
         className={`collina-modal-card collina-modal-card--${stateClass} ${
           isAnimating ? 'collina-modal-card--animating' : ''
@@ -297,24 +302,29 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
         onTransitionEnd={handleCardTransitionEnd}
       >
-        <div className="collina-modal-header">
-          <div>
-            <h3 id={titleId} className="collina-modal-title">
-              {title}
-            </h3>
-            {subtitle && (
-              <span className="collina-modal-subtitle">{subtitle}</span>
-            )}
+        {!hideHeader && (
+          <div className="collina-modal-header">
+            <div>
+              <div className="collina-modal-title-row">
+                <h3 id={titleId} className="collina-modal-title">
+                  {title}
+                </h3>
+                {headerBadge}
+              </div>
+              {subtitle && (
+                <span className="collina-modal-subtitle">{subtitle}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="collina-modal-close-btn"
+              aria-label={`Fechar ${title}`}
+              onClick={onClose}
+            >
+              <X size={14} />
+            </button>
           </div>
-          <button
-            type="button"
-            className="collina-modal-close-btn"
-            aria-label={`Fechar ${title}`}
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
-        </div>
+        )}
 
         <div className="collina-modal-body">{children}</div>
 
