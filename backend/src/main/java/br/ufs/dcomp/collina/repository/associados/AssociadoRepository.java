@@ -10,7 +10,9 @@ import java.util.Optional;
 
 public interface AssociadoRepository extends JpaRepository<Associado, Integer> {
     Optional<Associado> findByPessoaCpf(String cpf);
+    Optional<Associado> findByUsuarioId(String usuarioId);
     boolean existsByPessoaCpf(String cpf);
+    boolean existsByUsuarioId(String usuarioId);
     // Usado pelo Financeiro na emissão de mensalidades (RF-F05)
     List<Associado> findBySituacaoCadastralIn(Collection<SituacaoCadastralEnum> situacoes);
 }

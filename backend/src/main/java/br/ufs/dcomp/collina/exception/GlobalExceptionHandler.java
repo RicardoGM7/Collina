@@ -3,6 +3,8 @@ package br.ufs.dcomp.collina.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,7 +70,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // 5. Erro interno genérico inesperado (500 Internal Server Error)
+    // 5. Sem permissão (@PreAuthorize nos controllers/services) (403 Forbidden).
+    // Sem este handler o Exception genérico abaixo responderia 500.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.FORBIDDEN.value(),
+                "Acesso negado",
+                "Seu perfil não tem permissão para acessar este recurso.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // 6. Não autenticado (401 Unauthorized)
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Não autenticado",
+                "Token de acesso ausente, inválido ou expirado.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    // 7. Erro interno genérico inesperado (500 Internal Server Error)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
         ApiError error = new ApiError(

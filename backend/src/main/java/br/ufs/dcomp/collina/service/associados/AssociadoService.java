@@ -3,6 +3,8 @@ package br.ufs.dcomp.collina.service.associados;
 import br.ufs.dcomp.collina.dto.associados.AssociadoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoResponseDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoUpdateDTO;
+import br.ufs.dcomp.collina.dto.auth.UsuarioCriarRequestDTO;
+import br.ufs.dcomp.collina.dto.auth.UsuarioResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.associados.Associado;
 import br.ufs.dcomp.collina.model.associados.Pessoa;
@@ -10,10 +12,12 @@ import br.ufs.dcomp.collina.model.associados.Plano;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
 import br.ufs.dcomp.collina.model.associados.StatusVinculoEnum;
 import br.ufs.dcomp.collina.model.associados.TipoPlanoEnum;
+import br.ufs.dcomp.collina.model.auth.PerfilUsuarioEnum;
 import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
 import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
 import br.ufs.dcomp.collina.repository.associados.PlanoRepository;
 import br.ufs.dcomp.collina.repository.associados.VinculoDependenciaRepository;
+import br.ufs.dcomp.collina.service.auth.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +42,9 @@ public class AssociadoService {
 
     @Autowired
     private VinculoDependenciaService vinculoService;
+
+    @Autowired(required = false)
+    private UsuarioService usuarioService;
 
     // 1. RF-AS01 + RF-AS02: cadastrar associado titular já vinculado a um plano
     @Transactional
@@ -70,6 +77,10 @@ public class AssociadoService {
         if (associadoRepository.existsByPessoaCpf(cpf)) {
             throw new IllegalStateException("Já existe um associado titular cadastrado com este CPF.");
         }
+        if (dto.usuarioId() != null && !dto.usuarioId().isBlank()
+                && associadoRepository.existsByUsuarioId(dto.usuarioId().trim())) {
+            throw new IllegalStateException("Esta conta de acesso já está vinculada a outro associado titular.");
+        }
 
         LocalDate hoje = LocalDate.now();
         Pessoa pessoa = pessoaRepository.findByCpf(cpf).orElse(null);
@@ -96,13 +107,35 @@ public class AssociadoService {
                     });
         }
 
+        String usuarioId = dto.usuarioId() != null && !dto.usuarioId().isBlank()
+                ? dto.usuarioId().trim()
+                : null;
+
+        boolean temEmail = dto.email() != null && !dto.email().isBlank();
+        boolean temSenha = dto.senha() != null && !dto.senha().isBlank();
+        if (usuarioId == null && (temEmail || temSenha)) {
+            if (!temEmail || !temSenha) {
+                throw new IllegalArgumentException("Informe e-mail e senha para criar a conta de acesso do associado.");
+            }
+            if (usuarioService == null) {
+                throw new IllegalStateException("Serviço de autenticação indisponível para criar a conta de acesso.");
+            }
+            UsuarioResponseDTO conta = usuarioService.criar(new UsuarioCriarRequestDTO(
+                    pessoa.getNome(),
+                    dto.email().trim(),
+                    dto.senha(),
+                    PerfilUsuarioEnum.ASSOCIADO
+            ));
+            usuarioId = conta.uid();
+        }
+
         Associado associado = new Associado();
         associado.setPessoa(pessoa);
         associado.setCategoria(dto.categoria());
         associado.setPlano(plano);
         associado.setSituacaoCadastral(SituacaoCadastralEnum.ATIVO);
         associado.setDataAdmissao(hoje);
-        associado.setUsuarioId(dto.usuarioId());
+        associado.setUsuarioId(usuarioId);
 
         return new AssociadoResponseDTO(associadoRepository.save(associado));
     }
@@ -132,6 +165,35 @@ public class AssociadoService {
         Associado associado = associadoRepository.findByPessoaCpf(cpfValido)
                 .orElseThrow(() -> new ResourceNotFoundException("Associado não encontrado com o CPF informado."));
         return new AssociadoResponseDTO(associado);
+    }
+
+    // 4.1 Buscar associado pelo usuarioId autenticado (RF-AS01 / RF-AUTH01)
+    @Transactional(readOnly = true)
+    public AssociadoResponseDTO buscarPorUsuarioId(String usuarioId) {
+        if (usuarioId == null || usuarioId.trim().isBlank()) {
+            throw new IllegalArgumentException("O ID do usuário é obrigatório.");
+        }
+        return new AssociadoResponseDTO(obterPorUsuarioId(usuarioId));
+    }
+
+    // 4.2 RF-AS05: o titular autenticado altera os próprios dados (identificado pelo token, não por ID do cliente)
+    @Transactional
+    public AssociadoResponseDTO atualizarMeusDados(String usuarioId, AssociadoUpdateDTO dto) {
+        return atualizarDadosPessoais(obterPorUsuarioId(usuarioId).getId(), dto);
+    }
+
+    // Id do associado vinculado ao usuário autenticado (usado para consultas do próprio titular)
+    @Transactional(readOnly = true)
+    public Integer obterIdPorUsuarioId(String usuarioId) {
+        return obterPorUsuarioId(usuarioId).getId();
+    }
+
+    private Associado obterPorUsuarioId(String usuarioId) {
+        if (usuarioId == null || usuarioId.trim().isBlank()) {
+            throw new IllegalArgumentException("O ID do usuário é obrigatório.");
+        }
+        return associadoRepository.findByUsuarioId(usuarioId.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Nenhum cadastro de associado vinculado ao usuário autenticado."));
     }
 
     // 5. RF-AS05: o titular altera seus próprios dados pessoais (CPF, categoria, plano e situação não mudam aqui)

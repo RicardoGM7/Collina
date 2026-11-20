@@ -5,11 +5,16 @@ import br.ufs.dcomp.collina.dto.associados.AlterarSituacaoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoResponseDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoUpdateDTO;
+import br.ufs.dcomp.collina.dto.associados.VinculoDependenciaResponseDTO;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
+import br.ufs.dcomp.collina.model.associados.StatusVinculoEnum;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
 import br.ufs.dcomp.collina.service.associados.AssociadoService;
+import br.ufs.dcomp.collina.service.associados.VinculoDependenciaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,6 +27,52 @@ public class AssociadoController {
 
     @Autowired
     private AssociadoService associadoService;
+
+    @Autowired
+    private VinculoDependenciaService vinculoService;
+
+    // ===== Endpoints do próprio associado (perfil ASSOCIADO). O titular é identificado pelo token (uid),
+    // nunca por um ID enviado pelo cliente, então um associado não acessa dados de outro (UC-ASSO01, RNF07).
+
+    // 0.1 Dados do associado autenticado
+    @GetMapping("/me")
+    public ResponseEntity<AssociadoResponseDTO> buscarMeuPerfil(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return ResponseEntity.ok(associadoService.buscarPorUsuarioId(usuario.uid()));
+    }
+
+    // 0.1b Autocadastro do associado titular autenticado (vincula automaticamente ao uid do token)
+    @PostMapping("/me")
+    public ResponseEntity<AssociadoResponseDTO> cadastrarMeuPerfil(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody AssociadoRequestDTO dto) {
+        AssociadoRequestDTO comUid = new AssociadoRequestDTO(
+                dto.nome(),
+                dto.cpf(),
+                dto.dataNascimento(),
+                dto.categoria(),
+                dto.tipoPlano(),
+                usuario.uid()
+        );
+        AssociadoResponseDTO novo = associadoService.cadastrar(comUid);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+        return ResponseEntity.created(location).body(novo);
+    }
+
+    // 0.2 RF-AS05: o titular altera os próprios dados pessoais
+    @PutMapping("/me")
+    public ResponseEntity<AssociadoResponseDTO> atualizarMeusDados(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                                   @Valid @RequestBody AssociadoUpdateDTO dto) {
+        return ResponseEntity.ok(associadoService.atualizarMeusDados(usuario.uid(), dto));
+    }
+
+    // 0.3 RF-AS05/AS08: o titular consulta (sem alterar) os próprios dependentes
+    @GetMapping("/me/dependentes")
+    public ResponseEntity<List<VinculoDependenciaResponseDTO>> listarMeusDependentes(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) StatusVinculoEnum status) {
+        Integer titularId = associadoService.obterIdPorUsuarioId(usuario.uid());
+        return ResponseEntity.ok(vinculoService.listarPorTitular(titularId, status));
+    }
 
     // 1. Cadastrar associado titular (201 Created)
     @PostMapping
