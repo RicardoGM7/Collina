@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronLeft,
+  ChevronRight,
   Edit2,
   Eye,
   EyeOff,
@@ -425,12 +426,12 @@ export function AdminAssociadosPage() {
       <div className="admin-page-top">
         <div className="admin-breadcrumb">
           <Link to={rotaVoltar} className="admin-back-btn">
-            <ChevronLeft size={16} />
+            <ChevronLeft size={14} color="#2BB673" strokeWidth={2.8} />
             <span>Voltar ao Início</span>
           </Link>
           <div className="admin-breadcrumb-text">
             <span>Visão geral</span>
-            <span className="crumb-sep">&gt;</span>
+            <ChevronRight size={14} color="#94A3B8" />
             <span className="crumb-curr">Cadastros</span>
           </div>
         </div>
@@ -612,7 +613,7 @@ export function AdminAssociadosPage() {
                   <th>Admissão</th>
                   <th>Situação Cadastral</th>
                   <th>Dependentes</th>
-                  <th style={{ textAlign: 'right' }}>Ações</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -888,7 +889,7 @@ export function AdminAssociadosPage() {
                 <div className="plan-preview-header">
                   <div>
                     <span className="plan-preview-label">
-                      Resumo do Plano Selecionado (parâmetros do back-end)
+                      Resumo do Plano Selecionado
                     </span>
                     <h3 className="plan-preview-title">
                       {nomePlano(planoSelecionadoForm)}
@@ -945,7 +946,7 @@ export function AdminAssociadosPage() {
       {abaAtiva === 'planos' && (
         <div className="admin-content-card">
           <div className="form-card-header">
-            <h2 className="form-card-title">Parâmetros dos Planos (RF-AS02)</h2>
+            <h2 className="form-card-title">Parâmetros dos Planos</h2>
             <p className="form-card-desc">
               Valores e limites carregados diretamente do back-end
             </p>
@@ -955,12 +956,23 @@ export function AdminAssociadosPage() {
             <p className="no-deps-text">Carregando planos...</p>
           ) : (
             <div className="planos-grid">
-              {planos.map((plano) => (
-                <div key={plano.id} className="plano-card-item">
+              {planos.map((plano) => {
+                const badgeNivel =
+                  plano.tipo === 'PROPRIETARIO'
+                    ? 'Proprietário'
+                    : plano.tipo === 'BASICO'
+                      ? 'Contribuinte · Básico'
+                      : plano.tipo === 'PLUS'
+                        ? 'Contribuinte · Plus'
+                        : 'Contribuinte · Premium'
+
+                return (
+                <div
+                  key={plano.id}
+                  className={`plano-card-item plano-card--${plano.tipo.toLowerCase()}`}
+                >
                   <div className="plano-card-top">
-                    <span className="plano-tipo-badge">
-                      {CATEGORIA_LABEL[CATEGORIA_DO_PLANO[plano.tipo]]}
-                    </span>
+                    <span className="plano-tipo-badge">{badgeNivel}</span>
                     <span className="plano-valor">
                       {formatarMoeda(plano.valorPeriodico)}
                       <small>/mês</small>
@@ -981,22 +993,20 @@ export function AdminAssociadosPage() {
                   </div>
 
                   {ehAdmin && (
-                    <div style={{ marginTop: 8, textAlign: 'right' }}>
+                    <div className="plano-card-footer">
                       <button
                         type="button"
-                        className="btn-action-small"
+                        className="btn-action-small plano-btn-edit"
                         onClick={() => abrirEdicaoPlano(plano)}
                       >
-                        <Edit2
-                          size={12}
-                          style={{ marginRight: 4, verticalAlign: 'middle' }}
-                        />
-                        Editar parâmetros
+                        <Edit2 size={12} />
+                        <span>Editar parâmetros</span>
                       </button>
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

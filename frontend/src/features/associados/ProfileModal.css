@@ -252,12 +252,29 @@
 }
 
 .profile-input {
-  padding: 8px 12px;
-  border: 1.5px solid #2BB673;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
   font-size: 13.5px;
+  color: #0B1F33;
   outline: none;
   background-color: #FFFFFF;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.profile-input::placeholder {
+  color: #94A3B8;
+}
+
+.profile-input:hover:not(:disabled) {
+  border-color: #94A3B8;
+}
+
+.profile-input:focus {
+  border-color: #2BB673;
+  box-shadow: 0 0 0 3px rgba(43, 182, 115, 0.14);
 }
 
 .profile-plan-box {
