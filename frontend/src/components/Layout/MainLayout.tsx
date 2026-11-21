@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   MeuCadastroProvider,
@@ -18,6 +18,7 @@ interface MainLayoutProps {
 }
 
 function MainLayoutShell({ children, userName, userRole }: MainLayoutProps) {
+  const navigate = useNavigate()
   const { usuario, logout } = useAuth()
   const { associado } = useMeuCadastro()
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
@@ -28,6 +29,14 @@ function MainLayoutShell({ children, userName, userRole }: MainLayoutProps) {
       ? associado?.pessoa.nome ?? usuario.nome
       : usuario?.nome)
 
+  function handleOpenProfile() {
+    if (usuario?.perfil === 'ASSOCIADO') {
+      navigate('/associado/mensalidades?aba=dados')
+      return
+    }
+    setIsProfileModalOpen(true)
+  }
+
   return (
     <div className="app-shell">
       <Navbar
@@ -36,7 +45,7 @@ function MainLayoutShell({ children, userName, userRole }: MainLayoutProps) {
           userRole ?? (usuario ? PERFIL_LABEL[usuario.perfil] : undefined)
         }
         onLogout={() => void logout()}
-        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenProfile={handleOpenProfile}
       />
 
       <div className="app-body">

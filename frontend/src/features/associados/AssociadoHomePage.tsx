@@ -8,7 +8,6 @@ import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { SITUACAO_LABEL, nomePlano } from '../../types/associado'
 import { useMeuCadastro } from './MeuCadastroContext'
-import { ProfileModal } from './ProfileModal'
 import { formatarMoeda, primeiroNome } from './associadoUtils'
 import './AssociadoHomePage.css'
 
@@ -17,20 +16,10 @@ export function AssociadoHomePage() {
   const { usuario } = useAuth()
   const { associado, carregando, naoVinculado, erro } = useMeuCadastro()
 
-  const [perfilAberto, setPerfilAberto] = useState(false)
-  const [perfilTabInicial, setPerfilTabInicial] = useState<
-    'dados' | 'dependentes' | 'pagamentos'
-  >('dados')
-
   const [modalModuloEmBreve, setModalModuloEmBreve] = useState<{
     titulo: string
     descricao: string
   } | null>(null)
-
-  function abrirPerfil(tab: 'dados' | 'dependentes' | 'pagamentos') {
-    setPerfilTabInicial(tab)
-    setPerfilAberto(true)
-  }
 
   // Nome real do associado (cadastro do banco ou conta autenticada)
   const nomeCompleto =
@@ -144,7 +133,7 @@ export function AssociadoHomePage() {
           {/* Card 2: Mensalidades (valor real do plano; cobrança é placeholder até módulo Financeiro) */}
           <div
             className="action-card card-navy"
-            onClick={() => abrirPerfil('pagamentos')}
+            onClick={() => navigate('/associado/mensalidades')}
             role="button"
             tabIndex={0}
           >
@@ -247,13 +236,6 @@ export function AssociadoHomePage() {
           </div>
         </div>
       </section>
-
-      {/* Profile Modal */}
-      <ProfileModal
-        isOpen={perfilAberto}
-        onClose={() => setPerfilAberto(false)}
-        initialTab={perfilTabInicial}
-      />
 
       {/* Modal informativa de módulo em desenvolvimento */}
       {modalModuloEmBreve && (

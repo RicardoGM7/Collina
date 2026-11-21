@@ -7,6 +7,7 @@ import { AdminHomePage } from '../features/dashboard/AdminHomePage'
 import { EstoquePage } from '../features/estoque/EstoquePage'
 import { AdminPedidosPage } from '../features/pedidos/AdminPedidosPage'
 import { AssociadoHomePage } from '../features/associados/AssociadoHomePage'
+import { AssociadoMensalidadesPage } from '../features/associados/AssociadoMensalidadesPage'
 import { AssociadoPedidosPage } from '../features/associados/AssociadoPedidosPage'
 import { AdminAssociadosPage } from '../features/associados/AdminAssociadosPage'
 import { HOME_POR_PERFIL, PERFIL_LABEL } from '../types/user'
@@ -120,6 +121,10 @@ export function AppRoutes() {
             {/* Somente associado */}
             <Route element={<ProtectedRoute perfis={['ASSOCIADO']} />}>
               <Route path="/associado" element={<AssociadoHomePage />} />
+              <Route
+                path="/associado/mensalidades"
+                element={<AssociadoMensalidadesPage />}
+              />
               <Route
                 path="/associado/pedidos"
                 element={<AssociadoPedidosPage />}
