@@ -1,4 +1,7 @@
+// Instância do Axios com interceptor de autenticação Firebase e tratamento de erros da API
 import axios from 'axios'
+import { signOut } from 'firebase/auth'
+import { auth } from '../config/firebase'
 
 export interface ApiErrorPayload {
   timestamp?: string
@@ -21,9 +24,31 @@ export const api = axios.create({
   timeout: 15000,
 })
 
+// Anexa o ID token do Firebase em toda requisição (o SDK renova o token sozinho quando está perto de expirar)
+api.interceptors.request.use(async (config) => {
+  const usuario = auth.currentUser
+  if (usuario) {
+    const token = await usuario.getIdToken()
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// 401 com usuário logado = token recusado pela API (sessão revogada ou conta desativada): encerra a sessão
+// e o ProtectedRoute leva o usuário para o login.
+api.interceptors.response.use(
+  (resposta) => resposta,
+  async (erro) => {
+    if (axios.isAxiosError(erro) && erro.response?.status === 401 && auth.currentUser) {
+      await signOut(auth).catch(() => undefined)
+    }
+    return Promise.reject(erro)
+  },
+)
+
 export function getApiErrorMessage(
   error: unknown,
-  fallback = 'Não foi possível completar a operação.'
+  fallback = 'Não foi possível completar a operação.',
 ): string {
   if (axios.isAxiosError<ApiErrorPayload>(error)) {
     const data = error.response?.data

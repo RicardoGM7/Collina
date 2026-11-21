@@ -24,7 +24,7 @@ interface DashboardCardItem {
 const ADMIN_CARDS: DashboardCardItem[] = [
   {
     id: 'estoque',
-    path: '/admin/estoque',
+    path: '/estoque',
     title: 'Estoque',
     subtitle: 'Itens e pedidos',
     badgeText: '2 baixos',
@@ -35,7 +35,7 @@ const ADMIN_CARDS: DashboardCardItem[] = [
   },
   {
     id: 'escala',
-    path: '/admin/escala',
+    path: '/escala',
     title: 'Escala de Hoje',
     subtitle: 'Turnos da equipe',
     badgeText: '4 turnos',
@@ -46,7 +46,7 @@ const ADMIN_CARDS: DashboardCardItem[] = [
   },
   {
     id: 'financeiro',
-    path: '/admin/financeiro',
+    path: '/financeiro',
     title: 'Financeiro',
     subtitle: 'Receitas × despesas',
     badgeText: '+2.189',
@@ -57,7 +57,7 @@ const ADMIN_CARDS: DashboardCardItem[] = [
   },
   {
     id: 'reservas',
-    path: '/admin/reservas',
+    path: '/reservas',
     title: 'Reservas',
     subtitle: 'Quadras e salões',
     badgeText: '4 hoje',
@@ -69,7 +69,7 @@ const ADMIN_CARDS: DashboardCardItem[] = [
   },
   {
     id: 'cadastros',
-    path: '/admin/cadastros',
+    path: '/cadastros',
     title: 'Cadastros',
     subtitle: 'Sócios e funcionários',
     badgeText: '+2.189',
@@ -80,7 +80,7 @@ const ADMIN_CARDS: DashboardCardItem[] = [
   },
   {
     id: 'pedidos',
-    path: '/admin/pedidos',
+    path: '/pedidos',
     title: 'Pedidos',
     subtitle: 'Comandas e consumo',
     badgeText: '4 pendentes',

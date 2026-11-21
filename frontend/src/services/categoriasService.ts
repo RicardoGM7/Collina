@@ -23,10 +23,7 @@ export const categoriasService = {
   },
 
   async atualizar(id: number, payload: CategoriaPayload): Promise<CategoriaDTO> {
-    const { data } = await api.put<CategoriaDTO>(
-      `/api/categorias/${id}`,
-      payload
-    )
+    const { data } = await api.put<CategoriaDTO>(`/api/categorias/${id}`, payload)
     return data
   },
 
