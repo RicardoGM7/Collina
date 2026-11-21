@@ -1,9 +1,9 @@
 import { ArrowRight, Calendar, Info } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import iconeFinanceiro from '../../assets/iconeFinanceiro.png'
-import iconePedidos from '../../assets/iconePedidos.png'
-import iconeReservas from '../../assets/iconeReservas.png'
+import espacoAssociado from '../../assets/EspacoAssociado.png'
+import mensalidadeAssociado from '../../assets/MensalidadeAssociado.png'
+import pedidosAssociado from '../../assets/PedidosAssociado.png'
 import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { SITUACAO_LABEL, nomePlano } from '../../types/associado'
@@ -116,9 +116,9 @@ export function AssociadoHomePage() {
 
             <div className="action-card-art">
               <img
-                src={iconeReservas}
+                src={espacoAssociado}
                 alt="Reservar Espaço"
-                className="action-card-img action-card-img-reservas"
+                className="action-card-img"
               />
             </div>
 
@@ -147,7 +147,7 @@ export function AssociadoHomePage() {
 
             <div className="action-card-art">
               <img
-                src={iconeFinanceiro}
+                src={mensalidadeAssociado}
                 alt="Mensalidades"
                 className="action-card-img"
               />
@@ -179,7 +179,7 @@ export function AssociadoHomePage() {
 
             <div className="action-card-art">
               <img
-                src={iconePedidos}
+                src={pedidosAssociado}
                 alt="Pedidos"
                 className="action-card-img"
               />
