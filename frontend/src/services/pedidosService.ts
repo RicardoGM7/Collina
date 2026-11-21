@@ -46,27 +46,27 @@ export interface ListarPedidosParams {
 
 export const pedidosService = {
   async listar(params?: ListarPedidosParams): Promise<PedidoDTO[]> {
-    const { data } = await api.get<PedidoDTO[]>('/pedidos', { params })
+    const { data } = await api.get<PedidoDTO[]>('/api/pedidos', { params })
     return data
   },
 
   async buscarPorId(id: number): Promise<PedidoDTO> {
-    const { data } = await api.get<PedidoDTO>(`/pedidos/${id}`)
+    const { data } = await api.get<PedidoDTO>(`/api/pedidos/${id}`)
     return data
   },
 
   async criar(itens: ItemPedidoPayload[]): Promise<PedidoDTO> {
-    const { data } = await api.post<PedidoDTO>('/pedidos', { itens })
+    const { data } = await api.post<PedidoDTO>('/api/pedidos', { itens })
     return data
   },
 
   async cancelar(id: number): Promise<PedidoDTO> {
-    const { data } = await api.patch<PedidoDTO>(`/pedidos/${id}/cancelar`)
+    const { data } = await api.patch<PedidoDTO>(`/api/pedidos/${id}/cancelar`)
     return data
   },
 
   async entregar(id: number): Promise<PedidoDTO> {
-    const { data } = await api.patch<PedidoDTO>(`/pedidos/${id}/entregar`)
+    const { data } = await api.patch<PedidoDTO>(`/api/pedidos/${id}/entregar`)
     return data
   },
 
@@ -75,7 +75,7 @@ export const pedidosService = {
     payload: ItemPedidoPayload
   ): Promise<ItemPedidoDTO> {
     const { data } = await api.post<ItemPedidoDTO>(
-      `/pedidos/${pedidoId}/itens`,
+      `/api/pedidos/${pedidoId}/itens`,
       payload
     )
     return data
@@ -87,14 +87,14 @@ export const pedidosService = {
     novaQuantidade: number
   ): Promise<ItemPedidoDTO> {
     const { data } = await api.patch<ItemPedidoDTO>(
-      `/pedidos/${pedidoId}/itens/${itemId}`,
+      `/api/pedidos/${pedidoId}/itens/${itemId}`,
       { novaQuantidade }
     )
     return data
   },
 
   async removerItem(pedidoId: number, itemId: number): Promise<void> {
-    await api.delete(`/pedidos/${pedidoId}/itens/${itemId}`)
+    await api.delete(`/api/pedidos/${pedidoId}/itens/${itemId}`)
   },
 
   async pagar(
@@ -102,7 +102,7 @@ export const pedidosService = {
     valorPago: number
   ): Promise<PagamentoPedidoDTO> {
     const { data } = await api.post<PagamentoPedidoDTO>(
-      `/pedidos/${pedidoId}/pagamento`,
+      `/api/pedidos/${pedidoId}/pagamento`,
       { valorPago }
     )
     return data

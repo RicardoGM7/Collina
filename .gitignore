@@ -1,5 +1,12 @@
 HELP.md
 target/
+
+### Firebase (credenciais NUNCA devem ir para o Git) ###
+firebase-service-account*.json
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+backend/secrets/
+
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

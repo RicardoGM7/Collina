@@ -33,12 +33,12 @@ export interface MovimentacaoPayload {
 
 export const estoqueService = {
   async listar(): Promise<EstoqueDTO[]> {
-    const { data } = await api.get<EstoqueDTO[]>('/estoques')
+    const { data } = await api.get<EstoqueDTO[]>('/api/estoques')
     return data
   },
 
   async listarBaixo(): Promise<EstoqueDTO[]> {
-    const { data } = await api.get<EstoqueDTO[]>('/estoques/baixo')
+    const { data } = await api.get<EstoqueDTO[]>('/api/estoques/baixo')
     return data
   },
 
@@ -47,7 +47,7 @@ export const estoqueService = {
     novoMinimo: number
   ): Promise<EstoqueDTO> {
     const { data } = await api.patch<EstoqueDTO>(
-      `/estoques/produto/${produtoId}/minimo`,
+      `/api/estoques/produto/${produtoId}/minimo`,
       { novoMinimo }
     )
     return data
@@ -57,7 +57,7 @@ export const estoqueService = {
     payload: MovimentacaoPayload
   ): Promise<MovimentacaoEstoqueDTO> {
     const { data } = await api.post<MovimentacaoEstoqueDTO>(
-      '/estoques/movimentacoes',
+      '/api/estoques/movimentacoes',
       payload
     )
     return data
@@ -67,7 +67,7 @@ export const estoqueService = {
     tipo?: MovimentacaoTipo
   ): Promise<MovimentacaoEstoqueDTO[]> {
     const { data } = await api.get<MovimentacaoEstoqueDTO[]>(
-      '/estoques/movimentacoes',
+      '/api/estoques/movimentacoes',
       { params: tipo ? { tipo } : undefined }
     )
     return data
@@ -77,7 +77,7 @@ export const estoqueService = {
     produtoId: number
   ): Promise<MovimentacaoEstoqueDTO[]> {
     const { data } = await api.get<MovimentacaoEstoqueDTO[]>(
-      `/estoques/produto/${produtoId}/movimentacoes`
+      `/api/estoques/produto/${produtoId}/movimentacoes`
     )
     return data
   },
