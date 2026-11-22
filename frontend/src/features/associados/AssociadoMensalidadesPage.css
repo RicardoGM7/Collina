@@ -1,0 +1,732 @@
+.assoc-mensalidades-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 1. Barra superior: Voltar ao Início + Breadcrumb + Segmented Tabs */
+.assoc-mens-topbar {
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 44px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-top-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.assoc-mens-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #0b1724;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    transform 120ms ease;
+}
+
+.assoc-mens-btn-back:hover {
+  background-color: #16324f;
+}
+
+.assoc-mens-btn-back:active {
+  transform: scale(0.98);
+}
+
+.assoc-mens-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.assoc-mens-breadcrumb-active {
+  color: #0b1724;
+  font-weight: 700;
+}
+
+.assoc-mens-seg-tabs {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e2ecf5;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.assoc-mens-seg-btn:hover {
+  color: #0b1724;
+}
+
+.assoc-mens-seg-btn.active {
+  background-color: #ffffff;
+  color: #0b1724;
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(11, 23, 36, 0.08);
+}
+
+/* Container central alinhado com os demais módulos */
+.assoc-mens-container {
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 2. Banner do Associado */
+.assoc-mens-banner {
+  background: linear-gradient(135deg, #0b1f33 0%, #102a45 100%);
+  border-radius: 20px;
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(11, 31, 51, 0.14);
+}
+
+.assoc-mens-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.assoc-mens-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #2bb673;
+  background-color: rgba(43, 182, 115, 0.12);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assoc-mens-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.assoc-mens-banner-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.assoc-mens-banner-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.assoc-mens-chip--plan {
+  background-color: rgba(43, 182, 115, 0.18);
+  color: #6ee7b7;
+  border: 1px solid rgba(43, 182, 115, 0.35);
+}
+
+.assoc-mens-chip--neutral {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.assoc-mens-chip--active {
+  background-color: rgba(43, 182, 115, 0.15);
+  color: #a7f3d0;
+  border: 1px solid rgba(43, 182, 115, 0.3);
+}
+
+.assoc-mens-chip--inactive {
+  background-color: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* Alertas */
+.assoc-mens-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.assoc-mens-alert--success {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.assoc-mens-alert--error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+/* 3. Grid de KPIs Reais (Mensalidades) */
+.assoc-mens-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.assoc-mens-kpi-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(11, 23, 36, 0.03);
+}
+
+.assoc-mens-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assoc-mens-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.assoc-mens-kpi-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background-color: #f1f6fa;
+  color: #0b1f33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assoc-mens-kpi-icon--green {
+  background-color: #ecfdf5;
+  color: #15803d;
+}
+
+.assoc-mens-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0b1f33;
+  line-height: 1.2;
+}
+
+.assoc-mens-kpi-sub {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* 4. Card Principal de Conteúdo */
+.assoc-mens-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(11, 23, 36, 0.03);
+}
+
+.assoc-mens-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-card-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.assoc-mens-card-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Placeholder honesto (Módulo Financeiro em desenvolvimento) */
+.assoc-mens-placeholder {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 16px;
+  border: 1.5px dashed #cbd5e1;
+  background-color: #f8fafc;
+}
+
+.assoc-mens-placeholder-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #e2ecf5;
+  color: #0b1f33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assoc-mens-placeholder-text h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.assoc-mens-placeholder-text p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+/* Estado vazio simples */
+.assoc-mens-empty {
+  padding: 32px 20px;
+  border-radius: 16px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.assoc-mens-empty p {
+  margin: 0;
+}
+
+/* 5. Aba Dependentes */
+.assoc-mens-dep-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background-color: #f1f6fa;
+  border: 1px solid #dbe6f0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0b1f33;
+  white-space: nowrap;
+}
+
+.assoc-mens-dep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assoc-mens-dep-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  transition: border-color 160ms ease;
+}
+
+.assoc-mens-dep-card:hover {
+  border-color: #cbd5e1;
+}
+
+.assoc-mens-dep-card.inactive {
+  background-color: #f8fafc;
+  opacity: 0.82;
+}
+
+.assoc-mens-dep-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: #ecfdf5;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assoc-mens-dep-card.inactive .assoc-mens-dep-avatar {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.assoc-mens-dep-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assoc-mens-dep-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-dep-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.assoc-mens-dep-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.assoc-mens-dep-badge.active {
+  background-color: #ecfdf5;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.assoc-mens-dep-badge.inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.assoc-mens-dep-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #475569;
+}
+
+.assoc-mens-dep-meta strong {
+  color: #0b1f33;
+  font-weight: 700;
+}
+
+.assoc-mens-dep-dot {
+  color: #cbd5e1;
+}
+
+.assoc-mens-dep-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* 6. Aba Dados Pessoais */
+.assoc-mens-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.assoc-mens-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.assoc-mens-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.assoc-mens-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b1f33;
+  word-break: break-word;
+}
+
+.assoc-mens-value.strong {
+  font-weight: 800;
+}
+
+.assoc-mens-value.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.assoc-mens-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background-color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b1f33;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.assoc-mens-input:focus {
+  border-color: #2bb673;
+}
+
+.assoc-mens-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assoc-mens-btn-edit,
+.assoc-mens-btn-cancel,
+.assoc-mens-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.assoc-mens-btn-edit {
+  background-color: #f1f6fa;
+  border: 1px solid #dbe6f0;
+  color: #0b1f33;
+}
+
+.assoc-mens-btn-edit:hover {
+  background-color: #e2ecf5;
+}
+
+.assoc-mens-btn-cancel {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.assoc-mens-btn-cancel:hover {
+  background-color: #f8fafc;
+}
+
+.assoc-mens-btn-save {
+  background-color: #2bb673;
+  border: 1px solid #2bb673;
+  color: #ffffff;
+}
+
+.assoc-mens-btn-save:hover:not(:disabled) {
+  background-color: #249e63;
+}
+
+.assoc-mens-btn-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Box de Plano Vinculado */
+.assoc-mens-plan-box {
+  background: linear-gradient(135deg, #0b1f33 0%, #132f4c 100%);
+  border-radius: 16px;
+  padding: 18px 20px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.assoc-mens-plan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-plan-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6ee7b7;
+  margin-bottom: 4px;
+}
+
+.assoc-mens-plan-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.assoc-mens-plan-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.assoc-mens-plan-period {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+.assoc-mens-plan-features {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assoc-mens-plan-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Nota de rodapé (RF-AS01 / RF-AS03 / RF-AS05) */
+.assoc-mens-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.assoc-mens-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #64748b;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .assoc-mens-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assoc-mens-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assoc-mens-banner {
+    padding: 18px 20px;
+  }
+
+  .assoc-mens-card {
+    padding: 18px 18px;
+  }
+}

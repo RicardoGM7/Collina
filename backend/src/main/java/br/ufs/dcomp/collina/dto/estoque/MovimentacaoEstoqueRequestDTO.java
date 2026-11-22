@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 
 public record MovimentacaoEstoqueRequestDTO(
         @NotNull(message = "O ID do produto é obrigatório.")
-        Integer produtoID,
+        Integer produtoId,
 
         @NotNull(message = "O tipo de movimentação é obrigatório.")
         MovimentacaoEstoqueEnum tipo,

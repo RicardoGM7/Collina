@@ -23,15 +23,18 @@ public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(nullable = false)
     private Instant data;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private StatusTransacaoEnum status;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemPedido> itens = new ArrayList();
+    private List<ItemPedido> itens = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
     private PagamentoPedido pagamentoPedido;
 
 }
