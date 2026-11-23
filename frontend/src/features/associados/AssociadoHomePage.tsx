@@ -133,7 +133,7 @@ export function AssociadoHomePage() {
           {/* Card 2: Mensalidades (valor real do plano; cobrança é placeholder até módulo Financeiro) */}
           <div
             className="action-card card-navy"
-            onClick={() => navigate('/associado/mensalidades')}
+            onClick={() => navigate('/associado/mensalidades?aba=pagamentos')}
             role="button"
             tabIndex={0}
           >
@@ -204,20 +204,6 @@ export function AssociadoHomePage() {
               Minhas Próximas Reservas
             </h2>
           </div>
-
-          <button
-            type="button"
-            className="associado-link-btn"
-            onClick={() =>
-              setModalModuloEmBreve({
-                titulo: 'Módulo de Reservas de Espaços',
-                descricao:
-                  'A funcionalidade de reservas ainda não está implementada no back-end (módulo de Espaços). Em breve você poderá consultar disponibilidade e agendar horários diretamente.',
-              })
-            }
-          >
-            Nova Reserva +
-          </button>
         </div>
 
         <div className="reservation-placeholder-box">

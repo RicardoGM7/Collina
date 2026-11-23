@@ -2,7 +2,7 @@ package br.ufs.dcomp.collina.model.auth;
 
 import java.util.Optional;
 
-// Perfis de acesso do sistema (Requisitos.docx, RF-AUTO01). O perfil do usuário fica no Firebase, como custom claim "perfil".
+// Perfis de acesso do sistema (armazenados em tb_usuario).
 public enum PerfilUsuarioEnum {
     ADMIN,          // Administrador
     RECEPCAO,       // Funcionário de Recepção
@@ -11,7 +11,7 @@ public enum PerfilUsuarioEnum {
     ESCALA_RH,      // Funcionário de Escala/RH
     ASSOCIADO;      // Associado titular (Proprietário ou Contribuinte)
 
-    // Nome da claim gravada no token do Firebase (o front lê a mesma chave)
+    // Claim legada usada apenas na migração automática de contas antigas do Firebase para tb_usuario
     public static final String CLAIM = "perfil";
 
     // Authority usada no Spring Security: hasRole("ADMIN") <-> "ROLE_ADMIN"

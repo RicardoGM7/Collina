@@ -95,11 +95,6 @@ export const associadoService = {
     return normalizarAssociado(data)
   },
 
-  async alterarPlano(id: number, tipoPlano: TipoPlano): Promise<Associado> {
-    const { data } = await api.patch<Associado>(`/api/associados/${id}/plano`, { tipoPlano })
-    return normalizarAssociado(data)
-  },
-
   async alterarSituacao(id: number, situacao: SituacaoCadastral): Promise<Associado> {
     const { data } = await api.patch<Associado>(`/api/associados/${id}/situacao`, { situacao })
     return normalizarAssociado(data)
@@ -130,7 +125,7 @@ export const associadoService = {
     return data
   },
 
-  // RF-AS04: dispara a rotina de inativação por idade (21 anos)
+  // Dispara a rotina de inativação por idade (21 anos)
   async inativarDependentesPorIdade(): Promise<number> {
     const { data } = await api.post<{ vinculosInativados: number }>(
       '/api/dependentes/inativar-por-idade',
@@ -138,7 +133,7 @@ export const associadoService = {
     return data.vinculosInativados
   },
 
-  // ===== Planos (RF-AS02) =====
+  // ===== Planos =====
 
   async listarPlanos(): Promise<Plano[]> {
     const { data } = await api.get<Plano[]>('/api/planos')

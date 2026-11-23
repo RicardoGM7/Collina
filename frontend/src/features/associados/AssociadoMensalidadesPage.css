@@ -624,6 +624,67 @@
   cursor: not-allowed;
 }
 
+.assoc-mens-btn-pay {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background-color: #2bb673;
+  border: 1px solid #2bb673;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    transform 120ms ease;
+}
+
+.assoc-mens-btn-pay:hover {
+  background-color: #249e63;
+}
+
+.assoc-mens-btn-pay:active {
+  transform: scale(0.98);
+}
+
+.assoc-mens-pay-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.assoc-mens-pay-modal-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: #f1f6fa;
+  border: 1px solid #dbe6f0;
+  color: #0b1f33;
+}
+
+.assoc-mens-pay-modal-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #0b1f33;
+}
+
+.assoc-mens-pay-modal-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.assoc-mens-pay-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Box de Plano Vinculado */
 .assoc-mens-plan-box {
   background: linear-gradient(135deg, #0b1f33 0%, #132f4c 100%);

@@ -1,6 +1,5 @@
 package br.ufs.dcomp.collina.controller.associados;
 
-import br.ufs.dcomp.collina.dto.associados.AlterarPlanoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AlterarSituacaoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoRequestDTO;
 import br.ufs.dcomp.collina.dto.associados.AssociadoResponseDTO;
@@ -112,14 +111,7 @@ public class AssociadoController {
         return ResponseEntity.ok(associadoService.atualizarDadosPessoais(id, dto));
     }
 
-    // 6. Alterar plano/categoria - funcionário autorizado (200 OK)
-    @PatchMapping("/{id}/plano")
-    public ResponseEntity<AssociadoResponseDTO> alterarPlano(@PathVariable Integer id,
-                                                             @Valid @RequestBody AlterarPlanoRequestDTO dto) {
-        return ResponseEntity.ok(associadoService.alterarPlano(id, dto.tipoPlano()));
-    }
-
-    // 7. RF-AS06: alterar situação cadastral - funcionário autorizado (200 OK)
+    // 6. RF-AS06: alterar situação cadastral - funcionário autorizado (200 OK)
     @PatchMapping("/{id}/situacao")
     public ResponseEntity<AssociadoResponseDTO> alterarSituacao(@PathVariable Integer id,
                                                                 @Valid @RequestBody AlterarSituacaoRequestDTO dto) {

@@ -46,7 +46,7 @@ function ModulePlaceholder({ title }: { title: string }) {
 }
 
 /*
-  CONTROLE DE ACESSO POR PERFIL (RBAC) — Requisitos.docx, RF-AUTO02 a RF-AUTO04
+  CONTROLE DE ACESSO POR PERFIL (RBAC)
   - ADMIN:      painel administrativo e todos os módulos.
   - RECEPCAO:   atendimento (associados, dependentes) e reservas.
   - FINANCEIRO: módulo financeiro.
@@ -77,7 +77,7 @@ export function AppRoutes() {
               <Route path="/admin" element={<AdminHomePage />} />
             </Route>
 
-            {/* Cadastros de associados e dependentes: Administrador e Recepção (RF-AS01 a RF-AS06) */}
+            {/* Cadastros de associados e dependentes: Administrador e Recepção */}
             <Route element={<ProtectedRoute perfis={['ADMIN', 'RECEPCAO']} />}>
               <Route path="/cadastros" element={<AdminAssociadosPage />} />
             </Route>

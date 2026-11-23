@@ -27,11 +27,10 @@ public class AuthController {
         this.usuarioService = usuarioService;
     }
 
-    // 1. Dados do usuário do token atual (não consulta o Firebase)
+    // 1. Dados do usuário autenticado (carregados a partir de tb_usuario)
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponseDTO> me(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return ResponseEntity.ok(new UsuarioResponseDTO(
-                usuario.uid(), usuario.email(), usuario.nome(), usuario.perfil(), true, usuario.emailVerificado()));
+        return ResponseEntity.ok(usuarioService.buscarMe(usuario));
     }
 
     // 2. Garante o perfil do usuário logado (ASSOCIADO por padrão; ADMIN para e-mails configurados). Chamado pelo front no login.

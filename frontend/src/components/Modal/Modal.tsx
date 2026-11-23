@@ -6,6 +6,7 @@ import {
   type ReactNode,
   type TransitionEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import './Modal.css'
 
@@ -277,7 +278,7 @@ export function Modal({
         ? 'closing'
         : 'idle'
 
-  return (
+  return createPortal(
     <div
       className={`collina-modal-backdrop collina-modal-backdrop--${stateClass} ${
         isAnimating ? 'collina-modal-backdrop--animating' : ''
@@ -330,6 +331,7 @@ export function Modal({
 
         {footer && <div className="collina-modal-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -5,6 +5,7 @@ import {
   Clock,
   CreditCard,
   Edit2,
+  Info,
   Save,
   ShieldCheck,
   User,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { associadoService } from '../../services/associadoService'
 import {
@@ -44,7 +46,7 @@ function resolverAba(valor: string | null): AbaAtiva {
   if (valor && (ABAS_VALIDAS as readonly string[]).includes(valor)) {
     return valor as AbaAtiva
   }
-  return 'dados'
+  return 'pagamentos'
 }
 
 export function AssociadoMensalidadesPage() {
@@ -66,6 +68,7 @@ export function AssociadoMensalidadesPage() {
   const [dependentes, setDependentes] = useState<VinculoDependencia[]>([])
   const [carregandoDeps, setCarregandoDeps] = useState(false)
   const [erroDeps, setErroDeps] = useState('')
+  const [modalPagamentoAberto, setModalPagamentoAberto] = useState(false)
 
   useEffect(() => {
     if (associado) {
@@ -327,6 +330,16 @@ export function AssociadoMensalidadesPage() {
                     Integração com o módulo Financeiro e Mensalidades
                   </p>
                 </div>
+
+                {/* Botão reservado para integração futura com o módulo Financeiro */}
+                <button
+                  type="button"
+                  className="assoc-mens-btn-pay"
+                  onClick={() => setModalPagamentoAberto(true)}
+                >
+                  <CreditCard size={15} />
+                  <span>Fazer pagamento</span>
+                </button>
               </div>
 
               <div className="assoc-mens-placeholder">
@@ -476,14 +489,6 @@ export function AssociadoMensalidadesPage() {
                     <p>Nenhum dependente vinculado ao seu cadastro.</p>
                   </div>
                 )}
-
-                <div className="assoc-mens-footnote">
-                  <AlertCircle size={15} />
-                  <span>
-                    O cadastro, alteração e inativação de dependentes são
-                    realizados pela recepção do clube (RF-AS03).
-                  </span>
-                </div>
               </>
             )}
           </section>
@@ -683,19 +688,40 @@ export function AssociadoMensalidadesPage() {
                     </div>
                   </div>
                 </div>
-
-                <div className="assoc-mens-footnote">
-                  <AlertCircle size={15} />
-                  <span>
-                    Conforme a regra do clube (RF-AS05), a troca de categoria,
-                    plano ou situação cadastral é formalizada pela administração.
-                  </span>
-                </div>
               </>
             )}
           </section>
         )}
       </div>
+
+      {/* Modal informativa até a integração com o módulo Financeiro */}
+      <Modal
+        isOpen={modalPagamentoAberto}
+        onClose={() => setModalPagamentoAberto(false)}
+        title="Fazer Pagamento"
+        subtitle="Módulo Financeiro em desenvolvimento"
+        maxWidth={460}
+      >
+        <div className="assoc-mens-pay-modal-body">
+          <div className="assoc-mens-pay-modal-alert">
+            <Info size={20} className="assoc-mens-pay-modal-icon" />
+            <p className="assoc-mens-pay-modal-text">
+              O fluxo de pagamento de mensalidades será integrado ao módulo
+              Financeiro assim que estiver disponível.
+            </p>
+          </div>
+
+          <div className="assoc-mens-pay-modal-actions">
+            <button
+              type="button"
+              className="assoc-mens-btn-save"
+              onClick={() => setModalPagamentoAberto(false)}
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
