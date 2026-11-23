@@ -11,7 +11,6 @@ import {
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Modal } from '../../components/Modal/Modal'
-import { useAuth } from '../../context/AuthContext'
 import { getApiErrorMessage } from '../../services/api'
 import {
   categoriasService,
@@ -85,9 +84,6 @@ const ORDER_STATUS_META: Record<
 }
 
 export function AssociadoPedidosPage() {
-  const { usuario } = useAuth()
-  const storageKey = `collina_meus_pedidos_${usuario?.uid ?? 'anon'}`
-
   const [activeTab, setActiveTab] = useState<'produtos' | 'pedidos'>('produtos')
   const [selectedCategoryId, setSelectedCategoryId] = useState<'all' | number>(
     'all'
@@ -96,14 +92,7 @@ export function AssociadoPedidosPage() {
 
   const [categories, setCategories] = useState<CategoriaDTO[]>([])
   const [products, setProducts] = useState<CatalogProduct[]>([])
-  const [myOrders, setMyOrders] = useState<PedidoDTO[]>(() => {
-    try {
-      const saved = sessionStorage.getItem(storageKey)
-      return saved ? (JSON.parse(saved) as PedidoDTO[]) : []
-    } catch {
-      return []
-    }
-  })
+  const [myOrders, setMyOrders] = useState<PedidoDTO[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -123,12 +112,11 @@ export function AssociadoPedidosPage() {
 
   const loadData = useCallback(async (showErrorToast = true) => {
     try {
-      // GET /api/pedidos é restrito a ADMIN/ESTOQUE no SecurityConfig (pedidos ainda não possuem dono no backend).
-      // Por isso o associado consulta apenas catálogo + saldo, e mantém seus pedidos da sessão localmente.
-      const [cats, prods, estoques] = await Promise.all([
+      const [cats, prods, estoques, meusPedidos] = await Promise.all([
         categoriasService.listar(),
         produtosService.listar(),
         estoqueService.listar(),
+        pedidosService.listarMeus(),
       ])
 
       const estoqueMap = new Map<number, EstoqueDTO>()
@@ -144,6 +132,7 @@ export function AssociadoPedidosPage() {
 
       setCategories(cats)
       setProducts(mergedProducts)
+      setMyOrders(meusPedidos)
     } catch (error) {
       if (showErrorToast) {
         toast.error(
@@ -234,15 +223,10 @@ export function AssociadoPedidosPage() {
       )
 
       setLastCreatedOrder(created)
-      setMyOrders((prev) => {
-        const updated = [created, ...prev.filter((p) => p.id !== created.id)]
-        try {
-          sessionStorage.setItem(storageKey, JSON.stringify(updated))
-        } catch {
-          // ignora erro de quota do sessionStorage
-        }
-        return updated
-      })
+      setMyOrders((prev) => [
+        created,
+        ...prev.filter((p) => p.id !== created.id),
+      ])
       setCart({})
       setIsSuccessModalOpen(true)
       toast.success(`Pedido #${created.id} criado com sucesso!`)

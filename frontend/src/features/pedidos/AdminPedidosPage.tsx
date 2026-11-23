@@ -17,6 +17,7 @@ import { getApiErrorMessage } from '../../services/api'
 import { estoqueService, type EstoqueDTO } from '../../services/estoqueService'
 import {
   pedidosService,
+  type ClientePedidoDTO,
   type ItemPedidoDTO,
   type PedidoDTO,
   type PedidoStatusDTO,
@@ -81,15 +82,13 @@ const STATUS_META: Record<
 }
 
 const ORDERS_PER_PAGE = 6
-const DEFAULT_CUSTOMER_LABEL = 'Balcão / Associado'
+const DEFAULT_CUSTOMER_LABEL = 'Balcão / Não vinculado'
 
 export function AdminPedidosPage() {
   const [orders, setOrders] = useState<PedidoDTO[]>([])
   const [allOrdersForKpi, setAllOrdersForKpi] = useState<PedidoDTO[]>([])
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
-  const [customerNamesByOrderId, setCustomerNamesByOrderId] = useState<
-    Record<number, string>
-  >({})
+  const [clientes, setClientes] = useState<ClientePedidoDTO[]>([])
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -106,7 +105,7 @@ export function AdminPedidosPage() {
   const lastSelectedOrderRef = useRef<PedidoDTO | null>(null)
 
   // Estado do Modal 1: Novo Pedido (Balcão)
-  const [novoNome, setNovoNome] = useState('')
+  const [novoUsuarioId, setNovoUsuarioId] = useState<number | ''>('')
   const [novoProdutoId, setNovoProdutoId] = useState<number | ''>('')
   const [novoQtd, setNovoQtd] = useState<number>(1)
   const [novoItens, setNovoItens] = useState<DraftOrderItem[]>([])
@@ -122,13 +121,14 @@ export function AdminPedidosPage() {
     async (showErrorToast = true) => {
       try {
         const range = getPeriodDateRange(periodFilter)
-        const [filteredList, fullList, prods, estoques] = await Promise.all([
+        const [filteredList, fullList, prods, estoques, clientesList] = await Promise.all([
           pedidosService.listar(range),
           periodFilter === 'Todos'
             ? Promise.resolve<PedidoDTO[] | null>(null)
             : pedidosService.listar(),
           produtosService.listar(),
           estoqueService.listar(),
+          pedidosService.listarClientes(),
         ])
 
         const sortedFiltered = [...filteredList].sort((a, b) => b.id - a.id)
@@ -152,6 +152,7 @@ export function AdminPedidosPage() {
         setOrders(sortedFiltered)
         setAllOrdersForKpi(sortedAll)
         setCatalog(mergedCatalog)
+        setClientes(clientesList)
       } catch (error) {
         if (showErrorToast) {
           toast.error(
@@ -182,11 +183,11 @@ export function AdminPedidosPage() {
     return lastSelectedOrderRef.current
   }, [orders, allOrdersForKpi, selectedOrderId])
 
-  const getCustomerName = useCallback(
-    (orderId: number) =>
-      customerNamesByOrderId[orderId]?.trim() || DEFAULT_CUSTOMER_LABEL,
-    [customerNamesByOrderId]
-  )
+  const getCustomerName = useCallback((order: PedidoDTO) => {
+    if (order.usuarioNome?.trim()) return order.usuarioNome.trim()
+    if (order.usuarioEmail?.trim()) return order.usuarioEmail.trim()
+    return DEFAULT_CUSTOMER_LABEL
+  }, [])
 
   // KPIs reais calculados sobre os pedidos do backend
   const kpis = useMemo(() => {
@@ -217,11 +218,13 @@ export function AdminPedidosPage() {
     return orders.filter((order) => {
       const matchesStatus =
         statusFilter === 'ALL' || order.statusPedido === statusFilter
-      const customerName = getCustomerName(order.id).toLowerCase()
+      const customerName = getCustomerName(order).toLowerCase()
+      const customerEmail = (order.usuarioEmail ?? '').toLowerCase()
       const matchesQuery =
         !query ||
         String(order.id).includes(query) ||
         customerName.includes(query) ||
+        customerEmail.includes(query) ||
         order.itens.some((i) =>
           (i.nomeDoProduto ?? '').toLowerCase().includes(query)
         )
@@ -262,7 +265,7 @@ export function AdminPedidosPage() {
       toast.error('Cadastre produtos no estoque antes de criar um pedido.')
       return
     }
-    setNovoNome('')
+    setNovoUsuarioId('')
     const firstAvailable = catalog.find((p) => p.disponivel > 0) ?? catalog[0]
     setNovoProdutoId(firstAvailable.id)
     setNovoQtd(1)
@@ -360,15 +363,9 @@ export function AdminPedidosPage() {
         novoItens.map((i) => ({
           produtoId: i.produtoId,
           quantidade: i.quantidade,
-        }))
+        })),
+        novoUsuarioId === '' ? undefined : novoUsuarioId
       )
-
-      if (novoNome.trim()) {
-        setCustomerNamesByOrderId((prev) => ({
-          ...prev,
-          [created.id]: novoNome.trim(),
-        }))
-      }
 
       toast.success(`Pedido #${created.id} criado com sucesso!`)
       setActiveModal(null)
@@ -738,7 +735,7 @@ export function AdminPedidosPage() {
                         </span>
                       </td>
                       <td className="pedidos-customer-name">
-                        {getCustomerName(order.id)}
+                        {getCustomerName(order)}
                       </td>
                       <td className="text-center">
                         <span className={`pedidos-badge ${meta.className}`}>
@@ -832,7 +829,7 @@ export function AdminPedidosPage() {
         title="Novo Pedido (Balcão)"
         subtitle="Adicione os produtos e quantidades do pedido"
         maxWidth={460}
-        closeOnOverlayClick={novoItens.length === 0 && novoNome.trim() === ''}
+        closeOnOverlayClick={novoItens.length === 0 && novoUsuarioId === ''}
         footer={
           <div className="pedidos-modal-footer-split">
             <div className="pedidos-modal-total">
@@ -861,17 +858,26 @@ export function AdminPedidosPage() {
         }
       >
         <div className="pedidos-modal-field">
-          <label className="pedidos-field-label" htmlFor="novo-pedido-nome">
-            Nome (opcional por enquanto)
+          <label className="pedidos-field-label" htmlFor="novo-pedido-usuario">
+            Cliente / Usuário (opcional)
           </label>
-          <input
-            id="novo-pedido-nome"
-            type="text"
+          <select
+            id="novo-pedido-usuario"
             className="pedidos-text-input"
-            placeholder="Ex: Ricardo Gomes Miranda"
-            value={novoNome}
-            onChange={(e) => setNovoNome(e.target.value)}
-          />
+            value={novoUsuarioId}
+            onChange={(e) =>
+              setNovoUsuarioId(e.target.value === '' ? '' : Number(e.target.value))
+            }
+          >
+            <option value="">Meu usuário (padrão)</option>
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.id}>
+                {cliente.nome?.trim()
+                  ? `${cliente.nome.trim()} (${cliente.email})`
+                  : cliente.email}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="pedidos-modal-field">
@@ -1018,7 +1024,7 @@ export function AdminPedidosPage() {
             <div className="pedidos-info-pills">
               <div className="pedidos-info-pill">
                 <User size={14} className="pedidos-info-pill-icon" />
-                <span>{getCustomerName(selectedOrder.id)}</span>
+                <span>{getCustomerName(selectedOrder)}</span>
               </div>
               <div className="pedidos-info-pill">
                 <Clock size={14} className="pedidos-info-pill-icon" />
@@ -1176,7 +1182,7 @@ export function AdminPedidosPage() {
           <>
             <div className="pedidos-info-pill">
               <User size={14} className="pedidos-info-pill-icon" />
-              <span>{getCustomerName(selectedOrder.id)}</span>
+              <span>{getCustomerName(selectedOrder)}</span>
             </div>
 
             <div className="pedidos-summary-box">

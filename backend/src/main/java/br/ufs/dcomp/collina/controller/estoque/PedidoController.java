@@ -1,15 +1,18 @@
 package br.ufs.dcomp.collina.controller.estoque;
 
+import br.ufs.dcomp.collina.dto.estoque.ClientePedidoResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.PagamentoPedidoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.PagamentoPedidoResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoResponseDTO;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
 import br.ufs.dcomp.collina.model.estoque.StatusTransacaoEnum;
 import br.ufs.dcomp.collina.service.estoque.PedidoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -31,8 +34,10 @@ public class PedidoController {
 
     // RF-E01: Criar novo pedido (201 Created)
     @PostMapping
-    public ResponseEntity<PedidoResponseDTO> criar(@Valid @RequestBody PedidoRequestDTO dto) {
-        PedidoResponseDTO novoPedido = pedidoService.criarPedido(dto);
+    public ResponseEntity<PedidoResponseDTO> criar(
+            @Valid @RequestBody PedidoRequestDTO dto,
+            @AuthenticationPrincipal UsuarioAutenticado solicitante) {
+        PedidoResponseDTO novoPedido = pedidoService.criarPedido(dto, solicitante);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -40,6 +45,19 @@ public class PedidoController {
                 .toUri();
 
         return ResponseEntity.created(location).body(novoPedido);
+    }
+
+    // Listar pedidos do próprio usuário autenticado (200 OK)
+    @GetMapping("/meus")
+    public ResponseEntity<List<PedidoResponseDTO>> listarMeus(
+            @AuthenticationPrincipal UsuarioAutenticado solicitante) {
+        return ResponseEntity.ok(pedidoService.listarMeusPedidos(solicitante));
+    }
+
+    // Listar usuários ativos para seleção de cliente no balcão (ADMIN / ESTOQUE)
+    @GetMapping("/clientes")
+    public ResponseEntity<List<ClientePedidoResponseDTO>> listarClientes() {
+        return ResponseEntity.ok(pedidoService.listarClientesParaPedido());
     }
 
     // RF-E16 e RF-E17: Listar pedidos com filtros opcionais de status e período (200 OK)

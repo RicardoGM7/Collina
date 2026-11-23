@@ -4,9 +4,12 @@
 ### ====================================================================
 
 @baseUrl = http://localhost:8080/api/chat
+# Cole aqui o ID Token JWT do Firebase de um usuário com perfil ADMIN
+@token = COLE_SEU_FIREBASE_ID_TOKEN_AQUI
 
 ### 1. Apresentação inicial (sem conversaId - o backend gera automaticamente)
 POST {{baseUrl}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

@@ -4,25 +4,109 @@ import {
   useState,
   type CSSProperties,
   type FormEvent,
+  type ReactNode,
   type TransitionEvent,
 } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { getApiErrorMessage } from '../../services/api'
+import { chatService, type AcaoPendenteDTO } from '../../services/chatService'
 import './ChatSidebar.css'
 
-const SUGGESTIONS = ['Resumo do mês', 'Reservas de hoje', 'Registrar saída']
+type StatusAcaoUi =
+  | 'PENDENTE'
+  | 'PROCESSANDO'
+  | 'CONFIRMADA'
+  | 'CANCELADA'
+  | 'EXPIRADA'
+  | 'ERRO'
+
+interface AcaoPendenteUi extends AcaoPendenteDTO {
+  status: StatusAcaoUi
+  resultado?: string
+}
+
+interface ChatMessage {
+  id: string
+  role: 'ai' | 'user'
+  text: string
+  isError?: boolean
+  acoes?: AcaoPendenteUi[]
+}
+
+const ADMIN_SUGGESTIONS = [
+  'Quais itens estão acabando?',
+  'Pedidos em aberto',
+  'Ver cardápio disponível',
+  'Listar todos os produtos',
+]
 
 function staggerStyle(index: number): CSSProperties {
   return { '--stagger-index': index } as CSSProperties
 }
 
+function criarMensagemInicial(nomeUsuario?: string | null): ChatMessage {
+  const primeiroNome = nomeUsuario?.trim().split(/\s+/)[0]
+  const saudacao = primeiroNome ? `Olá, ${primeiroNome}!` : 'Olá!'
+  return {
+    id: 'welcome',
+    role: 'ai',
+    text: `${saudacao} Sou a Carollina AI. Posso consultar itens com estoque baixo, exibir o cardápio, registrar movimentações de estoque e gerenciar pedidos. Como posso ajudar?`,
+  }
+}
+
+/**
+ * Renderiza trechos **em negrito** de forma segura (sem innerHTML) preservando quebras de linha via CSS.
+ */
+function renderFormattedText(text: string): ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return <strong key={idx}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
 export function ChatSidebar() {
+  const { usuario } = useAuth()
   const [isOpen, setIsOpen] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
   const [input, setInput] = useState('')
+  const [conversaId, setConversaId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
+    criarMensagemInicial(usuario?.nome),
+  ])
 
   const sidebarRef = useRef<HTMLElement>(null)
   const minimizedRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const animTimerRef = useRef<number | null>(null)
+
+  // Reinicia a conversa ao trocar de usuário logado
+  useEffect(() => {
+    setConversaId(null)
+    setMessages([criarMensagemInicial(usuario?.nome)])
+    setInput('')
+    setIsLoading(false)
+  }, [usuario?.uid, usuario?.nome])
+
+  // Rolagem automática para a última mensagem
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isLoading])
 
   function handleToggle(nextOpen: boolean) {
     if (animTimerRef.current !== null) {
@@ -67,11 +151,137 @@ export function ChatSidebar() {
     }
   }, [])
 
+  function handleResetConversation() {
+    if (isLoading) return
+    if (conversaId) {
+      void chatService.limparConversa(conversaId).catch(() => undefined)
+    }
+    setConversaId(null)
+    setMessages([criarMensagemInicial(usuario?.nome)])
+    setInput('')
+    inputRef.current?.focus()
+  }
+
+  function atualizarEstadoAcao(
+    messageId: string,
+    acaoId: string,
+    patch: Partial<AcaoPendenteUi>,
+  ) {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id !== messageId || !msg.acoes) return msg
+        return {
+          ...msg,
+          acoes: msg.acoes.map((a) =>
+            a.acaoId === acaoId ? { ...a, ...patch } : a,
+          ),
+        }
+      }),
+    )
+  }
+
+  async function handleDecisaoAcao(
+    messageId: string,
+    acaoId: string,
+    decisao: 'confirmar' | 'cancelar',
+  ) {
+    atualizarEstadoAcao(messageId, acaoId, { status: 'PROCESSANDO' })
+
+    try {
+      const res =
+        decisao === 'confirmar'
+          ? await chatService.confirmarAcao(acaoId)
+          : await chatService.cancelarAcao(acaoId)
+
+      const novoStatus: StatusAcaoUi =
+        res.status === 'CONFIRMADA'
+          ? 'CONFIRMADA'
+          : res.status === 'CANCELADA'
+            ? 'CANCELADA'
+            : res.status === 'EXPIRADA'
+              ? 'EXPIRADA'
+              : 'ERRO'
+
+      atualizarEstadoAcao(messageId, acaoId, {
+        status: novoStatus,
+        resultado: res.mensagem,
+      })
+    } catch (error) {
+      const msgErro = getApiErrorMessage(
+        error,
+        'Não foi possível processar sua confirmação.',
+      )
+      atualizarEstadoAcao(messageId, acaoId, {
+        status: 'ERRO',
+        resultado: msgErro,
+      })
+    }
+  }
+
+  async function enviarMensagem(textoBruto: string) {
+    const texto = textoBruto.trim()
+    if (!texto || isLoading) return
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      text: texto,
+    }
+
+    setMessages((prev) => [...prev, userMsg])
+    setInput('')
+    setIsLoading(true)
+
+    try {
+      const resposta = await chatService.enviarMensagem(texto, conversaId)
+      setConversaId(resposta.conversaId)
+
+      const acoesUi: AcaoPendenteUi[] | undefined =
+        resposta.acoesPendentes && resposta.acoesPendentes.length > 0
+          ? resposta.acoesPendentes.map((a) => ({
+              ...a,
+              status: 'PENDENTE',
+            }))
+          : undefined
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          role: 'ai',
+          text: resposta.mensagem,
+          isError: Boolean(resposta.erro),
+          acoes: acoesUi,
+        },
+      ])
+    } catch (error) {
+      const mensagemErro = getApiErrorMessage(
+        error,
+        'Não foi possível obter resposta da Carollina AI no momento.',
+      )
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          role: 'ai',
+          text: mensagemErro,
+          isError: true,
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+      window.setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!input.trim()) return
-    setInput('')
+    void enviarMensagem(input)
   }
+
+  const mostrarSugestoes = messages.length === 1 && !isLoading
 
   return (
     <>
@@ -106,7 +316,7 @@ export function ChatSidebar() {
             <span className="chat-name">Carollina AI</span>
             <span className="chat-status">
               <span className="chat-status-dot" />
-              Online
+              {isLoading ? 'Pensando...' : 'Online'}
             </span>
           </div>
         </div>
@@ -130,71 +340,208 @@ export function ChatSidebar() {
               <span className="chat-name">Carollina AI</span>
               <span className="chat-status">
                 <span className="chat-status-dot" />
-                Online
+                {isLoading ? 'Pensando...' : 'Online'}
               </span>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="chat-collapse-btn"
-            aria-label="Fechar chat Carollina AI"
-            onClick={() => handleToggle(false)}
-            title="Minimizar"
-          >
-            <ChevronRight size={16} className="chat-arrow-icon" />
-          </button>
+          <div className="chat-header-actions">
+            {messages.length > 1 && (
+              <button
+                type="button"
+                className="chat-collapse-btn"
+                aria-label="Iniciar nova conversa"
+                onClick={handleResetConversation}
+                disabled={isLoading}
+                title="Nova conversa"
+              >
+                <RotateCcw size={14} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="chat-collapse-btn"
+              aria-label="Fechar chat Carollina AI"
+              onClick={() => handleToggle(false)}
+              title="Minimizar"
+            >
+              <ChevronRight size={16} className="chat-arrow-icon" />
+            </button>
+          </div>
         </div>
 
         <div className="chat-messages">
-          <div
-            className="chat-bubble chat-bubble-ai chat-stagger-item"
-            style={staggerStyle(0)}
-          >
-            Olá! Posso consultar reservas, estoque e finanças, e registrar
-            movimentações. Como ajudo?
-          </div>
-
-          <div
-            className="chat-bubble chat-bubble-user chat-stagger-item"
-            style={staggerStyle(1)}
-          >
-            Quais itens estão acabando?
-          </div>
-
-          <div
-            className="chat-bubble chat-bubble-ai chat-stagger-item"
-            style={staggerStyle(2)}
-          >
-            2 itens estão abaixo do mínimo: <strong>Boia de piscina</strong> (4
-            de 5) e <strong>Bolas de basquete</strong> (1 de 3). Quer registrar
-            uma entrada?
-          </div>
-
-          <div className="chat-suggestions">
-            {SUGGESTIONS.map((item, idx) => (
-              <button
-                key={item}
-                type="button"
-                className="chat-chip chat-stagger-item"
-                style={staggerStyle(3 + idx)}
+          {messages.map((msg, idx) => (
+            <div key={msg.id} className="chat-message-group">
+              <div
+                className={`chat-bubble ${
+                  msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'
+                } ${msg.isError ? 'chat-bubble-error' : ''} chat-stagger-item`}
+                style={staggerStyle(Math.min(idx, 5))}
               >
-                {item}
-              </button>
-            ))}
-          </div>
+                {msg.role === 'ai' ? renderFormattedText(msg.text) : msg.text}
+              </div>
+
+              {msg.acoes && msg.acoes.length > 0 && (
+                <div className="chat-actions-stack">
+                  {msg.acoes.map((acao) => (
+                    <div
+                      key={acao.acaoId}
+                      className={`chat-action-card ${
+                        acao.critica ? 'chat-action-card--critica' : ''
+                      } chat-action-card--${acao.status.toLowerCase()}`}
+                    >
+                      <div className="chat-action-header">
+                        <span className="chat-action-title">
+                          {acao.critica ? (
+                            <ShieldAlert size={14} />
+                          ) : (
+                            <ShieldCheck size={14} />
+                          )}
+                          {acao.titulo}
+                        </span>
+
+                        {acao.status !== 'PENDENTE' &&
+                          acao.status !== 'PROCESSANDO' && (
+                            <span
+                              className={`chat-action-badge chat-action-badge--${acao.status.toLowerCase()}`}
+                            >
+                              {acao.status === 'CONFIRMADA'
+                                ? 'Confirmada'
+                                : acao.status === 'CANCELADA'
+                                  ? 'Cancelada'
+                                  : acao.status === 'EXPIRADA'
+                                    ? 'Expirada'
+                                    : 'Erro'}
+                            </span>
+                          )}
+                      </div>
+
+                      {acao.detalhes.length > 0 && (
+                        <ul className="chat-action-details">
+                          {acao.detalhes.map((linha, i) => (
+                            <li key={i}>{linha}</li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {(acao.status === 'PENDENTE' ||
+                        acao.status === 'PROCESSANDO') && (
+                        <div className="chat-action-buttons">
+                          <button
+                            type="button"
+                            className={`chat-action-btn ${
+                              acao.critica
+                                ? 'chat-action-btn--danger'
+                                : 'chat-action-btn--confirm'
+                            }`}
+                            disabled={acao.status === 'PROCESSANDO'}
+                            onClick={() =>
+                              void handleDecisaoAcao(
+                                msg.id,
+                                acao.acaoId,
+                                'confirmar',
+                              )
+                            }
+                          >
+                            <Check size={14} />
+                            {acao.status === 'PROCESSANDO'
+                              ? 'Aplicando...'
+                              : 'Confirmar'}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="chat-action-btn chat-action-btn--cancel"
+                            disabled={acao.status === 'PROCESSANDO'}
+                            onClick={() =>
+                              void handleDecisaoAcao(
+                                msg.id,
+                                acao.acaoId,
+                                'cancelar',
+                              )
+                            }
+                          >
+                            <X size={14} />
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
+
+                      {acao.resultado && (
+                        <p
+                          className={`chat-action-result ${
+                            acao.status === 'ERRO' || acao.status === 'EXPIRADA'
+                              ? 'chat-action-result--error'
+                              : ''
+                          }`}
+                        >
+                          {acao.resultado}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {isLoading && (
+            <div
+              className="chat-bubble chat-bubble-ai chat-bubble-loading"
+              aria-live="polite"
+            >
+              <span
+                className="chat-typing-dots"
+                aria-label="Carollina AI está digitando"
+              >
+                <span />
+                <span />
+                <span />
+              </span>
+            </div>
+          )}
+
+          {mostrarSugestoes && (
+            <div className="chat-suggestions">
+              {ADMIN_SUGGESTIONS.map((item, idx) => (
+                <button
+                  key={item}
+                  type="button"
+                  className="chat-chip chat-stagger-item"
+                  style={staggerStyle(1 + idx)}
+                  onClick={() => void enviarMensagem(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="chat-footer">
           <form className="chat-form" onSubmit={handleSubmit}>
             <input
+              ref={inputRef}
               type="text"
               className="chat-input"
-              placeholder="Escreva sua pergunta..."
+              maxLength={2000}
+              placeholder={
+                isLoading ? 'Aguardando resposta...' : 'Escreva sua pergunta...'
+              }
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              disabled={isLoading}
             />
-            <button type="submit" className="chat-send-btn" title="Enviar">
+            <button
+              type="submit"
+              className="chat-send-btn"
+              title="Enviar"
+              disabled={isLoading || !input.trim()}
+            >
               <ArrowRight size={17} />
             </button>
           </form>

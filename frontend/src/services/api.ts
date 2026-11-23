@@ -65,6 +65,10 @@ export function getApiErrorMessage(
       return data.message
     }
 
+    if (error.code === 'ECONNABORTED') {
+      return 'A requisição demorou mais do que o esperado (tempo esgotado). Tente novamente.'
+    }
+
     if (error.code === 'ERR_NETWORK' || !error.response) {
       return 'Não foi possível conectar ao servidor. Verifique se o backend está rodando na porta 8080.'
     }

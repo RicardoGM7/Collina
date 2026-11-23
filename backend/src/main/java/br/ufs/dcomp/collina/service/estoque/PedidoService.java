@@ -1,12 +1,19 @@
 package br.ufs.dcomp.collina.service.estoque;
 
+import br.ufs.dcomp.collina.dto.estoque.ClientePedidoResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.PagamentoPedidoResponseDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoRequestDTO;
 import br.ufs.dcomp.collina.dto.estoque.PedidoResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
+import br.ufs.dcomp.collina.model.auth.PerfilUsuarioEnum;
+import br.ufs.dcomp.collina.model.auth.StatusUsuarioEnum;
+import br.ufs.dcomp.collina.model.auth.Usuario;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
 import br.ufs.dcomp.collina.model.estoque.*;
+import br.ufs.dcomp.collina.repository.auth.UsuarioRepository;
 import br.ufs.dcomp.collina.repository.estoque.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,20 +47,26 @@ public class PedidoService {
     @Autowired
     private PagamentoPedidoRepository pagamentoPedidoRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     // ==========================================
     // 1. Ciclo de Vida do Pedido
     // ==========================================
 
-    // RF-E01: Criar novo pedido
+    // RF-E01: Criar novo pedido vinculado ao usuário autenticado (ou outro usuário se ADMIN/ESTOQUE informar usuarioId)
     @Transactional
-    public PedidoResponseDTO criarPedido(PedidoRequestDTO dto) {
+    public PedidoResponseDTO criarPedido(PedidoRequestDTO dto, UsuarioAutenticado solicitante) {
         if (dto == null || dto.itens() == null || dto.itens().isEmpty()) {
             throw new IllegalArgumentException("O pedido deve conter pelo menos um item.");
         }
 
+        Usuario dono = resolverDonoPedido(dto.usuarioId(), solicitante);
+
         Pedido pedido = new Pedido();
         pedido.setData(Instant.now());
         pedido.setStatus(StatusTransacaoEnum.AGUARDANDO_PAGAMENTO);
+        pedido.setUsuario(dono);
         pedido.setItens(new ArrayList<>());
 
         // Agrupa as quantidades por produtoId para evitar duplicações e burlar validação de estoque
@@ -107,6 +120,63 @@ public class PedidoService {
                 .stream()
                 .map(PedidoResponseDTO::new)
                 .toList();
+    }
+
+    // Listar pedidos vinculados ao próprio usuário autenticado
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarMeusPedidos(UsuarioAutenticado solicitante) {
+        if (solicitante == null || solicitante.uid() == null || solicitante.uid().isBlank()) {
+            throw new AccessDeniedException("Usuário não autenticado.");
+        }
+
+        Usuario usuario = usuarioRepository.findByFirebaseUid(solicitante.uid())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado no banco."));
+
+        return pedidoRepository.findByUsuarioIdOrderByDataDesc(usuario.getId())
+                .stream()
+                .map(PedidoResponseDTO::new)
+                .toList();
+    }
+
+    // Listar usuários ativos disponíveis para vincular a um pedido no balcão (ADMIN / ESTOQUE)
+    @Transactional(readOnly = true)
+    public List<ClientePedidoResponseDTO> listarClientesParaPedido() {
+        return usuarioRepository.findByStatusOrderByNomeAsc(StatusUsuarioEnum.ATIVO)
+                .stream()
+                .sorted(Comparator.comparing(
+                        u -> (u.getNome() != null && !u.getNome().isBlank() ? u.getNome() : u.getEmail())
+                                .toLowerCase(Locale.ROOT)))
+                .map(ClientePedidoResponseDTO::new)
+                .toList();
+    }
+
+    private Usuario resolverDonoPedido(Integer usuarioIdInformado, UsuarioAutenticado solicitante) {
+        if (solicitante == null || solicitante.uid() == null || solicitante.uid().isBlank()) {
+            throw new AccessDeniedException("Usuário não autenticado.");
+        }
+
+        Usuario usuarioLogado = usuarioRepository.findByFirebaseUid(solicitante.uid())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado no banco."));
+
+        if (usuarioIdInformado == null) {
+            return usuarioLogado;
+        }
+
+        boolean podeEscolherOutro = solicitante.perfil() == PerfilUsuarioEnum.ADMIN
+                || solicitante.perfil() == PerfilUsuarioEnum.ESTOQUE;
+
+        if (!podeEscolherOutro && !usuarioIdInformado.equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você só pode criar pedidos vinculados à sua própria conta.");
+        }
+
+        Usuario dono = usuarioRepository.findById(usuarioIdInformado)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com ID: " + usuarioIdInformado));
+
+        if (!dono.isAtivo()) {
+            throw new IllegalStateException("Não é possível vincular um pedido a um usuário inativo.");
+        }
+
+        return dono;
     }
 
     // RF-E17: Consultar pedidos com filtro opcional por status e período

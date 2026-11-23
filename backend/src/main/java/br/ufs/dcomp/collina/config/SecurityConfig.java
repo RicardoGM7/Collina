@@ -65,11 +65,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").authenticated()
 
                         // Módulo de estoque e pedidos.
-                        // Catálogo (produtos, categorias e saldo) é visível a qualquer usuário logado; o associado
-                        // só pode CRIAR pedido (RF-E01). Pedidos não têm dono no modelo atual, então listar/cancelar/pagar
-                        // continua restrito ao estoque/admin para não expor pedidos de terceiros.
+                        // Catálogo (produtos, categorias e saldo) é visível a qualquer usuário logado; qualquer
+                        // usuário autenticado pode consultar seus próprios pedidos (/meus) e o associado pode
+                        // CRIAR pedido (RF-E01) vinculado à própria conta. Gestão geral continua restrita a ADMIN/ESTOQUE.
                         .requestMatchers(HttpMethod.GET, "/api/produtos/**", "/api/categorias/**", "/api/estoques")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos/meus").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/pedidos").hasAnyRole("ADMIN", "ESTOQUE", "ASSOCIADO")
                         .requestMatchers("/api/estoques/**", "/api/produtos/**", "/api/categorias/**", "/api/pedidos/**")
                         .hasAnyRole("ADMIN", "ESTOQUE")
@@ -83,6 +84,10 @@ public class SecurityConfig {
 
                         // Módulo de associados: administrador e funcionário de recepção.
                         .requestMatchers("/api/associados/**", "/api/dependentes/**").hasAnyRole("ADMIN", "RECEPCAO")
+
+                        // Assistente IA (Carollina AI): foco inicial no perfil ADMIN.
+                        // Quando as permissões de ASSOCIADO e demais perfis forem definidas, expandir esta regra.
+                        .requestMatchers("/api/chat/**").hasRole("ADMIN")
 
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()

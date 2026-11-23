@@ -11,10 +11,15 @@ import java.util.Set;
 public record PedidoRequestDTO(
         @NotEmpty(message = "O pedido deve conter pelo menos um item.")
         @Valid
-        List<ItemPedidoRequestDTO> itens
+        List<ItemPedidoRequestDTO> itens,
+        Integer usuarioId
 ) {
+    public PedidoRequestDTO(List<ItemPedidoRequestDTO> itens) {
+        this(itens, null);
+    }
+
     public PedidoRequestDTO(Set<ItemPedidoRequestDTO> itens) {
-        this(itens != null ? List.copyOf(itens) : null);
+        this(itens != null ? List.copyOf(itens) : null, null);
     }
 
     public record ItemPedidoRequestDTO(

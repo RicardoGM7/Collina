@@ -1,4 +1,5 @@
 import { api } from './api'
+import type { PerfilUsuario } from '../types/user'
 
 export type PedidoStatusDTO =
   | 'AGUARDANDO_PAGAMENTO'
@@ -23,7 +24,17 @@ export interface PedidoDTO {
   data: string
   statusPedido: PedidoStatusDTO
   total: number
+  usuarioId: number | null
+  usuarioNome: string | null
+  usuarioEmail: string | null
   itens: ItemPedidoDTO[]
+}
+
+export interface ClientePedidoDTO {
+  id: number
+  nome: string | null
+  email: string
+  perfil: PerfilUsuario
 }
 
 export interface ItemPedidoPayload {
@@ -50,13 +61,28 @@ export const pedidosService = {
     return data
   },
 
+  async listarMeus(): Promise<PedidoDTO[]> {
+    const { data } = await api.get<PedidoDTO[]>('/api/pedidos/meus')
+    return data
+  },
+
+  async listarClientes(): Promise<ClientePedidoDTO[]> {
+    const { data } = await api.get<ClientePedidoDTO[]>('/api/pedidos/clientes')
+    return data
+  },
+
   async buscarPorId(id: number): Promise<PedidoDTO> {
     const { data } = await api.get<PedidoDTO>(`/api/pedidos/${id}`)
     return data
   },
 
-  async criar(itens: ItemPedidoPayload[]): Promise<PedidoDTO> {
-    const { data } = await api.post<PedidoDTO>('/api/pedidos', { itens })
+  async criar(
+    itens: ItemPedidoPayload[],
+    usuarioId?: number | null
+  ): Promise<PedidoDTO> {
+    const payload =
+      usuarioId != null ? { itens, usuarioId } : { itens }
+    const { data } = await api.post<PedidoDTO>('/api/pedidos', payload)
     return data
   },
 

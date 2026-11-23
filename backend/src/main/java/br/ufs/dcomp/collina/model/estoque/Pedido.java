@@ -1,6 +1,7 @@
 package br.ufs.dcomp.collina.model.estoque;
 
 
+import br.ufs.dcomp.collina.model.auth.Usuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,10 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusTransacaoEnum status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedido> itens = new ArrayList<>();
