@@ -14,10 +14,16 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Integer> {
     @EntityGraph(attributePaths = {"produto"})
     List<Estoque> findAll();
 
+    @Override
+    @EntityGraph(attributePaths = {"produto"})
+    Optional<Estoque> findById(Integer id);
+
     // Busca o estoque pelo ID do produto associado
+    @EntityGraph(attributePaths = {"produto"})
     Optional<Estoque> findByProdutoId(Integer produtoId);
 
     // RF-E13: Alerta de estoque mínimo (itens com saldo menor ou igual ao mínimo)
+    @EntityGraph(attributePaths = {"produto"})
     @Query("SELECT e FROM Estoque e WHERE e.quantidade <= e.estoqueMinimo")
     List<Estoque> findItensComEstoqueBaixo();
 }

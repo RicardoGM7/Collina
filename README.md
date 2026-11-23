@@ -97,15 +97,13 @@ Para garantir que o código funcione em todas as máquinas sem alterar arquivos 
 
 ### 1. Back-end (Spring Boot)
 Entre na pasta `backend`:
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-*(Ou execute a classe `CollinaApiApplication.java` diretamente pelo Play da sua IDE).*  
+
+*execute a classe `CollinaApiApplication.java` diretamente pelo Play da sua IDE.*  
 A API estará rodando em: `http://localhost:8080`.
 
 ### 2. Front-end (React + Vite)
 Entre na pasta `frontend`:
+
 ```bash
 cd frontend
 npm install
@@ -120,10 +118,5 @@ Acesse a aplicação no navegador pelo endereço indicado (geralmente `http://lo
 Para mantermos o projeto organizado e evitarmos conflitos de código entre os 7 integrantes:
 
 1. **Nunca faça commit direto na branch `main`:** A branch `main` sempre deve conter código estável.
-2. **Crie uma branch para cada tarefa:**
-   * `feat/associados-cadastro-titular`
-   * `feat/financeiro-emissao-mensalidade`
-   * `feat/espacos-grade-horarios`
-   * `feat/estoque-cadastro-produto`
-   * `fix/ajuste-validacao-cpf`
+2. **Cada módulo tem sua respectiva branch, use ela para codar seu modulo**
 3. **Abra um Pull Request (PR):** Quando terminar a funcionalidade, abra um PR para a `main` e peça a revisão de pelo menos um colega do grupo antes de realizar o merge.

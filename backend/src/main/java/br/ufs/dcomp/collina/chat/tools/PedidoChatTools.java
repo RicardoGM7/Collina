@@ -16,6 +16,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -110,7 +111,7 @@ public class PedidoChatTools {
                 sb.append(String.format("🍽️ [%s]\n", entry.getKey().toUpperCase()));
                 for (Produto p : entry.getValue()) {
                     sb.append(String.format("• ID: %d | %s — R$ %.2f\n",
-                            p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : 0.0));
+                            p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : BigDecimal.ZERO));
                     if (p.getDescricao() != null && !p.getDescricao().isBlank()) {
                         sb.append(String.format("  Detalhes: %s\n", p.getDescricao().trim()));
                     }
@@ -175,7 +176,7 @@ public class PedidoChatTools {
 
             for (Produto p : produtosDaCategoria) {
                 sb.append(String.format("• ID: %d | %s — R$ %.2f\n",
-                        p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : 0.0));
+                        p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : BigDecimal.ZERO));
                 if (p.getDescricao() != null && !p.getDescricao().isBlank()) {
                     sb.append(String.format("  Detalhes: %s\n", p.getDescricao().trim()));
                 }
@@ -215,7 +216,7 @@ public class PedidoChatTools {
                         : "Sem categoria";
 
                 sb.append(String.format("ID: %d | Nome: %s | Preço: R$ %.2f | Categorias: [%s] | Status: %s\n",
-                        p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : 0.0, categorias, statusEstoque));
+                        p.getId(), p.getNome(), p.getPreco() != null ? p.getPreco() : BigDecimal.ZERO, categorias, statusEstoque));
                 if (p.getDescricao() != null && !p.getDescricao().isBlank()) {
                     sb.append(String.format("   Descrição: %s\n", p.getDescricao().trim()));
                 }
@@ -268,9 +269,9 @@ public class PedidoChatTools {
                 for (ItemPedido item : itens) {
                     String nome = (item.getProduto() != null) ? item.getProduto().getNome() : "Desconhecido";
                     Integer prodId = (item.getProduto() != null) ? item.getProduto().getId() : null;
-                    double precoUnitario = item.getPreco() != null ? item.getPreco() : 0.0;
+                    BigDecimal precoUnitario = item.getPreco() != null ? item.getPreco() : BigDecimal.ZERO;
                     int qtd = item.getQuantidade() != null ? item.getQuantidade() : 0;
-                    double subtotal = precoUnitario * qtd;
+                    BigDecimal subtotal = precoUnitario.multiply(BigDecimal.valueOf(qtd));
 
                     sb.append(String.format("- ItemID: %d | Produto: %s (ProdID: %s) | Qtd: %d | Preço Unit: R$ %.2f | Subtotal: R$ %.2f\n",
                             item.getId(), nome, prodId, qtd, precoUnitario, subtotal));

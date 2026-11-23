@@ -2,6 +2,7 @@ package br.ufs.dcomp.collina.dto.estoque;
 
 import br.ufs.dcomp.collina.model.estoque.Produto;
 
+import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,7 +10,7 @@ public record ProdutoResponseDTO(
         Integer id,
         String nome,
         String descricao,
-        Double preco,
+        BigDecimal preco,
         Set<CategoriaResponseDTO> categorias) {
 
         public ProdutoResponseDTO(Produto produto){

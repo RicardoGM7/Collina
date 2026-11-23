@@ -21,11 +21,15 @@ public class Estoque {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private  Integer quantidade;
+
+    @Column(nullable = false)
+    private Integer quantidade;
+
+    @Column(nullable = false)
     private Integer estoqueMinimo;
 
     @OneToOne
-    @JoinColumn(name = "produto_id")
+    @JoinColumn(name = "produto_id", nullable = false, unique = true)
     private Produto produto;
 
     @OneToMany(mappedBy = "estoque")
