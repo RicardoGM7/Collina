@@ -43,10 +43,10 @@ public class MovimentacaoFinanceira {
 
     private String motivoCancelamento;
 
-    // FK da classe
-    @OneToOne
-    @JoinColumn(name = "pagamento_id", nullable = true)
-    private Long pagamentoId;
+    // FK
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pagamento_id", nullable = true, unique = true)
+    private Pagamento pagamento;
     
     private Long funcionarioId;
     /* 
@@ -62,6 +62,10 @@ public class MovimentacaoFinanceira {
     public void cancelar(String motivo) {
         this.situacao = SituacaoMovimentacaoEnum.CANCELADO;
         this.motivoCancelamento = motivo;
+    }
+
+    public Long getPagamentoId() {
+        return pagamento != null ? pagamento.getId() : null;
     }
 
     public boolean ehEntrada() { return tipo == TipoMovimentacaoEnum.ENTRADA; }

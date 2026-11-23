@@ -10,13 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.ufs.dcomp.collina.dto.financeiro.ConfirmacaoManualRequest;
-import br.ufs.dcomp.collina.dto.financeiro.MovimentacaoFinanceiraRequestDTO;
 import br.ufs.dcomp.collina.dto.financeiro.PagamentoResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.financeiro.Mensalidade;
-import br.ufs.dcomp.collina.model.financeiro.OrigemMovimentacaoEnum;
 import br.ufs.dcomp.collina.model.financeiro.Pagamento;
-import br.ufs.dcomp.collina.model.financeiro.TipoMovimentacaoEnum;
 import br.ufs.dcomp.collina.repository.financeiro.MensalidadeRepository;
 import br.ufs.dcomp.collina.repository.financeiro.PagamentoRepository;
 import br.ufs.dcomp.collina.service.financeiro.integracao.VerificadorDeFuncionario;
@@ -60,15 +57,7 @@ public class PagamentoService {
         pagamento.confirmar(agora);
         Pagamento salvo = pagamentoRepository.save(pagamento);
 
-        MovimentacaoFinanceiraRequestDTO entrada = new MovimentacaoFinanceiraRequestDTO(
-                TipoMovimentacaoEnum.ENTRADA,
-                OrigemMovimentacaoEnum.PAGAMENTO,
-                salvo.getValor(),
-                "Pagamento de mensalidade " + mensalidade.getCompetencia(),
-                agora,
-                salvo.getId(),
-                null);
-        movimentacaoFinanceiraService.registrarEntradaAutomatica(entrada);
+       movimentacaoFinanceiraService.registrarEntradaAutomatica(salvo);
 
         return new PagamentoResponseDTO(salvo);
     }

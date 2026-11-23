@@ -1,530 +1,269 @@
-### ============================================================================
-### TESTES DA API - MÓDULO FINANCEIRO (COLLINA)
-### ============================================================================
-### COMO USAR
-###  - Rode as requisições NA ORDEM, com o banco zerado. Os ids abaixo (1, 2, 3...)
-###    assumem tabelas vazias. Para zerar (psql / pgAdmin):
-###      TRUNCATE tb_movimentacao_financeira, tb_saldo_clube, tb_solicitacao_gasto RESTART IDENTITY;
-###  - O saldo do clube é UM ÚNICO registro em tb_saldo_clube (id 1 após o TRUNCATE
-###    acima). A tabela começa vazia; o registro é criado com valor 0 na primeira
-###    movimentação e depois só é atualizado, nunca duplicado.
-###  - Nenhuma requisição usa id de saldo: o saldo é lido por GET /saldo.
-###  - O saldo esperado depois de cada passo está no comentário "Saldo".
-###  - Endpoints do módulo:
-###      /api/financeiro/movimentacoes            (POST, PUT, DELETE)
-###      /api/financeiro/solicitacoes-gasto       (POST, GET /prioridade)
-###      /api/financeiro/consulta-operacoes       (GET /saldo, GET /historico)
-###      /api/financeiro/relatorio    (GET /fechamento)
-### ============================================================================
+### FINANCEIRO - testes da API (movimentações, solicitações de gasto, consulta, relatório e entrada por pagamento)
+### Rode NA ORDEM, com o banco zerado: os ids e saldos abaixo assumem tabelas vazias.
+###   TRUNCATE tb_pagamento, tb_mensalidade, tb_movimentacao_financeira, tb_saldo_clube, tb_solicitacao_gasto RESTART IDENTITY CASCADE;
 
 @host = http://localhost:8080
-@financeiro = {{host}}/api/financeiro
-@consulta = {{financeiro}}/consulta-operacoes
-@relatorio = {{financeiro}}/relatorio
+@api = {{host}}/api
+@fin = {{api}}/financeiro
+@mov = {{fin}}/movimentacoes
+@sol = {{fin}}/solicitacoes-gasto
+@cons = {{fin}}/consulta-operacoes
+@rel = {{fin}}/relatorio
 @funcionarioId = 1
 
-
-### ============================================================================
-### 1. SALDO INICIAL
-### ============================================================================
-
-### 1.1 Saldo com banco vazio (200) -> valor 0
-### Só consulta: não cria o registro do saldo (tb_saldo_clube continua vazia).
-GET {{consulta}}/saldo
-
-
-### ============================================================================
-### 2. REGISTRAR MOVIMENTAÇÕES (RF-F01, RF-F02, RF-F17)
-### ============================================================================
-
-### 2.1 Entrada - receita avulsa de 1000.00 (201, id 1)   Saldo: 1000.00
-POST {{financeiro}}/movimentacoes
+### ===== 1. SALDO E MOVIMENTAÇÕES (RF-F01, RF-F02, RF-F17) =====
+### 1.1 Saldo com banco vazio (200) -> 0
+GET {{cons}}/saldo
+### 1.2 Entrada RECEITA_AVULSA 1000 (201, id 1)   Saldo: 1000.00
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 1000.00,
-  "descricao": "Aluguel do salão de festas",
-  "dataHora": "2026-11-10T09:00:00"
-}
-
-### 2.2 Saída - custo operacional de 200.00 (201, id 2)   Saldo: 800.00
-### Conferência opcional no banco, depois da 2.1 e da 2.2:
-###   SELECT * FROM tb_saldo_clube;   -> 1 linha (id 1), valor 800.00
-POST {{financeiro}}/movimentacoes
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":1000.00,"descricao":"Aluguel do salão","dataHora":"2026-11-10T09:00:00"}
+### 1.3 Saída CUSTO_OPERACIONAL 200 (201, id 2)   Saldo: 800.00
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 200.00,
-  "descricao": "Conta de energia",
-  "dataHora": "2026-11-11T14:30:00"
-}
+{"tipo":"SAIDA","origem":"CUSTO_OPERACIONAL","valor":200.00,"descricao":"Conta de energia","dataHora":"2026-11-11T14:30:00"}
 
-### 2.3 Conferir o saldo (200) -> 800.00
-GET {{consulta}}/saldo
-
-
-### ============================================================================
-### 3. SOLICITAÇÕES DE GASTO (RF-F19)
-### ============================================================================
-
-### 3.1 Cadastrar solicitação ALTA de 300.00 (201, id 1) - status PENDENTE
-POST {{financeiro}}/solicitacoes-gasto
+### ===== 2. SOLICITAÇÕES DE GASTO (RF-F19) =====
+### 2.1 Solicitação ALTA 300 (201, id 1, PENDENTE)
+POST {{sol}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "Reparo da bomba da piscina",
-  "valor": 300.00,
-  "prioridade": "ALTA",
-  "dataSolicitacao": "2026-11-12T08:00:00"
-}
-
-### 3.2 Cadastrar solicitação BAIXA de 100.00 (201, id 2)
-POST {{financeiro}}/solicitacoes-gasto
+{"descricao":"Reparo da bomba","valor":300.00,"prioridade":"ALTA","dataSolicitacao":"2026-11-12T08:00:00"}
+### 2.2 Solicitação BAIXA 100 (201, id 2)
+POST {{sol}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "Pintura do muro",
-  "valor": 100.00,
-  "prioridade": "BAIXA",
-  "dataSolicitacao": "2026-11-12T08:10:00"
-}
-
-### 3.3 Cadastrar solicitação MEDIA de 5000.00 (201, id 3) - maior que o saldo
-POST {{financeiro}}/solicitacoes-gasto
+{"descricao":"Pintura do muro","valor":100.00,"prioridade":"BAIXA","dataSolicitacao":"2026-11-12T08:10:00"}
+### 2.3 Solicitação MEDIA 5000 (201, id 3)
+POST {{sol}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "Troca do piso da quadra",
-  "valor": 5000.00,
-  "prioridade": "MEDIA",
-  "dataSolicitacao": "2026-11-12T08:20:00"
-}
-
-### 3.4 Listar pendentes por prioridade (200)
-### Esperado: 3 itens na ordem ALTA (id 1), MEDIA (id 3), BAIXA (id 2)
-GET {{financeiro}}/solicitacoes-gasto/prioridade
-
-### 3.5 Efetivar a solicitação 1: saída com solicitacaoId (201, id 3)   Saldo: 500.00
-### A solicitação 1 passa para EFETIVADA e sai da lista de pendentes.
-POST {{financeiro}}/movimentacoes
+{"descricao":"Piso da quadra","valor":5000.00,"prioridade":"MEDIA","dataSolicitacao":"2026-11-12T08:20:00"}
+### 2.4 Pendentes por prioridade (200) -> ids 1 (ALTA), 3 (MEDIA), 2 (BAIXA)
+GET {{sol}}/prioridade
+### 2.5 Efetivar a solicitação 1 (201, mov id 3)   Saldo: 500.00   (solicitação 1 -> EFETIVADA)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "SOLICITACAO_GASTO",
-  "valor": 300.00,
-  "descricao": "Reparo da bomba da piscina",
-  "dataHora": "2026-11-12T10:00:00",
-  "solicitacaoId": 1
-}
-
-### 3.6 Listar pendentes de novo (200) -> só ids 3 (MEDIA) e 2 (BAIXA)
-GET {{financeiro}}/solicitacoes-gasto/prioridade
-
-### 3.7 Efetivar a MESMA solicitação outra vez (409)
-### "Só solicitações pendentes podem ser efetivadas." Saldo continua 500.00
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":300.00,"dataHora":"2026-11-12T10:00:00","solicitacaoId":1}
+### 2.6 Efetivar a MESMA solicitação de novo (409: só pendentes)   Saldo segue 500.00
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "SOLICITACAO_GASTO",
-  "valor": 300.00,
-  "descricao": "Tentativa duplicada",
-  "dataHora": "2026-11-12T10:05:00",
-  "solicitacaoId": 1
-}
-
-### 3.8 Efetivar a solicitação 3 (5000.00) sem saldo (409)
-### "Valor insuficiente..." A solicitação 3 CONTINUA PENDENTE e o saldo não muda.
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":300.00,"dataHora":"2026-11-12T10:05:00","solicitacaoId":1}
+### 2.7 Efetivar a solicitação 3 (5000) sem saldo (409; segue PENDENTE)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "SOLICITACAO_GASTO",
-  "valor": 5000.00,
-  "descricao": "Troca do piso da quadra",
-  "dataHora": "2026-11-12T10:10:00",
-  "solicitacaoId": 3
-}
-
-### 3.9 solicitacaoId que não existe (404)
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":5000.00,"dataHora":"2026-11-12T10:10:00","solicitacaoId":3}
+### 2.8 Valor diferente do da solicitação 2 (100) (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "SOLICITACAO_GASTO",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:15:00",
-  "solicitacaoId": 999
-}
-
-### 3.10 solicitacaoId em uma ENTRADA (400)
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":1.00,"dataHora":"2026-11-12T10:15:00","solicitacaoId":2}
+### 2.9 SOLICITACAO_GASTO sem solicitacaoId (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:15:00",
-  "solicitacaoId": 2
-}
-
-### 3.11 Conferir o saldo (200) -> 500.00 (nenhuma das falhas acima alterou o saldo)
-GET {{consulta}}/saldo
-
-
-### ============================================================================
-### 4. EDITAR MOVIMENTAÇÃO (RF-F23)
-### O saldo é recalculado: desfaz o efeito antigo e aplica o novo.
-### ============================================================================
-
-### 4.1 Entrada 1 de 1000.00 -> 1500.00 (200)   Saldo: 500 + 500 = 1000.00
-PUT {{financeiro}}/movimentacoes/1
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":10.00,"dataHora":"2026-11-12T10:20:00"}
+### 2.10 solicitacaoId inexistente (404)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 1500.00,
-  "descricao": "Aluguel do salão de festas (valor corrigido)",
-  "dataHora": "2026-11-10T09:00:00"
-}
+{"tipo":"SAIDA","origem":"SOLICITACAO_GASTO","valor":10.00,"dataHora":"2026-11-12T10:25:00","solicitacaoId":999}
 
-### 4.2 Saída 2 de 200.00 -> 100.00 (200)   Saldo: 1000 + 100 = 1100.00
-PUT {{financeiro}}/movimentacoes/2
+### ===== 3. EDITAR MOVIMENTAÇÃO (RF-F23) - só valor e descrição mudam; tipo e origem são fixos =====
+### 3.1 Entrada 1: 1000 -> 1500 (200)   Saldo: 1000.00
+PUT {{mov}}/1
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 100.00,
-  "descricao": "Conta de energia (valor corrigido)",
-  "dataHora": "2026-11-11T14:30:00"
-}
-
-### 4.3 Editar só a descrição (200)   Saldo não muda: 1100.00
-PUT {{financeiro}}/movimentacoes/2
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":1500.00,"descricao":"Aluguel (corrigido)","dataHora":"2026-11-10T09:00:00"}
+### 3.2 Saída 2: 200 -> 100 (200)   Saldo: 1100.00
+PUT {{mov}}/2
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 100.00,
-  "descricao": "Conta de energia - outubro",
-  "dataHora": "2026-11-11T14:30:00"
-}
-
-### 4.4 Reduzir a entrada 1 para 100.00 deixaria o saldo negativo (409)
-### 1100 - 1400 < 0 -> recusado; nada muda, saldo continua 1100.00
-PUT {{financeiro}}/movimentacoes/1
+{"tipo":"SAIDA","origem":"CUSTO_OPERACIONAL","valor":100.00,"descricao":"Conta de energia (corrigida)","dataHora":"2026-11-11T14:30:00"}
+### 3.3 Tentar trocar o tipo da movimentação 2 (400)   Saldo segue 1100.00
+PUT {{mov}}/2
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 100.00,
-  "descricao": "Tentativa de reduzir",
-  "dataHora": "2026-11-10T09:00:00"
-}
-
-### 4.5 Editar movimentação que não existe (404)
-PUT {{financeiro}}/movimentacoes/999
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":100.00,"dataHora":"2026-11-11T14:30:00"}
+### 3.4 Reduzir a entrada 1 para 100 deixaria o saldo negativo (409)
+PUT {{mov}}/1
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.00,
-  "dataHora": "2026-11-10T09:00:00"
-}
-
-### 4.6 Conferir o saldo (200) -> 1100.00
-GET {{consulta}}/saldo
-
-
-### ============================================================================
-### 5. CANCELAR MOVIMENTAÇÃO (RF-F24) - cancelamento lógico com estorno no saldo
-### ============================================================================
-
-### 5.1 Cancelar sem informar o motivo (400)
-DELETE {{financeiro}}/movimentacoes/2?motivo=%20
-funcionarioId: {{funcionarioId}}
-
-### 5.2 Cancelar a saída 2 de 100.00 (204)   Saldo: 1100 + 100 = 1200.00
-DELETE {{financeiro}}/movimentacoes/2?motivo=Registro%20duplicado
-funcionarioId: {{funcionarioId}}
-
-### 5.3 Cancelar a MESMA movimentação de novo (409) "já foi cancelada"
-DELETE {{financeiro}}/movimentacoes/2?motivo=Tentativa%20dupla
-funcionarioId: {{funcionarioId}}
-
-### 5.4 Editar movimentação cancelada (409) "deve estar ativa"
-PUT {{financeiro}}/movimentacoes/2
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":100.00,"dataHora":"2026-11-10T09:00:00"}
+### 3.5 Movimentação inexistente (404)
+PUT {{mov}}/999
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 1.00,
-  "dataHora": "2026-11-11T14:30:00"
-}
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":10.00,"dataHora":"2026-11-10T09:00:00"}
 
-### 5.5 Cancelar a entrada 1 (1500.00) deixaria o saldo negativo (409)
-### 1200 - 1500 < 0 -> recusado; a movimentação continua ATIVA
-DELETE {{financeiro}}/movimentacoes/1?motivo=Teste
+### ===== 4. CANCELAR MOVIMENTAÇÃO (RF-F24) - cancelamento lógico com estorno no saldo =====
+### 4.1 Motivo em branco (400)
+DELETE {{mov}}/2?motivo=%20
 funcionarioId: {{funcionarioId}}
-
-### 5.6 Cancelar movimentação que não existe (404)
-DELETE {{financeiro}}/movimentacoes/999?motivo=Erro%20de%20digitacao
+### 4.2 Cancelar a saída 2 (204)   Saldo: 1200.00
+DELETE {{mov}}/2?motivo=Registro%20duplicado
 funcionarioId: {{funcionarioId}}
-
-### 5.7 Entrada de outro mês, para o relatório (201, id 4)   Saldo: 1250.00
-POST {{financeiro}}/movimentacoes
+### 4.3 Cancelar a MESMA de novo (409: já cancelada)
+DELETE {{mov}}/2?motivo=Tentativa
+funcionarioId: {{funcionarioId}}
+### 4.4 Editar movimentação cancelada (409)
+PUT {{mov}}/2
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 50.00,
-  "descricao": "Venda de camiseta do clube",
-  "dataHora": "2026-10-15T08:00:00"
-}
-
-### 5.8 Conferir o saldo (200) -> 1250.00 e dataAtualizacao recente
-GET {{consulta}}/saldo
-
-
-### ============================================================================
-### 6. HISTÓRICO DE OPERAÇÕES (RF-F04) - ordenado da data mais recente p/ a mais antiga
-### Neste ponto existem: id 3 (12/11, SAIDA, SOLICITACAO_GASTO), id 2 (11/11, SAIDA,
-### CANCELADO), id 1 (10/11, ENTRADA) e id 4 (15/10, ENTRADA)
-### ============================================================================
-
-### 6.1 Tudo (200) -> ids 3, 2, 1, 4
-GET {{consulta}}/historico
-
-### 6.2 Só entradas (200) -> ids 1, 4
-GET {{consulta}}/historico?tipo=ENTRADA
-
-### 6.3 Só saídas (200) -> ids 3, 2
-GET {{consulta}}/historico?tipo=SAIDA
-
-### 6.4 Por origem (200) -> id 3
-GET {{consulta}}/historico?origem=SOLICITACAO_GASTO
-
-### 6.5 Só canceladas (200) -> id 2
-GET {{consulta}}/historico?situacao=CANCELADO
-
-### 6.6 Só ativas (200) -> ids 3, 1, 4
-GET {{consulta}}/historico?situacao=ATIVO
-
-### 6.7 Por período, dia final incluído (200) -> id 2
-GET {{consulta}}/historico?dataInicio=2026-11-11&dataFim=2026-11-11
-
-### 6.8 Mês de novembro, só saídas (200) -> ids 3, 2
-GET {{consulta}}/historico?dataInicio=2026-11-01&dataFim=2026-11-30&tipo=SAIDA
-
-### 6.9 Período sem movimentações (200) -> lista vazia
-GET {{consulta}}/historico?dataInicio=2026-01-01&dataFim=2026-01-31
-
-### 6.10 Data final anterior à inicial (400)
-GET {{consulta}}/historico?dataInicio=2026-11-30&dataFim=2026-11-01
-
-
-### ============================================================================
-### 7. RELATÓRIO DE FECHAMENTO (RF-F03) - ignora movimentações canceladas
-### ============================================================================
-
-### 7.1 Novembro/2026 (200)
-### totalEntradas 1500.00 | totalSaidas 300.00 | saldoPeriodo 1200.00
-### porCategoria: ENTRADA/RECEITA_AVULSA 1500.00 e SAIDA/SOLICITACAO_GASTO 300.00
-### (a saída cancelada de 100.00 NÃO entra)
-GET {{relatorio}}/fechamento?competencia=2026-11
-
-### 7.2 Outubro/2026 (200) -> totalEntradas 50.00 | totalSaidas 0 | saldoPeriodo 50.00
-GET {{relatorio}}/fechamento?competencia=2026-10
-
-### 7.3 Mês sem movimentações (200) -> tudo zerado e porCategoria vazio
-GET {{relatorio}}/fechamento?competencia=2026-12
-
-### 7.4 Competência com formato inválido (400) "Use o formato AAAA-MM"
-GET {{relatorio}}/fechamento?competencia=11/2026
-
-### 7.5 Competência com mês inexistente (400)
-GET {{relatorio}}/fechamento?competencia=2026-13
-
-
-### ============================================================================
-### 8. VALIDAÇÕES DE ENTRADA (nenhuma delas altera o saldo)
-### ============================================================================
-
-### 8.1 Sem campos obrigatórios (400) - fieldErrors: tipo, origem, valor, dataHora
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"CUSTO_OPERACIONAL","valor":1.00,"dataHora":"2026-11-11T14:30:00"}
+### 4.5 Cancelar a entrada 1 (1500) deixaria o saldo negativo (409)
+DELETE {{mov}}/1?motivo=Teste
+funcionarioId: {{funcionarioId}}
+### 4.6 Cancelar movimentação inexistente (404)
+DELETE {{mov}}/999?motivo=Erro
+funcionarioId: {{funcionarioId}}
+### 4.7 Entrada de outro mês, para o relatório (201, id 4)   Saldo: 1250.00
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "Faltando tipo, origem, valor e data"
-}
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":50.00,"descricao":"Venda de camiseta","dataHora":"2026-10-15T08:00:00"}
 
-### 8.2 Valor negativo (400) - fieldErrors: valor
-POST {{financeiro}}/movimentacoes
+### ===== 5. HISTÓRICO (RF-F04) E RELATÓRIO DE FECHAMENTO (RF-F03) =====
+### 5.1 Tudo, da mais recente à mais antiga (200) -> ids 3, 2, 1, 4
+GET {{cons}}/historico
+### 5.2 Só entradas (200) -> ids 1, 4
+GET {{cons}}/historico?tipo=ENTRADA
+### 5.3 Só canceladas (200) -> id 2
+GET {{cons}}/historico?situacao=CANCELADO
+### 5.4 Origem + período (200) -> id 3
+GET {{cons}}/historico?origem=SOLICITACAO_GASTO&dataInicio=2026-11-01&dataFim=2026-11-30
+### 5.5 Data final anterior à inicial (400)
+GET {{cons}}/historico?dataInicio=2026-11-30&dataFim=2026-11-01
+### 5.6 Fechamento 2026-11 (200) -> entradas 1500.00 | saídas 300.00 | saldoPeriodo 1200.00 (canceladas não entram)
+GET {{rel}}/fechamento?competencia=2026-11
+### 5.7 Fechamento 2026-10 (200) -> entradas 50.00 | saídas 0 | saldoPeriodo 50.00
+GET {{rel}}/fechamento?competencia=2026-10
+### 5.8 Competência inválida (400)
+GET {{rel}}/fechamento?competencia=2026-13
+
+### ===== 6. VALIDAÇÕES (nenhuma altera o saldo, que segue 1250.00) =====
+### 6.1 Sem campos obrigatórios (400, fieldErrors: tipo, origem, valor, dataHora)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": -50.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.3 Valor zero (400)
-POST {{financeiro}}/movimentacoes
+{"descricao":"sem tipo, origem, valor e data"}
+### 6.2 Valor negativo (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 0,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.4 Mais de 2 casas decimais (400) - o banco arredondaria e o saldo ficaria errado
-POST {{financeiro}}/movimentacoes
+{"tipo":"SAIDA","origem":"CUSTO_OPERACIONAL","valor":-50.00,"dataHora":"2026-11-12T10:00:00"}
+### 6.3 Mais de 2 casas decimais (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.005,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.5 Origem incompatível com o tipo: ENTRADA com CUSTO_OPERACIONAL (400)
-POST {{financeiro}}/movimentacoes
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":10.005,"dataHora":"2026-11-12T10:00:00"}
+### 6.4 Origem incompatível com o tipo (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "ENTRADA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.6 Origem incompatível com o tipo: SAIDA com RECEITA_AVULSA (400)
-POST {{financeiro}}/movimentacoes
+{"tipo":"ENTRADA","origem":"CUSTO_OPERACIONAL","valor":10.00,"dataHora":"2026-11-12T10:00:00"}
+### 6.5 Lançamento manual com origem PAGAMENTO (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.7 Saída maior que o saldo (409) "Valor insuficiente para realizar a operação"
-POST {{financeiro}}/movimentacoes
+{"tipo":"ENTRADA","origem":"PAGAMENTO","valor":10.00,"dataHora":"2026-11-12T10:00:00"}
+### 6.6 Lançamento manual vinculado a pagamento (400)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "SAIDA",
-  "origem": "CUSTO_OPERACIONAL",
-  "valor": 999999.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 8.8 Solicitação sem descrição (400) - fieldErrors: descricao
-POST {{financeiro}}/solicitacoes-gasto
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":10.00,"dataHora":"2026-11-12T10:00:00","pagamentoId":1}
+### 6.7 Saída maior que o saldo (409)
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "   ",
-  "valor": 100.00,
-  "prioridade": "ALTA",
-  "dataSolicitacao": "2026-11-12T08:00:00"
-}
-
-### 8.9 Solicitação com valor zero e sem prioridade (400) - fieldErrors: valor, prioridade
-POST {{financeiro}}/solicitacoes-gasto
+{"tipo":"SAIDA","origem":"CUSTO_OPERACIONAL","valor":999999.00,"dataHora":"2026-11-12T10:00:00"}
+### 6.8 Solicitação inválida (400, fieldErrors: descricao, valor, prioridade)
+POST {{sol}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "descricao": "Compra de cadeiras",
-  "valor": 0,
-  "dataSolicitacao": "2026-11-12T08:00:00"
-}
+{"descricao":"  ","valor":0,"dataSolicitacao":"2026-11-12T08:00:00"}
+### 6.9 Conferir o saldo (200) -> 1250.00
+GET {{cons}}/saldo
 
-### 8.10 Conferir o saldo (200) -> segue 1250.00
-### Conferência opcional no banco: SELECT * FROM tb_saldo_clube; -> continua 1 linha (id 1)
-GET {{consulta}}/saldo
-
-### ============================================================================
-### 9. VALIDAÇÕES DAS NOVAS EXCEÇÕES (DEVE RETORNAR 400)
-### ============================================================================
-
-### 9.1 Sem o header funcionarioId
-POST {{financeiro}}/movimentacoes
+### ===== 7. ERROS DE REQUISIÇÃO (todos devem retornar 400) =====
+### 7.1 Sem o header funcionarioId
+POST {{mov}}
 Content-Type: application/json
 
-{
-  "tipo": "ENTRADA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 9.2 Valor inválido em um enum do corpo (tipo inexistente)
-POST {{financeiro}}/movimentacoes
+{"tipo":"ENTRADA","origem":"RECEITA_AVULSA","valor":10.00,"dataHora":"2026-11-12T10:00:00"}
+### 7.2 Enum inexistente no corpo
+POST {{mov}}
 Content-Type: application/json
 funcionarioId: {{funcionarioId}}
 
-{
-  "tipo": "TRANSFERENCIA",
-  "origem": "RECEITA_AVULSA",
-  "valor": 10.00,
-  "dataHora": "2026-11-12T10:00:00"
-}
-
-### 9.3 Cancelar sem o parâmetro motivo
-DELETE {{financeiro}}/movimentacoes/1
+{"tipo":"TRANSFERENCIA","origem":"RECEITA_AVULSA","valor":10.00,"dataHora":"2026-11-12T10:00:00"}
+### 7.3 Cancelar sem o parâmetro motivo
+DELETE {{mov}}/1
+funcionarioId: {{funcionarioId}}
+### 7.4 Relatório sem o parâmetro competencia
+GET {{rel}}/fechamento
+### 7.5 Id que não é número
+DELETE {{mov}}/abc?motivo=Teste
 funcionarioId: {{funcionarioId}}
 
-### 9.4 Relatório sem o parâmetro competencia
-GET {{relatorio}}/fechamento
+### ===== 8. ENTRADA AUTOMÁTICA DE PAGAMENTO (RF-F18) - usa o módulo de pagamento =====
+### Ainda não há endpoint para criar mensalidade: insira a mensalidade 1 no banco antes de rodar esta seção:
+###   INSERT INTO tb_mensalidade (status_mensalidade, competencia, valor_base, valor_final, data_vencimento, associado_titular_id)
+###   VALUES ('PENDENTE', '2026-11', 150.00, 150.00, '2026-11-30', 1);
 
-### 9.5 Id que não é número no caminho
-DELETE {{financeiro}}/movimentacoes/abc?motivo=Teste
+### 8.1 Confirmar o pagamento da mensalidade 1 (201)   Saldo: 1400.00   (gera a movimentação id 5)
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
 funcionarioId: {{funcionarioId}}
+
+{"valor":150.00,"formaPagamento":"PIX"}
+### 8.2 Entrada gerada (200) -> 1 item: ENTRADA, origem PAGAMENTO, valor 150.00, pagamentoId 1, 'Pagamento de mensalidade 2026-11'
+GET {{cons}}/historico?origem=PAGAMENTO
+### 8.3 Editar a movimentação de pagamento (409)
+PUT {{mov}}/5
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{"tipo":"ENTRADA","origem":"PAGAMENTO","valor":160.00,"dataHora":"2026-11-13T09:00:00"}
+### 8.4 Cancelar a movimentação de pagamento (409)
+DELETE {{mov}}/5?motivo=Teste
+funcionarioId: {{funcionarioId}}
+### 8.5 Confirmar a MESMA mensalidade de novo (409)   nenhuma segunda entrada é criada
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{"valor":150.00,"formaPagamento":"PIX"}
+### 8.6 Conferir o saldo (200) -> 1400.00
+GET {{cons}}/saldo
