@@ -65,7 +65,7 @@ public class PagamentoController {
 
     // Histórico de pagamentos de um titular (200 OK). associadoId é obrigatório (400 se ausente).
     @GetMapping("/pagamentos")
-    public ResponseEntity<List<PagamentoResponseDTO>> listarPorTitular(@RequestParam Long associadoId) {
+    public ResponseEntity<List<PagamentoResponseDTO>> listarPorTitular(@RequestParam Integer associadoId) {
         return ResponseEntity.ok(pagamentoService.listarPorTitular(associadoId));
     }
 }

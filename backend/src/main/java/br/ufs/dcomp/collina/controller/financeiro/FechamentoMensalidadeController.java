@@ -1,9 +1,13 @@
 package br.ufs.dcomp.collina.controller.financeiro;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufs.dcomp.collina.dto.financeiro.ResumoFechamentoDTO;
@@ -16,12 +20,14 @@ public class FechamentoMensalidadeController {
     @Autowired
     private FechamentoMensalidadeService fechamentoService;
 
-    // RF-F05/F20: reexecução manual do fechamento mensal (200 OK), para o caso de o agendador não ter
-    // rodado (aplicação fora do ar no dia 1) ou ter terminado com falhas. Sempre atua na competência
-    // corrente e é idempotente: titulares já processados são ignorados, nada é duplicado.
-    // TODO: restringir a perfis administrativos quando a autenticação (Firebase) estiver integrada.
+    // RF-F05/F20: reexecução do fechamento mensal (200 OK).
+    // As capturas de data corrente ficam agrupadas no controller e passadas por parâmetro ao service.
     @PostMapping
-    public ResponseEntity<ResumoFechamentoDTO> executar() {
-        return ResponseEntity.ok(fechamentoService.fecharCompetenciaAtual());
+    public ResponseEntity<ResumoFechamentoDTO> executar(
+            @RequestParam(name = "competencia", required = false) YearMonth competencia,
+            @RequestParam(name = "vencimento", required = false) LocalDate vencimento) {
+        YearMonth comp = (competencia != null) ? competencia : YearMonth.now();
+        LocalDate venc = (vencimento != null) ? vencimento : comp.atEndOfMonth();
+        return ResponseEntity.ok(fechamentoService.fecharEAbrirCompetencia(comp, venc));
     }
 }

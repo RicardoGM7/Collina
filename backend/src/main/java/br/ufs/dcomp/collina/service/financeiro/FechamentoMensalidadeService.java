@@ -1,6 +1,7 @@
 package br.ufs.dcomp.collina.service.financeiro;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.ufs.dcomp.collina.dto.financeiro.ResumoFechamentoDTO;
-import br.ufs.dcomp.collina.service.financeiro.integracao.ConsultaTitularesElegiveis;
-import br.ufs.dcomp.collina.service.financeiro.integracao.TitularElegivel;
+import br.ufs.dcomp.collina.model.associados.Associado;
+import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
+import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
 
 /**
  * Orquestrador do fechamento mensal.
  *
  * Fecha a mensalidade EM_ABERTO da competência anterior e abre a da nova competência,
- * para cada titular elegível. NÃO é transacional de propósito: cada titular é processado
+ * para cada titular elegível (ATIVO ou SUSPENSO). NÃO é transacional de propósito: cada titular é processado
  * em sua própria transação, em outro bean ({@link FechamentoTitularService}). Assim a falha
  * de um titular desfaz só o trabalho dele e o lote continua.
  */
@@ -28,41 +30,51 @@ public class FechamentoMensalidadeService {
     private static final Logger log = LoggerFactory.getLogger(FechamentoMensalidadeService.class);
 
     @Autowired
-    private ConsultaTitularesElegiveis consultaTitularesElegiveis;
+    private AssociadoRepository associadoRepository;
 
     @Autowired
     private FechamentoTitularService fechamentoTitularService;
 
-    // Relógio injetado (bean definido em SchedulingConfig): o "mês corrente" vem dele, nunca de YearMonth.now() solto.
     @Autowired
     private Clock clock;
 
-    // Fecha o mês anterior e abre o mês corrente. Usado pelo Agendador (dia 1) e pela reexecução manual.
-    // Só aceita a competência corrente de propósito: uma competência arbitrária abriria mensalidades
-    // erradas, e as tabelas financeiras não têm exclusão física para desfazer isso.
     public ResumoFechamentoDTO fecharCompetenciaAtual() {
-        return fecharEAbrirCompetencia(YearMonth.now(clock));
+        YearMonth agora = YearMonth.now(clock);
+        return fecharEAbrirCompetencia(agora, agora.atEndOfMonth());
     }
 
     public ResumoFechamentoDTO fecharEAbrirCompetencia(YearMonth novaCompetencia) {
         if (novaCompetencia == null) {
             throw new IllegalArgumentException("A nova competência é obrigatória.");
         }
+        return fecharEAbrirCompetencia(novaCompetencia, novaCompetencia.atEndOfMonth());
+    }
 
-        List<TitularElegivel> titulares = consultaTitularesElegiveis.listarElegiveis(novaCompetencia);
+    public ResumoFechamentoDTO fecharEAbrirCompetencia(YearMonth novaCompetencia, LocalDate vencimento) {
+        if (novaCompetencia == null) {
+            throw new IllegalArgumentException("A nova competência é obrigatória.");
+        }
+        if (vencimento == null) {
+            throw new IllegalArgumentException("A data de vencimento é obrigatória.");
+        }
+
+        // Carrega titulares ATIVO e SUSPENSO (inativos são ignorados)
+        List<Associado> titulares = associadoRepository.findBySituacaoCadastralIn(
+                List.of(SituacaoCadastralEnum.ATIVO, SituacaoCadastralEnum.SUSPENSO)
+        );
 
         int processados = 0;
         int ignorados = 0;
-        List<Long> titularesComFalha = new ArrayList<>();
+        List<Integer> titularesComFalha = new ArrayList<>();
 
-        for (TitularElegivel titular : titulares) {
+        for (Associado titular : titulares) {
             try {
-                switch (fechamentoTitularService.processarTitular(titular, novaCompetencia)) {
+                switch (fechamentoTitularService.processarTitular(titular, novaCompetencia, vencimento)) {
                     case PROCESSADO -> processados++;
                     case IGNORADO -> ignorados++;
                 }
             } catch (RuntimeException e) {
-                Long titularId = titular != null ? titular.associadoId() : null;
+                Integer titularId = titular != null ? titular.getId() : null;
                 titularesComFalha.add(titularId);
                 log.error("Falha ao fechar a competência {} do titular {}: {}",
                         novaCompetencia, titularId, e.getMessage(), e);

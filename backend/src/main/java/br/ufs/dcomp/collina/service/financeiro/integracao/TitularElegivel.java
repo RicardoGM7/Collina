@@ -6,7 +6,7 @@ import java.math.BigDecimal;
  * Titular que deve receber mensalidade na competência, com o valor base do
  * plano vigente. É um snapshot: o financeiro copia o valor para a Mensalidade.
  */
-public record TitularElegivel(Long associadoId, BigDecimal valorBase) {
+public record TitularElegivel(Integer associadoId, BigDecimal valorBase) {
 
     public TitularElegivel {
         if (associadoId == null) {

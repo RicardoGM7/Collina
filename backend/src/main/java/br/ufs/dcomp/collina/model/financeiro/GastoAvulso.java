@@ -3,6 +3,7 @@ package br.ufs.dcomp.collina.model.financeiro;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import br.ufs.dcomp.collina.model.associados.VinculoDependencia;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -50,19 +51,16 @@ public class GastoAvulso {
     private Long funcionario;
 
     //FK - Dependencia
-    /*
     @ManyToOne
     @JoinColumn(name = "vinculo_dependencia_id", nullable = true)
-    */
-    @Column
-    private Long vinculoDependecia;
+    private VinculoDependencia vinculoDependencia;
 
     public GastoAvulso(BigDecimal valor, String descricao, LocalDateTime dataLancamento, Long funcionario,
-            Long vinculoDependecia) {
+            VinculoDependencia vinculoDependencia) {
         this.valor = valor;
         this.descricao = descricao;
         this.dataLancamento = dataLancamento;
         this.funcionario = funcionario;
-        this.vinculoDependecia = vinculoDependecia;
+        this.vinculoDependencia = vinculoDependencia;
     }
 }

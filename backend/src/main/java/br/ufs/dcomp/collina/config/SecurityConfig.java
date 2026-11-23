@@ -82,6 +82,9 @@ public class SecurityConfig {
                         // Módulo de associados: administrador e funcionário de recepção.
                         .requestMatchers("/api/associados/**", "/api/dependentes/**").hasAnyRole("ADMIN", "RECEPCAO")
 
+                        // Módulo financeiro e de mensalidades: administrador e funcionário financeiro
+                        .requestMatchers("/api/financeiro/**", "/api/mensalidades/**").hasAnyRole("ADMIN", "FINANCEIRO")
+
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()
                 )

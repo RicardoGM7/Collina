@@ -106,7 +106,7 @@ public class PagamentoService {
     // Histórico de pagamentos de um titular. Id inexistente devolve lista vazia: o
     // financeiro ainda não tem como confirmar a existência do associado.
     @Transactional(readOnly = true)
-    public List<PagamentoResponseDTO> listarPorTitular(Long associadoId) {
+    public List<PagamentoResponseDTO> listarPorTitular(Integer associadoId) {
         if (associadoId == null) {
             throw new IllegalArgumentException("Id do associado não informado");
         }

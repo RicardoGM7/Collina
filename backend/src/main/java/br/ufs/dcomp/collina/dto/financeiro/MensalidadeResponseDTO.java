@@ -13,7 +13,7 @@ public record MensalidadeResponseDTO(
     StatusMensalidadeEnum status,
     BigDecimal valor,
     LocalDate vencimento,
-    Long associadoId
+    Integer associadoId
 
 ) {
     public MensalidadeResponseDTO(Mensalidade mensalidade){
@@ -24,7 +24,7 @@ public record MensalidadeResponseDTO(
             mensalidade.getStatusMensalidade(), 
             mensalidade.estaEmAberto() ? mensalidade.calcularValorTotal() : mensalidade.getValorFinal(), 
             mensalidade.getDataVencimento(), 
-            mensalidade.getAssociadoTitular()
+            mensalidade.getAssociadoTitular().getId()
         );
     }
 }

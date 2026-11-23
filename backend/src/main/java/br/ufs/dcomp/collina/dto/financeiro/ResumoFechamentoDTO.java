@@ -14,5 +14,5 @@ public record ResumoFechamentoDTO(
         String competencia,
         int processados,
         int ignorados,
-        List<Long> titularesComFalha
+        List<Integer> titularesComFalha
 ) {} 

@@ -18,11 +18,13 @@ import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
 import br.ufs.dcomp.collina.repository.associados.PlanoRepository;
 import br.ufs.dcomp.collina.repository.associados.VinculoDependenciaRepository;
 import br.ufs.dcomp.collina.service.auth.UsuarioService;
+import br.ufs.dcomp.collina.service.financeiro.AberturaMensalidadePort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -45,6 +47,9 @@ public class AssociadoService {
 
     @Autowired(required = false)
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AberturaMensalidadePort aberturaMensalidade;
 
     // 1. RF-AS01 + RF-AS02: cadastrar associado titular já vinculado a um plano
     @Transactional
@@ -137,7 +142,9 @@ public class AssociadoService {
         associado.setDataAdmissao(hoje);
         associado.setUsuarioId(usuarioId);
 
-        return new AssociadoResponseDTO(associadoRepository.save(associado));
+        Associado salvo = associadoRepository.save(associado);
+        aberturaMensalidade.abrirMensalidadeInicial(salvo, YearMonth.from(hoje));
+        return new AssociadoResponseDTO(salvo);
     }
 
     // 2. Listar associados (opcionalmente por situação cadastral)
@@ -284,6 +291,7 @@ public class AssociadoService {
             vinculoService.inativarVinculosPorInativacaoDoTitular(salvo);
         } else if (atual == SituacaoCadastralEnum.INATIVO && novaSituacao == SituacaoCadastralEnum.ATIVO) {
             vinculoService.reativarVinculosDoTitular(salvo);
+            aberturaMensalidade.abrirMensalidadeInicial(salvo);
         }
 
         return new AssociadoResponseDTO(salvo);

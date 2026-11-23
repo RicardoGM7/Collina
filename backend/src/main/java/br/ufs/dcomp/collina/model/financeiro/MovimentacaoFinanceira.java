@@ -44,8 +44,8 @@ public class MovimentacaoFinanceira {
     private String motivoCancelamento;
 
     // FK da classe
-    @OneToOne
-    @JoinColumn(name = "pagamento_id", nullable = true)
+
+    @Column(name = "pagamento_id", nullable = true, unique= true)
     private Long pagamentoId;
     
     private Long funcionarioId;

@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.ufs.dcomp.collina.model.associados.Associado;
 import br.ufs.dcomp.collina.model.financeiro.Mensalidade;
 import br.ufs.dcomp.collina.repository.financeiro.MensalidadeRepository;
-import br.ufs.dcomp.collina.service.financeiro.integracao.TitularElegivel;
 
 /**
  * Processa UM titular no fechamento mensal, em uma transação própria.
@@ -31,26 +31,28 @@ public class FechamentoTitularService {
     private MensalidadeRepository mensalidadeRepository;
 
     /**
-     * Regra de negócio: a mensalidade de janeiro acumula gastos avulsos durante janeiro, é fechada
-     * no início de fevereiro (nova competência) e vence no último dia de fevereiro.
-     * (Decisão do grupo: por ora o vencimento não precisa cair em dia útil.)
+     * Fecha a mensalidade da competência anterior (se houver EM_ABERTO) com a data de vencimento
+     * informada e abre a mensalidade da nova competência com o valor do plano vigente.
      */
     @Transactional
-    public Resultado processarTitular(TitularElegivel titular, YearMonth novaCompetencia) {
-        if (titular == null) {
-            throw new IllegalArgumentException("O titular é obrigatório.");
+    public Resultado processarTitular(Associado associado, YearMonth novaCompetencia, LocalDate vencimento) {
+        if (associado == null) {
+            throw new IllegalArgumentException("O associado titular é obrigatório.");
         }
         if (novaCompetencia == null) {
             throw new IllegalArgumentException("A nova competência é obrigatória.");
         }
+        if (vencimento == null) {
+            throw new IllegalArgumentException("A data de vencimento é obrigatória.");
+        }
 
-        Long titularId = titular.associadoId();
+        Integer titularId = associado.getId();
         YearMonth competenciaFechada = novaCompetencia.minusMonths(1);
 
         // 1. Repetição segura: se o titular já tem mensalidade da nova competência (que não seja
         //    cancelada), este fechamento já foi feito para ele. Não fecha nem abre de novo.
         boolean jaProcessado = mensalidadeRepository
-                .findByAssociadoTitularAndCompetencia(titularId, novaCompetencia.toString())
+                .findByAssociadoTitular_IdAndCompetencia(titularId, novaCompetencia.toString())
                 .stream()
                 .anyMatch(m -> !m.estaCancelada());
         if (jaProcessado) {
@@ -60,31 +62,27 @@ public class FechamentoTitularService {
 
         // 2. Fecha a mensalidade EM_ABERTO da competência anterior (a entidade valida o estado).
         Optional<Mensalidade> emAberto = mensalidadeRepository
-                .findByAssociadoTitularAndCompetencia(titularId, competenciaFechada.toString())
+                .findByAssociadoTitular_IdAndCompetencia(titularId, competenciaFechada.toString())
                 .stream()
                 .filter(Mensalidade::estaEmAberto)
                 .findFirst();
 
         if (emAberto.isPresent()) {
             Mensalidade mensalidade = emAberto.get();
-            mensalidade.fechar(calcularVencimento(competenciaFechada));
-            // Grava o fechamento ANTES de inserir a nova mensalidade: sem isso o Hibernate faria o
-            // INSERT antes do UPDATE, e um futuro índice único "uma EM_ABERTO por titular" seria violado.
+            mensalidade.fechar(vencimento);
             mensalidadeRepository.saveAndFlush(mensalidade);
         } else {
-            // Ex.: titular recém-cadastrado, sem mensalidade na competência anterior.
             log.warn("Titular {} sem mensalidade EM_ABERTO em {}; apenas abrindo {}.",
                     titularId, competenciaFechada, novaCompetencia);
         }
 
-        // 3. Abre a mensalidade da nova competência com o valor base do plano vigente (snapshot).
-        mensalidadeRepository.save(new Mensalidade(novaCompetencia.toString(), titular.valorBase(), titularId));
+        // 3. Abre a mensalidade da nova competência com o valor base do plano vigente lido agora (snapshot).
+        mensalidadeRepository.save(new Mensalidade(
+                novaCompetencia.toString(),
+                associado.getPlano().getMensalidade(),
+                associado
+        ));
 
         return Resultado.PROCESSADO;
-    }
-
-    // Mensalidade da competência X vence no último dia do mês seguinte (X + 1).
-    static LocalDate calcularVencimento(YearMonth competenciaFechada) {
-        return competenciaFechada.plusMonths(1).atEndOfMonth();
     }
 }

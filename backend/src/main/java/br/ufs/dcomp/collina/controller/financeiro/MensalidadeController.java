@@ -32,22 +32,21 @@ public class MensalidadeController {
     //   400 -> parâmetro ausente ou em formato inválido (competencia deve ser AAAA-MM)
     @GetMapping
     public ResponseEntity<List<MensalidadeResponseDTO>> listar(
-            @RequestParam("associadoId") Long associadoId,
+            @RequestParam("associadoId") Integer associadoId,
             @RequestParam("competencia") YearMonth competencia) {
         return ResponseEntity.ok(mensalidadeService.listarMensalidades(associadoId, competencia));
     }
 
-    // RF-F08: lançar gasto avulso (201 Created). Titular ou dependente: o gasto vai para a mensalidade
+    // RF-F08: lançar gasto avulso (200 OK). Titular ou dependente: o gasto vai para a mensalidade
     // EM_ABERTO do titular responsável. Devolve a mensalidade atualizada. Erros possíveis:
-    //   400 -> corpo inválido (@Valid), header ausente ou dado recusado pela entidade
-    //   404 -> não há mensalidade em aberto para o titular
-    //   409 -> mensalidade fora de EM_ABERTO
-    // O funcionarioId vem no header, como nos demais controllers do financeiro (provisório até a autenticação).
+    //   400 -> corpo inválido (@Valid) ou dado recusado pela entidade
+    //   404 -> não há mensalidade em aberto para o titular ou pessoa inexistente
+    //   409 -> titular inativo, dependente sem vínculo ativo ou mensalidade fora de EM_ABERTO
+    // O funcionarioId vem no corpo do DTO (provisório até a autenticação de funcionários).
     @PostMapping("/gastos-avulsos")
     public ResponseEntity<MensalidadeResponseDTO> incluirGastoAvulso(
-            @Valid @RequestBody GastoAvulsoRequestDTO dto,
-            @RequestHeader("funcionarioId") Long funcionarioId) {
-        MensalidadeResponseDTO mensalidade = mensalidadeService.incluirGastoAvulso(dto, funcionarioId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mensalidade);
+            @Valid @RequestBody GastoAvulsoRequestDTO dto) {
+        MensalidadeResponseDTO mensalidade = mensalidadeService.incluirGastoAvulso(dto, java.time.LocalDateTime.now());
+        return ResponseEntity.ok(mensalidade);
     }
 }

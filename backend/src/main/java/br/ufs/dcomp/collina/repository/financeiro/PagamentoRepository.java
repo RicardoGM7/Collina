@@ -18,7 +18,7 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>{
 
     @Query("""
         select p from Pagamento p 
-        where p.mensalidade.associadoTitular = :associadoId
+        where p.mensalidade.associadoTitular.id = :associadoId
         """)
-    List<Pagamento> buscarPorTitular(@Param("associadoId") Long associadoId);
+    List<Pagamento> buscarPorTitular(@Param("associadoId") Integer associadoId);
 }

@@ -16,5 +16,5 @@ package br.ufs.dcomp.collina.service.financeiro.integracao;
  */
 public interface ConsultaTitularResponsavel {
 
-    Long buscarIdTitularResponsavel(Long associadoId);
+    Integer buscarIdTitularResponsavel(Integer associadoId);
 }

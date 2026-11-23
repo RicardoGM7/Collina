@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.ufs.dcomp.collina.model.associados.Associado;
 import jakarta.persistence.Column;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -13,6 +14,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -46,13 +49,10 @@ public class Mensalidade {
     @Column(nullable = true)
     private LocalDate dataVencimento;
 
-    // FK - associado
-    @Column(nullable = false, name= "associado_titular_id")
-    /*
-    @OneToMany
-    @JoinColumn("name = associado_titular_id", nullable = false)
-    */
-    private Long associadoTitular;
+    // FK - associado    
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "associado_titular_id", nullable = false)
+    private Associado associadoTitular;
 
     // Composição com gastos avulsos 
     @OneToMany(mappedBy = "mensalidade", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,7 +62,7 @@ public class Mensalidade {
     //--------------------------------
     // Metodos
 
-    public Mensalidade(String competencia, BigDecimal valorBase, Long associadoTitular) {
+    public Mensalidade(String competencia, BigDecimal valorBase, Associado associadoTitular) {
 
         if(competencia == null){throw (new IllegalArgumentException("competencia não pode ser nula"));}
         if(associadoTitular == null){throw (new IllegalArgumentException("Associado titular não pode ser nulo"));}

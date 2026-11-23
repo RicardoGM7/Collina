@@ -9,17 +9,18 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record GastoAvulsoRequestDTO(
+    @NotNull(message = "Informe o ID da pessoa responsável pelo gasto")
+    Integer pessoaId,
 
-    @Size(max = 500)
-    @NotBlank(message= "Informe a descrição do gasto")
-    String descricao,
-
-    @NotNull 
-    @PositiveOrZero(message= "O valor do gasto não pode ser negativo")
-    @Digits(integer = 13, fraction = 2, message = "O valor deve ter no máximo 2 casas decimais.") 
+    @NotNull(message = "O valor do gasto não pode ser nulo")
+    @PositiveOrZero(message = "O valor do gasto não pode ser negativo")
+    @Digits(integer = 13, fraction = 2, message = "O valor deve ter no máximo 2 casas decimais.")
     BigDecimal valor,
 
-    @NotBlank(message = "O gasto não está vinculado a um associado")
-    Long autorDoGastoId
+    @Size(max = 500)
+    @NotBlank(message = "Informe a descrição do gasto")
+    String descricao,
 
+    @NotNull(message = "Informe o funcionário responsável pelo lançamento do gasto")
+    Long funcionarioId
 ) {}
