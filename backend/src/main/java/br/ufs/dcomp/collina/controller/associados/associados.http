@@ -65,15 +65,7 @@ Content-Type: application/json
   "dataNascimento": "1985-03-10"
 }
 
-### 2.7 Alterar plano (funcionário)
-PATCH {{baseUrl}}/associados/1/plano
-Content-Type: application/json
-
-{
-  "tipoPlano": "PLUS"
-}
-
-### 2.8 Suspender (RF-AS06)
+### 2.7 Suspender (RF-AS06)
 PATCH {{baseUrl}}/associados/1/situacao
 Content-Type: application/json
 

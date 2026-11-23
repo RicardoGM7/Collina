@@ -1,15 +1,24 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { FirebaseError } from 'firebase/app'
 import { Eye, EyeOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import fundoLoginRegister from '../../assets/fundoLoginRegister.png'
 import logoAzul from '../../assets/LogoAzulCollina.png'
 import { firebaseConfigurado } from '../../config/firebase'
 import { useAuth } from '../../context/AuthContext'
-import { mensagemDeErro } from './authErrors'
+import { mensagemDeErro, mensagemDeErroLogin } from './authErrors'
 import './LoginPage.css'
 
+const MENSAGEM_RECUPERACAO_NEUTRA =
+  'Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.'
+
 export function LoginPage() {
-  const { login, recuperarSenha } = useAuth()
+  const {
+    login,
+    recuperarSenha,
+    sessaoExpiradaPorInatividade,
+    limparAvisoSessaoExpirada,
+  } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -17,11 +26,20 @@ export function LoginPage() {
   const [infoMessage, setInfoMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  useEffect(() => {
+    if (sessaoExpiradaPorInatividade) {
+      setInfoMessage(
+        'Sua sessão foi encerrada por inatividade (30 minutos). Faça login novamente para continuar.',
+      )
+    }
+  }, [sessaoExpiradaPorInatividade])
+
   // Após o login bem-sucedido, o PublicOnlyRoute redireciona para a tela inicial do perfil
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErrorMessage('')
     setInfoMessage('')
+    limparAvisoSessaoExpirada()
 
     if (!email.trim() || !password) {
       setErrorMessage('Informe o e-mail e a senha.')
@@ -32,7 +50,7 @@ export function LoginPage() {
     try {
       await login(email, password)
     } catch (erro) {
-      setErrorMessage(mensagemDeErro(erro))
+      setErrorMessage(mensagemDeErroLogin(erro))
       setSubmitting(false)
     }
   }
@@ -40,6 +58,7 @@ export function LoginPage() {
   async function handleForgotPassword() {
     setErrorMessage('')
     setInfoMessage('')
+    limparAvisoSessaoExpirada()
 
     if (!email.trim()) {
       setErrorMessage('Digite o seu e-mail acima para receber o link de redefinição.')
@@ -48,8 +67,13 @@ export function LoginPage() {
 
     try {
       await recuperarSenha(email)
-      setInfoMessage('Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.')
+      setInfoMessage(MENSAGEM_RECUPERACAO_NEUTRA)
     } catch (erro) {
+      // A resposta deve ser idêntica exista ou não conta com o e-mail informado
+      if (erro instanceof FirebaseError && erro.code === 'auth/user-not-found') {
+        setInfoMessage(MENSAGEM_RECUPERACAO_NEUTRA)
+        return
+      }
       setErrorMessage(mensagemDeErro(erro))
     }
   }

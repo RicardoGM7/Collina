@@ -12,6 +12,7 @@ import {
   Search,
   Shield,
   UserCheck,
+  UserCog,
   UserPlus,
   Users,
   UserX,
@@ -21,6 +22,7 @@ import { Link } from 'react-router-dom'
 import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { associadoService } from '../../services/associadoService'
+import { UsuariosAdminPanel } from '../auth/UsuariosAdminPanel'
 import {
   CATEGORIA_DO_PLANO,
   CATEGORIA_LABEL,
@@ -47,9 +49,9 @@ export function AdminAssociadosPage() {
   const { usuario } = useAuth()
   const ehAdmin = usuario?.perfil === 'ADMIN'
 
-  const [abaAtiva, setAbaAtiva] = useState<'lista' | 'cadastro' | 'planos'>(
-    'lista',
-  )
+  const [abaAtiva, setAbaAtiva] = useState<
+    'lista' | 'cadastro' | 'planos' | 'usuarios'
+  >('lista')
 
   // Dados reais vindos do back-end
   const [associados, setAssociados] = useState<Associado[]>([])
@@ -63,7 +65,7 @@ export function AdminAssociadosPage() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('TODAS')
   const [busca, setBusca] = useState('')
 
-  // Formulário de Cadastro de Titular (RF-AS01, RF-AS02 + conta de acesso MVP)
+  // Formulário de Cadastro de Titular (+ conta de acesso MVP)
   const [formNome, setFormNome] = useState('')
   const [formCpf, setFormCpf] = useState('')
   const [formDataNasc, setFormDataNasc] = useState('')
@@ -77,14 +79,6 @@ export function AdminAssociadosPage() {
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [mensagemErro, setMensagemErro] = useState('')
 
-  // Modal Alterar Plano
-  const [associadoParaPlano, setAssociadoParaPlano] =
-    useState<Associado | null>(null)
-  const [novoPlanoSelecionado, setNovoPlanoSelecionado] =
-    useState<TipoPlano>('BASICO')
-  const [erroModalPlano, setErroModalPlano] = useState('')
-  const [salvandoPlanoAssoc, setSalvandoPlanoAssoc] = useState(false)
-
   // Modal Alterar Situação
   const [associadoParaSituacao, setAssociadoParaSituacao] =
     useState<Associado | null>(null)
@@ -93,7 +87,7 @@ export function AdminAssociadosPage() {
   const [erroModalSituacao, setErroModalSituacao] = useState('')
   const [salvandoSituacao, setSalvandoSituacao] = useState(false)
 
-  // Modal Gestão de Dependentes (RF-AS03, RF-AS04)
+  // Modal Gestão de Dependentes
   const [titularSelecionado, setTitularSelecionado] =
     useState<Associado | null>(null)
   const [dependentesTitular, setDependentesTitular] = useState<
@@ -108,7 +102,7 @@ export function AdminAssociadosPage() {
   const [depErro, setDepErro] = useState('')
   const [depSucesso, setDepSucesso] = useState('')
 
-  // Modal Editar Parâmetros do Plano (RF-AS02 - somente ADMIN)
+  // Modal Editar Parâmetros do Plano (somente ADMIN)
   const [planoEditando, setPlanoEditando] = useState<Plano | null>(null)
   const [planoValorEdit, setPlanoValorEdit] = useState('')
   const [planoReservasEdit, setPlanoReservasEdit] = useState('')
@@ -263,26 +257,6 @@ export function AdminAssociadosPage() {
     }
   }
 
-  async function handleSalvarNovoPlano() {
-    if (!associadoParaPlano) return
-    setErroModalPlano('')
-    setSalvandoPlanoAssoc(true)
-    try {
-      const atualizado = await associadoService.alterarPlano(
-        associadoParaPlano.id,
-        novoPlanoSelecionado,
-      )
-      setAssociados((prev) =>
-        prev.map((a) => (a.id === atualizado.id ? atualizado : a)),
-      )
-      setAssociadoParaPlano(null)
-    } catch (err) {
-      setErroModalPlano(mensagemErroApi(err, 'Erro ao alterar o plano.'))
-    } finally {
-      setSalvandoPlanoAssoc(false)
-    }
-  }
-
   async function handleSalvarNovaSituacao() {
     if (!associadoParaSituacao) return
     setErroModalSituacao('')
@@ -366,7 +340,7 @@ export function AdminAssociadosPage() {
     try {
       const inativados = await associadoService.inativarDependentesPorIdade()
       setFeedbackGeral(
-        `Rotina de idade limite (21 anos) concluída: ${inativados} vínculo(s) inativado(s) preservando o histórico (RF-AS04).`,
+        `Rotina de idade limite (21 anos) concluída: ${inativados} vínculo(s) inativado(s) preservando o histórico.`,
       )
       setTimeout(() => setFeedbackGeral(''), 5000)
     } catch (err) {
@@ -442,7 +416,7 @@ export function AdminAssociadosPage() {
             className="btn-rotina-idade"
             onClick={() => void handleExecutarRotinaIdade()}
             disabled={executandoRotinaIdade}
-            title="Executa verificação de dependentes que completaram 21 anos (RF-AS04)"
+            title="Executa verificação de dependentes que completaram 21 anos"
           >
             <RefreshCw
               size={14}
@@ -556,6 +530,17 @@ export function AdminAssociadosPage() {
           <Shield size={15} />
           <span>Planos do Clube ({planos.length})</span>
         </button>
+
+        {ehAdmin && (
+          <button
+            type="button"
+            className={`admin-nav-tab ${abaAtiva === 'usuarios' ? 'active' : ''}`}
+            onClick={() => setAbaAtiva('usuarios')}
+          >
+            <UserCog size={15} />
+            <span>Usuários e Perfis</span>
+          </button>
+        )}
       </div>
 
       {/* ABA 1: LISTA DE ASSOCIADOS */}
@@ -682,26 +667,13 @@ export function AdminAssociadosPage() {
                             type="button"
                             className="btn-action-small"
                             onClick={() => {
-                              setAssociadoParaPlano(assoc)
-                              setNovoPlanoSelecionado(assoc.plano.tipo)
-                              setErroModalPlano('')
-                            }}
-                            title="Alterar Plano (RF-AS02)"
-                          >
-                            Plano
-                          </button>
-
-                          <button
-                            type="button"
-                            className="btn-action-small"
-                            onClick={() => {
                               setAssociadoParaSituacao(assoc)
                               setNovaSituacaoSelecionada(
                                 assoc.situacaoCadastral,
                               )
                               setErroModalSituacao('')
                             }}
-                            title="Alterar Situação (RF-AS06)"
+                            title="Alterar Situação"
                           >
                             Situação
                           </button>
@@ -722,14 +694,14 @@ export function AdminAssociadosPage() {
         </div>
       )}
 
-      {/* ABA 2: FORMULÁRIO DE CADASTRO DE TITULAR (RF-AS01 & RF-AS02) */}
+      {/* ABA 2: FORMULÁRIO DE CADASTRO DE TITULAR */}
       {abaAtiva === 'cadastro' && (
         <div className="admin-content-card">
           <div className="form-card-header">
             <h2 className="form-card-title">Novo Associado Titular</h2>
             <p className="form-card-desc">
               Cadastre um novo associado titular nas categorias Contribuinte ou
-              Proprietário (RF-AS01 e RF-AS02).
+              Proprietário.
             </p>
           </div>
 
@@ -775,9 +747,6 @@ export function AdminAssociadosPage() {
                   value={formatarCpf(formCpf)}
                   onChange={(e) => setFormCpf(e.target.value)}
                 />
-                <span className="field-hint">
-                  Reaproveita cadastro prévio caso seja ex-dependente (RF-AS04).
-                </span>
               </div>
 
               <div className="profile-field">
@@ -801,9 +770,6 @@ export function AdminAssociadosPage() {
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                 />
-                <span className="field-hint">
-                  Usado pelo associado titular para entrar no sistema.
-                </span>
               </div>
 
               <div className="profile-field">
@@ -827,10 +793,6 @@ export function AdminAssociadosPage() {
                     {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <span className="field-hint">
-                  Senha inicial para o MVP; o titular também pode redefinir no
-                  login.
-                </span>
               </div>
 
               <div className="profile-field">
@@ -862,7 +824,7 @@ export function AdminAssociadosPage() {
 
               <div className="profile-field">
                 <label className="profile-label">
-                  Plano de Adesão (RF-AS02) *
+                  Plano de Adesão *
                 </label>
                 <select
                   className="profile-input"
@@ -1012,7 +974,10 @@ export function AdminAssociadosPage() {
         </div>
       )}
 
-      {/* MODAL: GERENCIAMENTO DE DEPENDENTES POR TITULAR (RF-AS03, RF-AS04) */}
+      {/* ABA 4: USUÁRIOS E PERFIS (somente ADMIN) */}
+      {ehAdmin && abaAtiva === 'usuarios' && <UsuariosAdminPanel />}
+
+      {/* MODAL: GERENCIAMENTO DE DEPENDENTES POR TITULAR */}
       {titularSelecionado && (
         <Modal
           isOpen={!!titularSelecionado}
@@ -1140,7 +1105,7 @@ export function AdminAssociadosPage() {
                       onChange={(e) => setDepDataNasc(e.target.value)}
                     />
                     <span className="field-hint">
-                      Deve ter menos de 21 anos (RF-AS04).
+                      Deve ter menos de 21 anos.
                     </span>
                   </div>
 
@@ -1177,74 +1142,13 @@ export function AdminAssociadosPage() {
         </Modal>
       )}
 
-      {/* MODAL: ALTERAR PLANO (RF-AS02, RF-AS05) */}
-      {associadoParaPlano && (
-        <Modal
-          isOpen={!!associadoParaPlano}
-          onClose={() => setAssociadoParaPlano(null)}
-          title={`Alterar Plano de ${associadoParaPlano.pessoa.nome}`}
-          subtitle="Os valores e limites vêm dos parâmetros vigentes do back-end"
-          maxWidth={480}
-        >
-          <div className="modal-edit-body">
-            {erroModalPlano && (
-              <div className="profile-alert error">
-                <AlertCircle size={16} />
-                <span>{erroModalPlano}</span>
-              </div>
-            )}
-
-            <p className="modal-edit-text">
-              Plano atual: <strong>{nomePlano(associadoParaPlano.plano)}</strong>
-            </p>
-
-            <div className="profile-field">
-              <label className="profile-label">Selecione o Novo Plano</label>
-              <select
-                className="profile-input"
-                value={novoPlanoSelecionado}
-                onChange={(e) =>
-                  setNovoPlanoSelecionado(e.target.value as TipoPlano)
-                }
-              >
-                {planos.map((p) => (
-                  <option key={p.id} value={p.tipo}>
-                    {nomePlano(p)} ({formatarMoeda(p.valorPeriodico)}/mês •{' '}
-                    {p.limiteMensalReservas} reservas • até{' '}
-                    {p.maxDependentesAtivos} dep.)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="modal-edit-actions">
-              <button
-                type="button"
-                className="profile-btn-cancel"
-                onClick={() => setAssociadoParaPlano(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="profile-btn-save"
-                disabled={salvandoPlanoAssoc}
-                onClick={() => void handleSalvarNovoPlano()}
-              >
-                {salvandoPlanoAssoc ? 'Salvando...' : 'Confirmar Alteração'}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* MODAL: ALTERAR SITUAÇÃO CADASTRAL (RF-AS06) */}
+      {/* MODAL: ALTERAR SITUAÇÃO CADASTRAL */}
       {associadoParaSituacao && (
         <Modal
           isOpen={!!associadoParaSituacao}
           onClose={() => setAssociadoParaSituacao(null)}
           title={`Alterar Situação de ${associadoParaSituacao.pessoa.nome}`}
-          subtitle="Controle de acesso, suspensão e inativação (RF-AS06)"
+          subtitle="Controle de acesso, suspensão e inativação"
           maxWidth={480}
         >
           <div className="modal-edit-body">
@@ -1304,13 +1208,13 @@ export function AdminAssociadosPage() {
         </Modal>
       )}
 
-      {/* MODAL: EDITAR PARÂMETROS DO PLANO (RF-AS02 - ADMIN) */}
+      {/* MODAL: EDITAR PARÂMETROS DO PLANO (ADMIN) */}
       {planoEditando && (
         <Modal
           isOpen={!!planoEditando}
           onClose={() => setPlanoEditando(null)}
           title={`Editar ${nomePlano(planoEditando)}`}
-          subtitle="Atualize os parâmetros vigentes do plano no back-end (RF-AS02)"
+          subtitle="Atualize os parâmetros vigentes do plano no back-end"
           maxWidth={460}
         >
           <form

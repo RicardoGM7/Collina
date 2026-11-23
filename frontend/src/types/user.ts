@@ -1,7 +1,6 @@
 // Tipagens de Usuário, Perfis/Roles e credenciais
 
-// Mesmos valores de PerfilUsuarioEnum no back-end (custom claim "perfil" do Firebase).
-// Perfis conforme Requisitos.docx (RF-AUTO01).
+// Mesmos valores de PerfilUsuarioEnum no back-end (tb_usuario).
 export type PerfilUsuario =
   | 'ADMIN'
   | 'RECEPCAO'

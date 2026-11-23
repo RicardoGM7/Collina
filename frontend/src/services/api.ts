@@ -24,10 +24,13 @@ export const api = axios.create({
   timeout: 15000,
 })
 
+export const API_ACTIVITY_EVENT = 'collina:api-activity'
+
 // Anexa o ID token do Firebase em toda requisição (o SDK renova o token sozinho quando está perto de expirar)
 api.interceptors.request.use(async (config) => {
   const usuario = auth.currentUser
   if (usuario) {
+    window.dispatchEvent(new Event(API_ACTIVITY_EVENT))
     const token = await usuario.getIdToken()
     config.headers.Authorization = `Bearer ${token}`
   }
