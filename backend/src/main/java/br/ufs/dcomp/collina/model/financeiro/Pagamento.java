@@ -39,7 +39,9 @@ public class Pagamento {
     @Column(nullable = false)
     private StatusTransacaoEnum status;
 
-    @Column
+    // unique: o webhook localiza o pagamento por este id, então não pode haver dois iguais.
+    // (O PostgreSQL aceita vários nulos em coluna única: pagamentos manuais não têm id externo.)
+    @Column(unique = true)
     private String idExternoGateway;
 
     @Column
@@ -47,6 +49,17 @@ public class Pagamento {
 
     @Column(nullable = true)
     private LocalDateTime dataPagamento;
+
+    // Dados da cobrança no gateway (preenchidos só nos pagamentos feitos pelo gateway).
+    // Ficam guardados para devolver a mesma cobrança se o usuário pedir de novo antes de ela vencer.
+    @Column
+    private LocalDateTime expiraEm;
+
+    @Column(length = 500)
+    private String urlPagamento;
+
+    @Column(length = 500)
+    private String codigoPix;
 
     //FK - Mensalidade
     @ManyToOne
@@ -59,6 +72,26 @@ public class Pagamento {
         this.mensalidade = mensalidade;
 
         this.status = StatusTransacaoEnum.AGUARDANDO;
+    }
+
+    // Guarda os dados da cobrança criada no gateway. Só vale enquanto o pagamento está AGUARDANDO.
+    public void vincularCobranca(String idExternoGateway, String urlPagamento, String codigoPix, LocalDateTime expiraEm){
+        if(!this.estaAguardando()){
+            throw (new IllegalStateException("Pagamentos com status: " + this.status + " não podem receber uma cobrança"));
+        }
+
+        if(idExternoGateway == null || idExternoGateway.isBlank()){
+            throw (new IllegalArgumentException("O id externo da cobrança é obrigatório"));
+        }
+
+        if(expiraEm == null){
+            throw (new IllegalArgumentException("A validade da cobrança é obrigatória"));
+        }
+
+        this.idExternoGateway = idExternoGateway;
+        this.urlPagamento = urlPagamento;
+        this.codigoPix = codigoPix;
+        this.expiraEm = expiraEm;
     }
 
     public void confirmar(LocalDateTime data){
@@ -84,6 +117,11 @@ public class Pagamento {
         }
         
         this.status = StatusTransacaoEnum.EXPIRADO;
+    }
+
+    // Cobrança sem validade registrada (ainda não criada no gateway) não é considerada vencida.
+    public boolean cobrancaVencida(LocalDateTime agora){
+        return this.expiraEm != null && !agora.isBefore(this.expiraEm);
     }
 
     public boolean estaAguardando(){return this.status == StatusTransacaoEnum.AGUARDANDO;}
