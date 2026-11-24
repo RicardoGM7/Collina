@@ -1,0 +1,168 @@
+### ========================================================
+### TESTES DAS ROTAS DE ESPAÇOS E RESERVAS - COLLINA (IntelliJ HTTP Client)
+### Todas exigem login: cole um ID token do Firebase em @token.
+### Perfis: ADMIN/RECEPCAO gerenciam espaços; só ADMIN configura blocos;
+### só ASSOCIADO (titular) solicita reserva.
+### ========================================================
+
+@baseUrl = http://localhost:8080/api
+@token = COLE_AQUI_O_ID_TOKEN
+
+
+### ========================================================
+### 1. ESPAÇOS (/api/espacos)
+### ========================================================
+
+### 1.1 Cadastrar espaço controlado (capacidade AVCB obrigatória) - RECEPCAO/ADMIN (201)
+POST {{baseUrl}}/espacos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Quadra Poliesportiva",
+  "publico": false,
+  "usoExclusivoTreino": false,
+  "limiteConvidados": 6,
+  "capacidadeMaxima": 12
+}
+
+### 1.2 Cadastrar espaço público (sem capacidade) (201)
+POST {{baseUrl}}/espacos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Área da Piscina",
+  "publico": true,
+  "limiteConvidados": 20
+}
+
+### 1.3 Capacidade ausente em espaço não público (400)
+POST {{baseUrl}}/espacos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Salão de Festas",
+  "limiteConvidados": 10
+}
+
+### 1.4 Listar espaços (associado vê só os reserváveis)
+GET {{baseUrl}}/espacos
+Authorization: Bearer {{token}}
+
+### 1.5 Atualizar espaço 1
+PUT {{baseUrl}}/espacos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Quadra Poliesportiva",
+  "publico": false,
+  "limiteConvidados": 8,
+  "capacidadeMaxima": 14
+}
+
+### 1.6 Colocar em manutenção (bloqueia NOVAS reservas)
+PATCH {{baseUrl}}/espacos/1/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "EM_MANUTENCAO"
+}
+
+### 1.7 Reativar
+PATCH {{baseUrl}}/espacos/1/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "ATIVO"
+}
+
+
+### ========================================================
+### 2. BLOCOS DE HORÁRIO (/api/espacos/{id}/blocos) - somente ADMIN
+### ========================================================
+
+### 2.1 Bloco livre 08:00-10:00 (201)
+POST {{baseUrl}}/espacos/1/blocos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "horaInicio": "08:00",
+  "horaFim": "10:00"
+}
+
+### 2.2 Bloco reservado para treino (não pode ser reservado por associado)
+POST {{baseUrl}}/espacos/1/blocos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "horaInicio": "18:00",
+  "horaFim": "20:00",
+  "tipo": "TREINO"
+}
+
+### 2.3 Duração diferente de 2h (409)
+POST {{baseUrl}}/espacos/1/blocos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "horaInicio": "10:00",
+  "horaFim": "11:00"
+}
+
+### 2.4 Listar blocos do espaço
+GET {{baseUrl}}/espacos/1/blocos
+Authorization: Bearer {{token}}
+
+### 2.5 Disponibilidade do dia (associado: só livres; funcionário: agenda completa)
+GET {{baseUrl}}/espacos/1/disponibilidade?data=2026-11-25
+Authorization: Bearer {{token}}
+
+
+### ========================================================
+### 3. RESERVAS (/api/reservas)
+### ========================================================
+
+### 3.1 Solicitar reserva de 1 ou mais blocos - ASSOCIADO titular (201)
+POST {{baseUrl}}/reservas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "espacoId": 1,
+  "data": "2026-11-25",
+  "blocoIds": [1],
+  "qtdConvidados": 2
+}
+
+### 3.2 Reserva com dependente beneficiário (menor de 21 anos na data de uso)
+POST {{baseUrl}}/reservas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "espacoId": 1,
+  "data": "2026-11-25",
+  "blocoIds": [2],
+  "qtdConvidados": 1,
+  "dependenteId": 1
+}
+
+### 3.3 Minhas reservas - ASSOCIADO
+GET {{baseUrl}}/reservas/minhas
+Authorization: Bearer {{token}}
+
+### 3.4 Reservas de um associado - RECEPCAO/ADMIN
+GET {{baseUrl}}/reservas?associadoId=1
+Authorization: Bearer {{token}}
+
+### 3.5 Cancelar reserva (até o dia anterior à data) - dono, RECEPCAO ou ADMIN
+PATCH {{baseUrl}}/reservas/1/cancelar
+Authorization: Bearer {{token}}
