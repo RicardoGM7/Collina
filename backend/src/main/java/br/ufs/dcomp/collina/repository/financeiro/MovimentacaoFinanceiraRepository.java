@@ -26,6 +26,14 @@ public interface MovimentacaoFinanceiraRepository extends JpaRepository<Moviment
         return findByDataHoraGreaterThanEqualAndDataHoraLessThan(inicio, fim);
     }
 
+    // Um pagamento só pode gerar uma movimentação (relação 1:1)
+    @Query("""
+       SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END
+       FROM MovimentacaoFinanceira m
+       WHERE m.pagamento.id = :pagamentoId
+       """)
+    boolean existsByPagamentoId(Long pagamentoId);
+
     // Buscar por filtro
     @Query("""
        SELECT m FROM MovimentacaoFinanceira m

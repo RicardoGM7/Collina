@@ -11,6 +11,7 @@ import br.ufs.dcomp.collina.dto.financeiro.MovimentacaoFinanceiraResponseDTO;
 import br.ufs.dcomp.collina.dto.financeiro.SaldoClubeResponseDTO;
 import br.ufs.dcomp.collina.model.financeiro.MovimentacaoFinanceira;
 import br.ufs.dcomp.collina.model.financeiro.OrigemMovimentacaoEnum;
+import br.ufs.dcomp.collina.model.financeiro.Pagamento;
 import br.ufs.dcomp.collina.model.financeiro.SaldoClube;
 import br.ufs.dcomp.collina.model.financeiro.SituacaoMovimentacaoEnum;
 import br.ufs.dcomp.collina.model.financeiro.TipoMovimentacaoEnum;
@@ -87,21 +88,38 @@ public class MovimentacaoFinanceiraService {
     }
 
     // RF-F18 - Registro Automático de Entrada
-    // Preciso de mais dados para finalizar este
     @Transactional
-    public MovimentacaoFinanceiraResponseDTO registrarEntradaAutomatica(
-                            MovimentacaoFinanceiraRequestDTO dados) {
+    public MovimentacaoFinanceiraResponseDTO registrarEntradaAutomatica(Pagamento pagamento) {
 
-        // Verificação dos dados
-        validarDados(dados);
-        if (dados.tipo() != TipoMovimentacaoEnum.ENTRADA) {
-            throw new IllegalArgumentException("A operação deve ser uma entrada.");
+        if (pagamento == null || pagamento.getId() == null) {
+            throw new IllegalArgumentException("O pagamento é obrigatório e precisa estar salvo.");
+        }
+        if (!pagamento.foiConfirmado()) {
+            throw new IllegalStateException("Somente pagamentos confirmados geram entrada financeira.");
+        }
+        // Relação 1:1, um pagamento gera no máximo uma movimentação
+        if (movimentacaoRepository.existsByPagamentoId(pagamento.getId())) {
+            throw new IllegalStateException("Já existe uma movimentação financeira para este pagamento.");
         }
 
-        aplicarVariacao(obterSaldoParaAtualizar(), efeito(dados.tipo(), dados.valor()));
+        BigDecimal valor = pagamento.getValor().setScale(2, RoundingMode.HALF_UP);
+        if (valor.signum() <= 0) {
+            throw new IllegalArgumentException("O valor do pagamento deve ser maior que zero.");
+        }
 
-        // Registro da operação
-        MovimentacaoFinanceira mov = criarMovimentacao(dados);
+        // Entrada: soma ao saldo do clube
+        aplicarVariacao(obterSaldoParaAtualizar(), valor);
+
+        // Registro da operação, ligada ao pagamento
+        MovimentacaoFinanceira mov = new MovimentacaoFinanceira();
+        mov.setTipo(TipoMovimentacaoEnum.ENTRADA);
+        mov.setOrigem(OrigemMovimentacaoEnum.PAGAMENTO);
+        mov.setValor(valor);
+        mov.setDescricao(descricaoDoPagamento(pagamento));
+        mov.setDataHora(pagamento.getDataPagamento() != null
+                ? pagamento.getDataPagamento() : LocalDateTime.now());
+        mov.setSituacao(SituacaoMovimentacaoEnum.ATIVO);
+        mov.setPagamento(pagamento);
 
         return new MovimentacaoFinanceiraResponseDTO(movimentacaoRepository.save(mov));
     }
@@ -289,6 +307,12 @@ public class MovimentacaoFinanceiraService {
         }
     }
 
+    private String descricaoDoPagamento(Pagamento pagamento) {
+        return pagamento.getMensalidade() != null
+                ? "Pagamento de mensalidade " + pagamento.getMensalidade().getCompetencia()
+                : "Pagamento " + pagamento.getId();
+    }
+
     private MovimentacaoFinanceira criarMovimentacao(MovimentacaoFinanceiraRequestDTO dados) {
         MovimentacaoFinanceira mov = new MovimentacaoFinanceira();
         mov.setTipo(dados.tipo());
@@ -297,7 +321,6 @@ public class MovimentacaoFinanceiraService {
         mov.setDescricao(dados.descricao());
         mov.setDataHora(dados.dataHora());
         mov.setSituacao(SituacaoMovimentacaoEnum.ATIVO);
-        mov.setPagamentoId(dados.pagamentoId());
         return mov;
     }
 }
