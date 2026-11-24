@@ -19,8 +19,5 @@ public record GastoAvulsoRequestDTO(
 
     @Size(max = 500)
     @NotBlank(message = "Informe a descrição do gasto")
-    String descricao,
-
-    @NotNull(message = "Informe o funcionário responsável pelo lançamento do gasto")
-    Long funcionarioId
+    String descricao
 ) {}

@@ -20,4 +20,7 @@ public record ConfirmacaoManualRequest(
     String idGateway
 
 ) {
+    public ConfirmacaoManualRequest(BigDecimal valor, FormaPagamentoEnum formaPagamento) {
+        this(valor, formaPagamento, null);
+    }
 }

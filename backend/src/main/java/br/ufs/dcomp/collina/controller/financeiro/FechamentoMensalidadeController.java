@@ -22,12 +22,13 @@ public class FechamentoMensalidadeController {
 
     // RF-F05/F20: reexecução do fechamento mensal (200 OK).
     // As capturas de data corrente ficam agrupadas no controller e passadas por parâmetro ao service.
+    // O vencimento padrão utiliza o último dia útil do mês (segunda a sexta-feira).
     @PostMapping
     public ResponseEntity<ResumoFechamentoDTO> executar(
             @RequestParam(name = "competencia", required = false) YearMonth competencia,
             @RequestParam(name = "vencimento", required = false) LocalDate vencimento) {
         YearMonth comp = (competencia != null) ? competencia : YearMonth.now();
-        LocalDate venc = (vencimento != null) ? vencimento : comp.atEndOfMonth();
+        LocalDate venc = (vencimento != null) ? vencimento : FechamentoMensalidadeService.calcularUltimoDiaUtil(comp);
         return ResponseEntity.ok(fechamentoService.fecharEAbrirCompetencia(comp, venc));
     }
 }

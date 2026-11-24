@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,13 +49,26 @@ public class PagamentoService {
         Mensalidade mensalidade = mensalidadeRepository.buscarPorIdParaAtualizar(mensalidadeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Mensalidade não encontrada com o ID: " + mensalidadeId));
 
-        mensalidade.marcarComoPaga();
+        // RF-F22: 2. Verificar se o status permite pagamento antes de qualquer alteração
+        if (!mensalidade.estaPendente() && !mensalidade.estaAtrasada()) {
+            if (mensalidade.getStatusMensalidade() == br.ufs.dcomp.collina.model.financeiro.StatusMensalidadeEnum.PAGA) {
+                throw new IllegalStateException("Mensalidade já foi paga");
+            }
+            throw new IllegalStateException("Mensalidade com status: " + mensalidade.getStatusMensalidade() + " não pode ser marcada como paga");
+        }
+
+        // RF-F22: 3. Validar se o valor informado corresponde exatamente ao valor final congelado
         validarValor(mensalidade, dados.valor());
+
+        // RF-F22: 4. Somente depois marcar a mensalidade como paga
+        mensalidade.marcarComoPaga();
 
         LocalDateTime agora = LocalDateTime.now();
 
         Pagamento pagamento = new Pagamento(dados.valor(), dados.formaPagamento(), mensalidade);
         pagamento.confirmar(agora);
+        // RF-F10: gerar comprovante único para confirmação manual (Ciclo 7)
+        pagamento.setComprovante("MANUAL-" + UUID.randomUUID());
         Pagamento salvo = pagamentoRepository.save(pagamento);
 
        movimentacaoFinanceiraService.registrarEntradaAutomatica(salvo);
@@ -94,6 +108,7 @@ public class PagamentoService {
 
     // Histórico de pagamentos de um titular. Id inexistente devolve lista vazia: o
     // financeiro ainda não tem como confirmar a existência do associado.
+    // Retorna ordenado cronologicamente pela data de pagamento.
     @Transactional(readOnly = true)
     public List<PagamentoResponseDTO> listarPorTitular(Integer associadoId) {
         if (associadoId == null) {
@@ -102,7 +117,8 @@ public class PagamentoService {
 
         return pagamentoRepository.buscarPorTitular(associadoId)
                 .stream()
-                .sorted(Comparator.comparing(Pagamento::getId))
+                .sorted(Comparator.comparing(Pagamento::getDataPagamento, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Pagamento::getId))
                 .map(PagamentoResponseDTO::new)
                 .toList();
     }

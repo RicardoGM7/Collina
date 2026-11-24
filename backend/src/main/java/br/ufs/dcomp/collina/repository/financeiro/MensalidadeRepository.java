@@ -19,6 +19,17 @@ public interface MensalidadeRepository extends JpaRepository<Mensalidade, Long>{
     
     List<Mensalidade> findByStatusMensalidadeAndDataVencimentoLessThan(StatusMensalidadeEnum statusMensalidade, LocalDate data);
     
+    @Query("""
+        select m from Mensalidade m
+        left join fetch m.associadoTitular a
+        left join fetch a.pessoa p
+        where m.statusMensalidade = :status
+        order by m.dataVencimento asc, m.id asc
+        """)
+    List<Mensalidade> findByStatusMensalidadeOrderByDataVencimentoAsc(@Param("status") StatusMensalidadeEnum status);
+
+    List<Mensalidade> findByStatusMensalidade(StatusMensalidadeEnum status);
+
     List<Mensalidade> findByAssociadoTitular_IdAndCompetencia(Integer associadoTitularId, String competencia);
 
     default List<Mensalidade> findByAssociadoTitularIdAndCompetencia(Integer associadoTitularId, String competencia) {

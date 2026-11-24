@@ -4,9 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import br.ufs.dcomp.collina.dto.financeiro.RelatorioFechamentoResponseDTO;
+import br.ufs.dcomp.collina.dto.financeiro.RelatorioInadimplenteResponseDTO;
 import br.ufs.dcomp.collina.model.financeiro.MovimentacaoFinanceira;
 import br.ufs.dcomp.collina.model.financeiro.OrigemMovimentacaoEnum;
+import br.ufs.dcomp.collina.model.financeiro.StatusMensalidadeEnum;
 import br.ufs.dcomp.collina.model.financeiro.TipoMovimentacaoEnum;
+import br.ufs.dcomp.collina.repository.financeiro.MensalidadeRepository;
 import br.ufs.dcomp.collina.repository.financeiro.MovimentacaoFinanceiraRepository;
 
 import java.math.BigDecimal;
@@ -22,10 +25,8 @@ public class RelatorioFinanceiroService {
     @Autowired 
     private MovimentacaoFinanceiraRepository movimentacaoRepository;
 
-    /*
     @Autowired 
-    private MensalidadeRepository mensalidaderepository;
-    */
+    private MensalidadeRepository mensalidadeRepository;
 
     private record Chave(TipoMovimentacaoEnum tipo, OrigemMovimentacaoEnum origem) {}
 
@@ -78,9 +79,13 @@ public class RelatorioFinanceiroService {
                 totalEntradas.subtract(totalSaidas), porCategoria);
     }
 
-    // RF-F15 - Consulta de associados inadimplentes
-    public void listarInadimplentes() {
-        // Irá utilizar o mensalidade repository aqui
+    // RF-F15 - Consulta de associados inadimplentes (mensalidades com status ATRASADA)
+    @Transactional(readOnly = true)
+    public List<RelatorioInadimplenteResponseDTO> listarInadimplentes() {
+        return mensalidadeRepository.findByStatusMensalidadeOrderByDataVencimentoAsc(StatusMensalidadeEnum.ATRASADA)
+                .stream()
+                .map(RelatorioInadimplenteResponseDTO::new)
+                .toList();
     }
     
 }

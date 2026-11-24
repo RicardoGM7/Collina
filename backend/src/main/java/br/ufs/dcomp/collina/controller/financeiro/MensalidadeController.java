@@ -1,21 +1,25 @@
 package br.ufs.dcomp.collina.controller.financeiro;
 
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufs.dcomp.collina.dto.financeiro.GastoAvulsoRequestDTO;
 import br.ufs.dcomp.collina.dto.financeiro.MensalidadeResponseDTO;
+import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
+import br.ufs.dcomp.collina.model.auth.Usuario;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
+import br.ufs.dcomp.collina.repository.auth.UsuarioRepository;
 import br.ufs.dcomp.collina.service.financeiro.MensalidadeService;
 import jakarta.validation.Valid;
 
@@ -26,10 +30,10 @@ public class MensalidadeController {
     @Autowired
     private MensalidadeService mensalidadeService;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     // RF-F06: listar as mensalidades de um titular em uma competência (200 OK).
-    // Ex.: GET /api/mensalidades?associadoId=1&competencia=2026-11
-    // Devolve lista vazia se não houver nenhuma. Erros (tratados pelo GlobalExceptionHandler):
-    //   400 -> parâmetro ausente ou em formato inválido (competencia deve ser AAAA-MM)
     @GetMapping
     public ResponseEntity<List<MensalidadeResponseDTO>> listar(
             @RequestParam("associadoId") Integer associadoId,
@@ -37,16 +41,23 @@ public class MensalidadeController {
         return ResponseEntity.ok(mensalidadeService.listarMensalidades(associadoId, competencia));
     }
 
-    // RF-F08: lançar gasto avulso (200 OK). Titular ou dependente: o gasto vai para a mensalidade
-    // EM_ABERTO do titular responsável. Devolve a mensalidade atualizada. Erros possíveis:
-    //   400 -> corpo inválido (@Valid) ou dado recusado pela entidade
-    //   404 -> não há mensalidade em aberto para o titular ou pessoa inexistente
-    //   409 -> titular inativo, dependente sem vínculo ativo ou mensalidade fora de EM_ABERTO
-    // O funcionarioId vem no corpo do DTO (provisório até a autenticação de funcionários).
+    // RF-F08: lançar gasto avulso (200 OK). O funcionário responsável é resolvido a partir
+    // do usuário autenticado no token Firebase.
     @PostMapping("/gastos-avulsos")
     public ResponseEntity<MensalidadeResponseDTO> incluirGastoAvulso(
-            @Valid @RequestBody GastoAvulsoRequestDTO dto) {
-        MensalidadeResponseDTO mensalidade = mensalidadeService.incluirGastoAvulso(dto, java.time.LocalDateTime.now());
+            @Valid @RequestBody GastoAvulsoRequestDTO dto,
+            @AuthenticationPrincipal UsuarioAutenticado usuarioLogado) {
+        Long funcionarioId = obterIdFuncionario(usuarioLogado);
+        MensalidadeResponseDTO mensalidade = mensalidadeService.incluirGastoAvulso(dto, funcionarioId, LocalDateTime.now());
         return ResponseEntity.ok(mensalidade);
+    }
+
+    private Long obterIdFuncionario(UsuarioAutenticado usuario) {
+        if (usuario == null || usuario.uid() == null || usuario.uid().isBlank()) {
+            throw new IllegalArgumentException("Usuário não autenticado.");
+        }
+        Usuario usuarioBanco = usuarioRepository.findByFirebaseUid(usuario.uid())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado no cadastro do sistema."));
+        return usuarioBanco.getId().longValue();
     }
 }

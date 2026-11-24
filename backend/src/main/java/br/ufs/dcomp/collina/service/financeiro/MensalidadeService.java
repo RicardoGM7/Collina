@@ -114,14 +114,17 @@ public class MensalidadeService implements AberturaMensalidadePort {
     }
 
     @Transactional
-    public MensalidadeResponseDTO incluirGastoAvulso(GastoAvulsoRequestDTO dto, LocalDateTime dataLancamento) {
+    public MensalidadeResponseDTO incluirGastoAvulso(GastoAvulsoRequestDTO dto, Long funcionarioId, LocalDateTime dataLancamento) {
         if (dto == null) {
             throw new IllegalArgumentException("Informe os dados do gasto avulso.");
+        }
+        if (funcionarioId == null) {
+            throw new IllegalArgumentException("O funcionário responsável pelo lançamento é obrigatório.");
         }
         if (dataLancamento == null) {
             throw new IllegalArgumentException("A data de lançamento não pode ser nula.");
         }
-        verificadorDeFuncionario.exigirFuncionarioHabilitado(dto.funcionarioId());
+        verificadorDeFuncionario.exigirFuncionarioHabilitado(funcionarioId);
 
         // 1. Resolver a Pessoa
         Pessoa pessoa = pessoaRepository.findById(dto.pessoaId())
@@ -159,17 +162,12 @@ public class MensalidadeService implements AberturaMensalidadePort {
                 dto.valor(),
                 dto.descricao(),
                 dataLancamento,
-                dto.funcionarioId(),
+                funcionarioId,
                 vinculoDependencia
         );
 
         mensalidade.adicionarGastoAvulso(gasto);
 
         return new MensalidadeResponseDTO(mensalidade);
-    }
-
-    @Transactional
-    public MensalidadeResponseDTO incluirGastoAvulso(GastoAvulsoRequestDTO dto) {
-        return incluirGastoAvulso(dto, LocalDateTime.now());
     }
 }

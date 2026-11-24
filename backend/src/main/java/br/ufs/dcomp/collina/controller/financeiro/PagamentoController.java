@@ -17,8 +17,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.ufs.dcomp.collina.dto.financeiro.ConfirmacaoManualRequest;
 import br.ufs.dcomp.collina.dto.financeiro.PagamentoResponseDTO;
+import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
+import br.ufs.dcomp.collina.model.auth.Usuario;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
+import br.ufs.dcomp.collina.repository.auth.UsuarioRepository;
 import br.ufs.dcomp.collina.service.financeiro.PagamentoService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api")
@@ -27,19 +32,19 @@ public class PagamentoController {
     @Autowired
     private PagamentoService pagamentoService;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     // RF-F18 / RF-F22: confirma manualmente o pagamento de uma mensalidade PENDENTE ou ATRASADA
     // (201 Created). Cria o Pagamento, marca a mensalidade como PAGA e lança a entrada no caixa.
-    // O funcionarioId no header é provisório, até haver autenticação. Erros possíveis
-    // (tratados pelo GlobalExceptionHandler):
-    //   400 -> corpo inválido (@Valid), header ausente ou valor diferente do valor da mensalidade
-    //   404 -> mensalidade inexistente
-    //   409 -> mensalidade em estado que não permite pagamento (EM_ABERTO, PAGA, CANCELADA)
+    // O funcionário autenticado é obtido a partir de tb_usuario através do token Firebase.
     @PostMapping("/mensalidades/{mensalidadeId}/confirmar-pagamento")
     public ResponseEntity<PagamentoResponseDTO> confirmarManualmente(
             @PathVariable Long mensalidadeId,
             @Valid @RequestBody ConfirmacaoManualRequest dados,
-            @RequestHeader("funcionarioId") Long funcionarioId) {
+            @AuthenticationPrincipal UsuarioAutenticado usuarioLogado) {
 
+        Long funcionarioId = obterIdFuncionario(usuarioLogado);
         PagamentoResponseDTO response = pagamentoService.confirmarManualmente(mensalidadeId, dados, funcionarioId);
 
         // O request é de /mensalidades/..., então o Location é montado a partir da raiz da aplicação.
@@ -49,6 +54,15 @@ public class PagamentoController {
                 .toUri();
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    private Long obterIdFuncionario(UsuarioAutenticado usuario) {
+        if (usuario == null || usuario.uid() == null || usuario.uid().isBlank()) {
+            throw new IllegalArgumentException("Usuário não autenticado.");
+        }
+        Usuario usuarioBanco = usuarioRepository.findByFirebaseUid(usuario.uid())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado no cadastro do sistema."));
+        return usuarioBanco.getId().longValue();
     }
 
     // Consulta um pagamento (200 OK). 404 se não existir.
@@ -64,6 +78,8 @@ public class PagamentoController {
     }
 
     // Histórico de pagamentos de um titular (200 OK). associadoId é obrigatório (400 se ausente).
+    // Restrito a administradores e equipe financeira. Associados consultam seus pagamentos via /api/associados/me/pagamentos.
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @GetMapping("/pagamentos")
     public ResponseEntity<List<PagamentoResponseDTO>> listarPorTitular(@RequestParam Integer associadoId) {
         return ResponseEntity.ok(pagamentoService.listarPorTitular(associadoId));

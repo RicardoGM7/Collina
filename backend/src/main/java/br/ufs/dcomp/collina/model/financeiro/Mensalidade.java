@@ -2,6 +2,7 @@ package br.ufs.dcomp.collina.model.financeiro;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,6 +115,19 @@ public class Mensalidade {
         
         Mensalidade substituta = new Mensalidade(this.competencia, this.valorBase, this.associadoTitular);
 
+        // RF-F11: Copia os gastos avulsos da original para a substituta (novas instâncias para preservar histórico)
+        for (GastoAvulso originalGasto : this.gastosAvulsos) {
+            GastoAvulso copia = new GastoAvulso(
+                originalGasto.getValor(),
+                originalGasto.getDescricao(),
+                originalGasto.getDataLancamento(),
+                originalGasto.getFuncionario(),
+                originalGasto.getVinculoDependencia()
+            );
+            copia.setMensalidade(substituta);
+            substituta.getGastosAvulsos().add(copia);
+        }
+
         substituta.setDataVencimento(novoVencimento);
         substituta.setValorFinal(novoValor);
         substituta.setStatusMensalidade(StatusMensalidadeEnum.PENDENTE);
@@ -145,6 +159,18 @@ public class Mensalidade {
         gasto.setMensalidade(this);
         this.gastosAvulsos.add(gasto);
         this.valorFinal = this.valorFinal.add(gasto.getValor());
+    }
+
+    public static LocalDate calcularUltimoDiaUtil(YearMonth mes) {
+        if (mes == null) {
+            throw new IllegalArgumentException("O mês não pode ser nulo.");
+        }
+        LocalDate fimDoMes = mes.atEndOfMonth();
+        return switch (fimDoMes.getDayOfWeek()) {
+            case SATURDAY -> fimDoMes.minusDays(1);
+            case SUNDAY -> fimDoMes.minusDays(2);
+            default -> fimDoMes;
+        };
     }
 
     public void fechar(LocalDate vencimento){

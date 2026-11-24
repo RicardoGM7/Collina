@@ -142,11 +142,10 @@ public class CobrancaTransacaoService {
             case RECUSADO -> pagamento.recusar();
             case EXPIRADO -> pagamento.expirar();
             case APROVADO -> {
-                // Decisão 2 (RF-F22): valor diferente do cobrado não confirma nada. Responde 200 para o
-                // gateway não reenviar, e o pagamento fica AGUARDANDO para conferência manual.
-                if (notificacao.valor().compareTo(pagamento.getValor()) != 0) {
-                    log.error("Pagamento {} aprovado com valor {} diferente do cobrado {}; NÃO confirmado, conferir manualmente.",
-                            pagamento.getId(), notificacao.valor(), pagamento.getValor());
+                // Decisão 2 (RF-F22): valor diferente do cobrado ou da mensalidade não confirma nada.
+                if (notificacao.valor().compareTo(pagamento.getValor()) != 0 || notificacao.valor().compareTo(mensalidade.getValorFinal()) != 0) {
+                    log.error("Pagamento {} aprovado com valor {} divergente (cobrado: {}, mensalidade: {}); NÃO confirmado, conferir manualmente.",
+                            pagamento.getId(), notificacao.valor(), pagamento.getValor(), mensalidade.getValorFinal());
                     return ResultadoNotificacao.IGNORADA;
                 }
 
@@ -160,17 +159,13 @@ public class CobrancaTransacaoService {
 
                 mensalidade.marcarComoPaga();
                 pagamento.confirmar(agora);
+                if (pagamento.getComprovante() == null) {
+                    pagamento.setComprovante("GATEWAY-" + notificacao.idExterno());
+                }
 
                 // Mesma entrada automática da confirmação manual (RF-F18), na mesma transação:
                 // se o caixa recusar, a mensalidade e o pagamento voltam ao estado anterior.
-                movimentacaoFinanceiraService.registrarEntradaAutomatica(new MovimentacaoFinanceiraRequestDTO(
-                        TipoMovimentacaoEnum.ENTRADA,
-                        OrigemMovimentacaoEnum.PAGAMENTO,
-                        pagamento.getValor(),
-                        "Pagamento de mensalidade " + mensalidade.getCompetencia(),
-                        agora,
-                        pagamento.getId(),
-                        null));
+                movimentacaoFinanceiraService.registrarEntradaAutomatica(pagamento);
             }
         }
 

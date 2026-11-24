@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import br.ufs.dcomp.collina.dto.financeiro.ResumoFechamentoDTO;
 import br.ufs.dcomp.collina.model.associados.Associado;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
+import br.ufs.dcomp.collina.model.financeiro.Mensalidade;
 import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
 
 /**
@@ -38,16 +39,20 @@ public class FechamentoMensalidadeService {
     @Autowired
     private Clock clock;
 
+    public static LocalDate calcularUltimoDiaUtil(YearMonth mes) {
+        return Mensalidade.calcularUltimoDiaUtil(mes);
+    }
+
     public ResumoFechamentoDTO fecharCompetenciaAtual() {
         YearMonth agora = YearMonth.now(clock);
-        return fecharEAbrirCompetencia(agora, agora.atEndOfMonth());
+        return fecharEAbrirCompetencia(agora, calcularUltimoDiaUtil(agora));
     }
 
     public ResumoFechamentoDTO fecharEAbrirCompetencia(YearMonth novaCompetencia) {
         if (novaCompetencia == null) {
             throw new IllegalArgumentException("A nova competência é obrigatória.");
         }
-        return fecharEAbrirCompetencia(novaCompetencia, novaCompetencia.atEndOfMonth());
+        return fecharEAbrirCompetencia(novaCompetencia, calcularUltimoDiaUtil(novaCompetencia));
     }
 
     public ResumoFechamentoDTO fecharEAbrirCompetencia(YearMonth novaCompetencia, LocalDate vencimento) {
@@ -56,6 +61,9 @@ public class FechamentoMensalidadeService {
         }
         if (vencimento == null) {
             throw new IllegalArgumentException("A data de vencimento é obrigatória.");
+        }
+        if (vencimento.getDayOfWeek() == java.time.DayOfWeek.SATURDAY || vencimento.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+            throw new IllegalArgumentException("A data de vencimento deve ser um dia útil (segunda a sexta-feira).");
         }
 
         // Carrega titulares ATIVO e SUSPENSO (inativos são ignorados)
