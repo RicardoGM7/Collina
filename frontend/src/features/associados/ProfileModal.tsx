@@ -294,7 +294,7 @@ export function ProfileModal({
                   <span>
                     Sua conta ainda não está vinculada a um cadastro de associado
                     titular no clube. Procure a recepção ou administração para
-                    concluir seu cadastro (RF-AS01).
+                    concluir seu cadastro.
                   </span>
                 </div>
               </>
@@ -438,14 +438,6 @@ export function ProfileModal({
                     </div>
                   </div>
                 </div>
-
-                <div className="profile-info-footnote">
-                  <AlertCircle size={14} />
-                  <span>
-                    Conforme a regra do clube (RF-AS05), a troca de categoria,
-                    plano ou situação cadastral é formalizada pela administração.
-                  </span>
-                </div>
               </>
             )}
           </div>
@@ -547,7 +539,7 @@ export function ProfileModal({
                                 <div className="dependent-age-warning">
                                   <AlertCircle size={13} />
                                   <span>
-                                    Dependente com 21 anos completados (RF-AS04).
+                                    Dependente com 21 anos completados.
                                   </span>
                                 </div>
                               )}
@@ -562,14 +554,6 @@ export function ProfileModal({
                     )}
                   </div>
                 )}
-
-                <div className="profile-info-footnote">
-                  <AlertCircle size={14} />
-                  <span>
-                    O cadastro, alteração e inativação de dependentes são
-                    realizados pela recepção do clube (RF-AS03).
-                  </span>
-                </div>
               </>
             )}
           </div>
@@ -603,7 +587,7 @@ export function ProfileModal({
                       {nomePlano(associado.plano)}
                     </h4>
                     <p className="pending-invoice-sub">
-                      Definido nos parâmetros vigentes do back-end (RF-AS02)
+                      Definido nos parâmetros vigentes do back-end
                     </p>
                   </div>
                 </div>

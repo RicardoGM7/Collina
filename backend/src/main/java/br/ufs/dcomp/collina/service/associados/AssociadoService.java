@@ -11,7 +11,6 @@ import br.ufs.dcomp.collina.model.associados.Pessoa;
 import br.ufs.dcomp.collina.model.associados.Plano;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
 import br.ufs.dcomp.collina.model.associados.StatusVinculoEnum;
-import br.ufs.dcomp.collina.model.associados.TipoPlanoEnum;
 import br.ufs.dcomp.collina.model.auth.PerfilUsuarioEnum;
 import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
 import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
@@ -144,6 +143,10 @@ public class AssociadoService {
 
         Associado salvo = associadoRepository.save(associado);
         aberturaMensalidade.abrirMensalidadeInicial(salvo, YearMonth.from(hoje));
+        if (usuarioId != null && usuarioService != null) {
+            usuarioService.vincularPessoa(usuarioId, pessoa);
+        }
+
         return new AssociadoResponseDTO(salvo);
     }
 
@@ -228,40 +231,7 @@ public class AssociadoService {
         return new AssociadoResponseDTO(associado);
     }
 
-    // 6. RF-AS02/AS05: alteração de plano por funcionário autorizado.
-    // A categoria acompanha o plano (Proprietário <-> Contribuinte). O novo plano precisa comportar
-    // a quantidade de dependentes ativos que o titular já possui.
-    @Transactional
-    public AssociadoResponseDTO alterarPlano(Integer id, TipoPlanoEnum novoTipo) {
-        if (id == null) {
-            throw new IllegalArgumentException("O ID do associado é obrigatório.");
-        }
-        if (novoTipo == null) {
-            throw new IllegalArgumentException("O novo plano é obrigatório.");
-        }
-
-        Associado associado = obterAssociado(id);
-        Plano novoPlano = planoRepository.findByTipo(novoTipo)
-                .orElseThrow(() -> new ResourceNotFoundException("Plano não encontrado: " + novoTipo));
-
-        if (associado.getPlano().getId().equals(novoPlano.getId())) {
-            throw new IllegalStateException("O associado já está vinculado ao plano " + novoTipo + ".");
-        }
-
-        long dependentesAtivos = vinculoRepository.countByTitularIdAndStatus(id, StatusVinculoEnum.ATIVO);
-        if (dependentesAtivos > novoPlano.getMaxDependentesAtivos()) {
-            throw new IllegalStateException("O plano " + novoTipo + " permite no máximo "
-                    + novoPlano.getMaxDependentesAtivos() + " dependentes ativos, mas o titular possui "
-                    + dependentesAtivos + ". Inative dependentes antes de trocar de plano.");
-        }
-
-        associado.setPlano(novoPlano);
-        associado.setCategoria(novoTipo.getCategoriaPermitida());
-
-        return new AssociadoResponseDTO(associadoRepository.save(associado));
-    }
-
-    // 7. RF-AS06: controle da situação cadastral (funcionário autorizado)
+    // 6. RF-AS06: controle da situação cadastral (funcionário autorizado)
     //  - SUSPENSO: não altera os vínculos (o acesso dos dependentes é bloqueado na verificação de elegibilidade)
     //  - INATIVO: inativa automaticamente os vínculos ativos (motivo INATIVACAO_TITULAR)
     //  - INATIVO -> ATIVO: reativa só os vínculos inativados por INATIVACAO_TITULAR
@@ -289,9 +259,15 @@ public class AssociadoService {
 
         if (novaSituacao == SituacaoCadastralEnum.INATIVO) {
             vinculoService.inativarVinculosPorInativacaoDoTitular(salvo);
+            if (usuarioService != null && salvo.getUsuarioId() != null) {
+                usuarioService.sincronizarStatusPorSistema(salvo.getUsuarioId(), false);
+            }
         } else if (atual == SituacaoCadastralEnum.INATIVO && novaSituacao == SituacaoCadastralEnum.ATIVO) {
             vinculoService.reativarVinculosDoTitular(salvo);
             aberturaMensalidade.abrirMensalidadeInicial(salvo);
+            if (usuarioService != null && salvo.getUsuarioId() != null) {
+                usuarioService.sincronizarStatusPorSistema(salvo.getUsuarioId(), true);
+            }
         }
 
         return new AssociadoResponseDTO(salvo);

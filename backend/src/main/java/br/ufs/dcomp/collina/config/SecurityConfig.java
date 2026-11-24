@@ -1,5 +1,6 @@
 package br.ufs.dcomp.collina.config;
 
+import br.ufs.dcomp.collina.repository.auth.UsuarioRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    FirebaseAuth firebaseAuth,
+                                                   UsuarioRepository usuarioRepository,
                                                    CorsConfigurationSource corsConfigurationSource,
                                                    @Value("${firebase.check-revoked:false}") boolean verificarRevogacao)
             throws Exception {
@@ -42,8 +44,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 // Define a política de sessão como Stateless (sem sessão no servidor)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Valida o ID token do Firebase antes dos filtros de autenticação do Spring
-                .addFilterBefore(new FirebaseAuthenticationFilter(firebaseAuth, verificarRevogacao),
+                // Valida o ID token do Firebase e carrega perfil/status de tb_usuario antes dos filtros do Spring
+                .addFilterBefore(new FirebaseAuthenticationFilter(firebaseAuth, usuarioRepository, verificarRevogacao),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, e) -> escreverErro(response,

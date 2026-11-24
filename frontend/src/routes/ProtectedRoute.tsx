@@ -1,5 +1,5 @@
 // Componente para proteção de rotas por perfil (RBAC)
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { HOME_POR_PERFIL, type PerfilUsuario } from '../types/user'
 
@@ -32,16 +32,15 @@ interface ProtectedRouteProps {
  *   <Route element={<ProtectedRoute perfis={['ADMIN']} />}>
  *     <Route path="/financeiro" element={...} />
  *   </Route>
- * Sem login -> /login (guardando a página pedida). Perfil sem permissão -> tela inicial do próprio perfil.
+ * Sem login -> /login. Perfil sem permissão -> tela inicial do próprio perfil.
  */
 export function ProtectedRoute({ perfis }: ProtectedRouteProps) {
   const { usuario, carregando } = useAuth()
-  const location = useLocation()
 
   if (carregando) return <TelaCarregando />
 
   if (!usuario) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+    return <Navigate to="/login" replace />
   }
 
   if (perfis && !perfis.includes(usuario.perfil)) {
@@ -51,16 +50,14 @@ export function ProtectedRoute({ perfis }: ProtectedRouteProps) {
   return <Outlet />
 }
 
-/** Rotas de visitante (login/registro): quem já está logado vai direto para a sua tela inicial. */
+/** Rotas de visitante (login/registro): quem já está logado vai direto para a tela inicial do seu perfil. */
 export function PublicOnlyRoute() {
   const { usuario, carregando } = useAuth()
-  const location = useLocation()
 
   if (carregando) return <TelaCarregando />
 
   if (usuario) {
-    const origem = (location.state as { from?: string } | null)?.from
-    return <Navigate to={origem ?? HOME_POR_PERFIL[usuario.perfil]} replace />
+    return <Navigate to={HOME_POR_PERFIL[usuario.perfil]} replace />
   }
 
   return <Outlet />

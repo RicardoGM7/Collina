@@ -55,7 +55,7 @@ const PRESET_COLORS = [
   '#0B1724',
 ]
 
-// RF-E05: VENDA é gerada automaticamente ao pagar pedidos; movimentação manual aceita os 3 tipos abaixo
+// VENDA é gerada automaticamente ao pagar pedidos; movimentação manual aceita os 3 tipos abaixo
 const MANUAL_ENUM_OPTIONS: Array<{
   id: Exclude<MovimentacaoTipo, 'VENDA'>
   label: string
