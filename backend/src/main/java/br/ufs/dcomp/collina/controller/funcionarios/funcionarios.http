@@ -1,0 +1,222 @@
+### ========================================================
+### TESTES DAS ROTAS DA API - FUNCIONÁRIOS E ESCALAS
+### (IntelliJ HTTP Client / VS Code Rest Client)
+### ========================================================
+
+@baseUrl = http://localhost:8080/api
+
+### ========================================================
+### 1. FUNCIONÁRIOS E CONTRATOS (/api/funcionarios)
+### ========================================================
+
+### 1.1 Cadastrar Novo Funcionário (201 Created)
+POST {{baseUrl}}/funcionarios
+Content-Type: application/json
+
+{
+  "nome": "Carlos Eduardo Silva",
+  "cpf": "12345678901",
+  "dataNascimento": "1992-04-15",
+  "dataAdmissao": "2024-01-10",
+  "cargo": "Salva-vidas",
+  "status": "ATIVO"
+}
+
+### 1.2 Listar Todos os Funcionários (200 OK)
+GET {{baseUrl}}/funcionarios
+
+### 1.3 Consultar Funcionário por ID (200 OK)
+GET {{baseUrl}}/funcionarios/1
+
+### 1.4 Alterar Funcionário (200 OK)
+PUT {{baseUrl}}/funcionarios/1
+Content-Type: application/json
+
+{
+  "nome": "Carlos Eduardo Silva",
+  "cpf": "12345678901",
+  "dataNascimento": "1992-04-15",
+  "dataAdmissao": "2024-01-10",
+  "cargo": "Salva-vidas Chefe",
+  "status": "ATIVO"
+}
+
+### 1.5 Cadastrar Relação Contratual (201 Created)
+POST {{baseUrl}}/funcionarios/contratos
+Content-Type: application/json
+
+{
+  "funcionarioId": 1,
+  "tipo": "CLT",
+  "salario": 3500.00,
+  "dataInicio": "2024-01-10"
+}
+
+### 1.6 Consultar Histórico Contratual do Funcionário (200 OK)
+GET {{baseUrl}}/funcionarios/1/contratos
+
+### 1.7 Encerrar Relação Contratual com Rescisão Proporcional (RF-FU14) (200 OK)
+PATCH {{baseUrl}}/funcionarios/contratos/1/encerrar
+Content-Type: application/json
+
+{
+  "dataFim": "2026-11-20",
+  "diasTrabalhados": 20
+}
+
+
+### ========================================================
+### 2. TURNOS (/api/turnos)
+### ========================================================
+
+### 2.1 Cadastrar Turno Manhã (6 horas) (201 Created)
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "nome": "Manhã",
+  "horaInicio": "06:00",
+  "horaFim": "12:00"
+}
+
+### 2.2 Cadastrar Turno Tarde (8 horas) (201 Created)
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "nome": "Tarde",
+  "horaInicio": "12:00",
+  "horaFim": "20:00"
+}
+
+### 2.3 Cadastrar Turno Noturno (8 horas - cruza meia-noite) (201 Created)
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "nome": "Noite",
+  "horaInicio": "22:00",
+  "horaFim": "06:00"
+}
+
+### 2.4 Listar Turnos com Duração Calculada (200 OK)
+GET {{baseUrl}}/turnos
+
+### 2.5 Buscar Turno por ID (200 OK)
+GET {{baseUrl}}/turnos/1
+
+
+### ========================================================
+### 3. ESCALAS E ALOCAÇÕES (/api/escalas)
+### ========================================================
+
+### 3.1 Criar Escala Mensal (201 Created)
+POST {{baseUrl}}/escalas
+Content-Type: application/json
+
+{
+  "periodo": "2026-12"
+}
+
+### 3.2 Listar Escalas (200 OK)
+GET {{baseUrl}}/escalas
+
+### 3.3 Buscar Escala por ID (200 OK)
+GET {{baseUrl}}/escalas/1
+
+### 3.4 Validar Alocação de Funcionário (RF-FU13 / CLT / RD-03) (200 OK)
+POST {{baseUrl}}/escalas/alocacoes/validar
+Content-Type: application/json
+
+{
+  "funcionarioId": 1,
+  "escalaId": 1,
+  "turnoId": 1,
+  "data": "2026-12-05"
+}
+
+### 3.5 Alocar Funcionário em Turno na Escala (201 Created)
+POST {{baseUrl}}/escalas/alocacoes
+Content-Type: application/json
+
+{
+  "funcionarioId": 1,
+  "escalaId": 1,
+  "turnoId": 1,
+  "data": "2026-12-05"
+}
+
+### 3.6 Listar Alocações da Escala (200 OK)
+GET {{baseUrl}}/escalas/1/alocacoes
+
+### 3.7 Listar Alocações do Funcionário (200 OK)
+GET {{baseUrl}}/escalas/alocacoes/funcionario/1
+
+### 3.8 Publicar Escala (PATCH) (200 OK)
+PATCH {{baseUrl}}/escalas/1/publicar
+
+### 3.9 Cancelar Alocação (204 No Content)
+DELETE {{baseUrl}}/escalas/alocacoes/1
+
+
+### ========================================================
+### 4. RH, PRESENÇA, FÉRIAS E AFASTAMENTOS (/api/rh)
+### ========================================================
+
+### 4.1 Registrar Ponto/Presença com Duração Calculada (RF-FU08) (201 Created)
+POST {{baseUrl}}/rh/presencas
+Content-Type: application/json
+
+{
+  "alocacaoId": 1,
+  "entrada": "2026-12-05T06:02:00",
+  "saida": "2026-12-05T12:05:00",
+  "status": "PRESENTE"
+}
+
+### 4.2 Registrar Ausência (200 OK)
+POST {{baseUrl}}/rh/ausencias
+Content-Type: application/json
+
+{
+  "alocacaoId": 1,
+  "justificada": true,
+  "motivo": "Consulta médica agendada"
+}
+
+### 4.3 Consultar Presença por Alocação (200 OK)
+GET {{baseUrl}}/rh/presencas/alocacao/1
+
+### 4.4 Gerar Relatório de Presenças e Ausências (RF-FU09) (200 OK)
+GET {{baseUrl}}/rh/relatorio?dataInicio=2026-12-01&dataFim=2026-12-31
+
+### 4.5 Registrar Férias (RF-FU10) (201 Created)
+POST {{baseUrl}}/rh/ferias
+Content-Type: application/json
+
+{
+  "funcionarioId": 1,
+  "dataInicio": "2026-12-10",
+  "dataFim": "2026-12-25",
+  "tipo": "REGULAR"
+}
+
+### 4.6 Listar Férias do Funcionário (200 OK)
+GET {{baseUrl}}/rh/ferias/funcionario/1
+
+### 4.7 Registrar Afastamento (RF-FU11) (201 Created)
+POST {{baseUrl}}/rh/afastamentos
+Content-Type: application/json
+
+{
+  "funcionarioId": 1,
+  "dataInicio": "2026-12-26",
+  "dataFim": "2026-12-30",
+  "tipo": "MEDICO"
+}
+
+### 4.8 Listar Afastamentos do Funcionário (200 OK)
+GET {{baseUrl}}/rh/afastamentos/funcionario/1
+
+### 4.9 Consultar Disponibilidade do Funcionário (RF-FU12) (200 OK)
+GET {{baseUrl}}/rh/disponibilidade?funcionarioId=1&data=2026-12-15
