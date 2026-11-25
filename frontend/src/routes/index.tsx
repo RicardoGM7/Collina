@@ -10,6 +10,9 @@ import { AssociadoHomePage } from '../features/associados/AssociadoHomePage'
 import { AssociadoMensalidadesPage } from '../features/associados/AssociadoMensalidadesPage'
 import { AssociadoPedidosPage } from '../features/associados/AssociadoPedidosPage'
 import { AdminAssociadosPage } from '../features/associados/AdminAssociadosPage'
+import { AdminEspacosPage } from '../features/espacos/AdminEspacosPage'
+import { AdminReservasPage } from '../features/espacos/AdminReservasPage'
+import { AssociadoReservasPage } from '../features/espacos/AssociadoReservasPage'
 import { HOME_POR_PERFIL, PERFIL_LABEL } from '../types/user'
 import { ProtectedRoute, PublicOnlyRoute, RootRedirect } from './ProtectedRoute'
 
@@ -106,10 +109,8 @@ export function AppRoutes() {
 
             {/* Recepção: atendimento e reservas */}
             <Route element={<ProtectedRoute perfis={['ADMIN', 'RECEPCAO']} />}>
-              <Route
-                path="/reservas"
-                element={<ModulePlaceholder title="Reservas de Espaços" />}
-              />
+              <Route path="/reservas" element={<AdminReservasPage />} />
+              <Route path="/espacos" element={<AdminEspacosPage />} />
             </Route>
             <Route element={<ProtectedRoute perfis={['RECEPCAO']} />}>
               <Route
@@ -124,6 +125,10 @@ export function AppRoutes() {
               <Route
                 path="/associado/mensalidades"
                 element={<AssociadoMensalidadesPage />}
+              />
+              <Route
+                path="/associado/reservas"
+                element={<AssociadoReservasPage />}
               />
               <Route
                 path="/associado/pedidos"
