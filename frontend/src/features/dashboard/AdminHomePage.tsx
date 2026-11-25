@@ -152,7 +152,7 @@ export function AdminHomePage() {
       path: '/reservas',
       title: 'Reservas',
       subtitle: 'Quadras e salões',
-      badgeText: 'Em breve',
+      badgeText: 'Disponível',
       badgeClass: 'badge-white',
       cardThemeClass: 'card-theme-navy',
       arrowClass: 'arrow-white',

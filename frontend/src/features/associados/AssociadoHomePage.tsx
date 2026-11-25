@@ -1,4 +1,4 @@
-import { ArrowRight, Calendar, Info } from 'lucide-react'
+import { ArrowRight, Info } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import espacoAssociado from '../../assets/EspacoAssociado.png'
@@ -7,6 +7,7 @@ import pedidosAssociado from '../../assets/PedidosAssociado.png'
 import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { SITUACAO_LABEL, nomePlano } from '../../types/associado'
+import { ProximasReservas } from '../espacos/ProximasReservas'
 import { useMeuCadastro } from './MeuCadastroContext'
 import { formatarMoeda, primeiroNome } from './associadoUtils'
 import './AssociadoHomePage.css'
@@ -91,16 +92,10 @@ export function AssociadoHomePage() {
         <h2 className="associado-section-heading">Ações Rápidas</h2>
 
         <div className="associado-actions-grid">
-          {/* Card 1: Reservar Espaço (Placeholder até módulo de Espaços estar pronto no back) */}
+          {/* Card 1: Reservar Espaço (módulo de Espaços) */}
           <div
             className="action-card card-green"
-            onClick={() =>
-              setModalModuloEmBreve({
-                titulo: 'Módulo de Reservas de Espaços',
-                descricao:
-                  'O agendamento de quadras, campos e quiosques ainda não foi implementado no back-end (módulo de Espaços). Assim que estiver disponível, será integrado aqui.',
-              })
-            }
+            onClick={() => navigate('/associado/reservas')}
             role="button"
             tabIndex={0}
           >
@@ -111,7 +106,6 @@ export function AssociadoHomePage() {
                   Quadras, campos e quiosques
                 </span>
               </div>
-              <span className="action-badge-dark">Em breve</span>
             </div>
 
             <div className="action-card-art">
@@ -195,7 +189,7 @@ export function AssociadoHomePage() {
         </div>
       </section>
 
-      {/* 3. Minhas Próximas Reservas (Placeholder — módulo de Espaços ainda não existe no back) */}
+      {/* 3. Minhas Próximas Reservas */}
       <section className="associado-section">
         <div className="associado-section-header-row">
           <div className="associado-heading-with-dot">
@@ -206,21 +200,7 @@ export function AssociadoHomePage() {
           </div>
         </div>
 
-        <div className="reservation-placeholder-box">
-          <div className="placeholder-icon-wrap">
-            <Calendar size={26} />
-          </div>
-          <div className="placeholder-text-wrap">
-            <h3 className="placeholder-title">
-              Reservas de espaços em desenvolvimento
-            </h3>
-            <p className="placeholder-desc">
-              O módulo de reservas ainda não está disponível no back-end. Assim
-              que for implementado, suas reservas confirmadas e agendadas serão
-              exibidas aqui automaticamente.
-            </p>
-          </div>
-        </div>
+        <ProximasReservas />
       </section>
 
       {/* Modal informativa de módulo em desenvolvimento */}
