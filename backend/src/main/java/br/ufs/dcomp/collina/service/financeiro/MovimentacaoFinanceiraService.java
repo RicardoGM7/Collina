@@ -97,7 +97,7 @@ public class MovimentacaoFinanceiraService {
         if (!pagamento.foiConfirmado()) {
             throw new IllegalStateException("Somente pagamentos confirmados geram entrada financeira.");
         }
-        // Relação 1:1, um pagamento gera no máximo uma movimentação
+        // Relação 1:1: um pagamento gera no máximo uma movimentação
         if (movimentacaoRepository.existsByPagamentoId(pagamento.getId())) {
             throw new IllegalStateException("Já existe uma movimentação financeira para este pagamento.");
         }
@@ -120,6 +120,34 @@ public class MovimentacaoFinanceiraService {
                 ? pagamento.getDataPagamento() : LocalDateTime.now());
         mov.setSituacao(SituacaoMovimentacaoEnum.ATIVO);
         mov.setPagamento(pagamento);
+
+        return new MovimentacaoFinanceiraResponseDTO(movimentacaoRepository.save(mov));
+    }
+
+    // RF-F18 (pedidos) - Registro Automático de Entrada a partir do pagamento de um pedido
+    // Chamado pelo PedidoService ao confirmar o pagamento.
+    @Transactional
+    public MovimentacaoFinanceiraResponseDTO registrarEntradaDePedido(
+            Integer pedidoId, BigDecimal valor, LocalDateTime dataHora) {
+
+        if (pedidoId == null) {
+            throw new IllegalArgumentException("O id do pedido é obrigatório.");
+        }
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor da entrada deve ser maior que zero.");
+        }
+
+        BigDecimal valorEntrada = valor.setScale(2, RoundingMode.HALF_UP);
+
+        aplicarVariacao(obterSaldoParaAtualizar(), valorEntrada);
+
+        MovimentacaoFinanceira mov = new MovimentacaoFinanceira();
+        mov.setTipo(TipoMovimentacaoEnum.ENTRADA);
+        mov.setOrigem(OrigemMovimentacaoEnum.PAGAMENTO);
+        mov.setValor(valorEntrada);
+        mov.setDescricao("Venda - Pedido #" + pedidoId);
+        mov.setDataHora(dataHora != null ? dataHora : LocalDateTime.now());
+        mov.setSituacao(SituacaoMovimentacaoEnum.ATIVO);
 
         return new MovimentacaoFinanceiraResponseDTO(movimentacaoRepository.save(mov));
     }
