@@ -62,21 +62,27 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
                         logger.debug("Requisição rejeitada: usuário inativo em tb_usuario (uid=" + registro.getFirebaseUid() + ")");
                     } else {
                         PerfilUsuarioEnum perfil = registro.getPerfil();
-                        String email = registro.getEmail() != null ? registro.getEmail() : decodificado.getEmail();
-                        String nome = registro.getNome() != null && !registro.getNome().isBlank()
-                                ? registro.getNome()
-                                : decodificado.getName();
+                        if (perfil == null) {
+                            // Usuário ativo mas sem perfil em tb_usuario é rejeitado de maneira controlada (sem NPE)
+                            SecurityContextHolder.clearContext();
+                            logger.debug("Requisição rejeitada: usuário sem perfil em tb_usuario (uid=" + registro.getFirebaseUid() + ")");
+                        } else {
+                            String email = registro.getEmail() != null ? registro.getEmail() : decodificado.getEmail();
+                            String nome = registro.getNome() != null && !registro.getNome().isBlank()
+                                    ? registro.getNome()
+                                    : decodificado.getName();
 
-                        UsuarioAutenticado principal = new UsuarioAutenticado(
-                                registro.getFirebaseUid(),
-                                email,
-                                nome,
-                                perfil,
-                                decodificado.isEmailVerified()
-                        );
-                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(perfil.authority()));
-                        SecurityContextHolder.getContext().setAuthentication(
-                                new UsernamePasswordAuthenticationToken(principal, token, authorities));
+                            UsuarioAutenticado principal = new UsuarioAutenticado(
+                                    registro.getFirebaseUid(),
+                                    email,
+                                    nome,
+                                    perfil,
+                                    decodificado.isEmailVerified()
+                            );
+                            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(perfil.authority()));
+                            SecurityContextHolder.getContext().setAuthentication(
+                                    new UsernamePasswordAuthenticationToken(principal, token, authorities));
+                        }
                     }
                 } else if (ehRotaBootstrapAuth(request)) {
                     // Conta ainda não sincronizada em tb_usuario (primeiro acesso/cadastro ou migração):

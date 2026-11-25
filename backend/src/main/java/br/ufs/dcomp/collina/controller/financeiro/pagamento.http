@@ -1,0 +1,220 @@
+### ============================================================================
+### TESTES DA API - PAGAMENTO DE MENSALIDADE (COLLINA)
+### ============================================================================
+### COMO USAR
+###  - Rode na ORDEM, com o banco zerado. Os ids assumem tabelas vazias:
+###      TRUNCATE tb_pagamento, tb_mensalidade, tb_movimentacao_financeira,
+###               tb_saldo_clube RESTART IDENTITY CASCADE;
+###  - Ainda não há endpoint para criar mensalidade. Insira à mão:
+###      INSERT INTO tb_mensalidade (status_mensalidade, competencia, valor_base,
+###                                  valor_final, data_vencimento, associado_titular_id)
+###      VALUES ('PENDENTE',  '2026-11', 150.00, 150.00, '2026-11-30', 1),  -- id 1
+###             ('PENDENTE',  '2026-11', 200.00, 200.00, '2026-11-30', 2),  -- id 2
+###             ('ATRASADA',  '2026-10', 150.00, 150.00, '2026-10-31', 1),  -- id 3
+###             ('EM_ABERTO', '2026-12', 150.00, 150.00, NULL,         3),  -- id 4
+###             ('CANCELADA', '2026-09', 150.00, 150.00, '2026-09-30', 3);  -- id 5
+###  - O saldo esperado depois de cada passo está no comentário "Saldo".
+###  - Endpoints do módulo:
+###      POST /api/mensalidades/{id}/confirmar-pagamento
+###      GET  /api/mensalidades/{id}/pagamentos
+###      GET  /api/pagamentos/{id}
+###      GET  /api/pagamentos?associadoId=
+### ============================================================================
+
+@host = http://localhost:8080
+@api = {{host}}/api
+@saldo = {{host}}/api/financeiro/consulta-operacoes/saldo
+@funcionarioId = 1
+
+
+### ============================================================================
+### 1. CONFIRMAÇÃO MANUAL - CAMINHO FELIZ (RF-F18, RF-F22)
+### ============================================================================
+
+### 1.1 Confirmar a mensalidade 1 (PENDENTE, 150.00) (201, pagamento id 1)   Saldo: 150.00
+### Resposta com status CONFIRMADO e header Location: /api/pagamentos/1
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 1.2 Conferir o saldo (200) -> 150.00
+GET {{saldo}}
+
+### 1.3 Confirmar a MESMA mensalidade de novo (409) "Mensalidade já paga"
+### Nenhum pagamento novo e o saldo continua 150.00 (nada é creditado duas vezes)
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 1.4 Confirmar a mensalidade 3 (ATRASADA, 150.00) (201, pagamento id 2)   Saldo: 300.00
+POST {{api}}/mensalidades/3/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "DINHEIRO"
+}
+
+
+### ============================================================================
+### 2. REGRAS DE NEGÓCIO (nenhuma delas altera o saldo)
+### ============================================================================
+
+### 2.1 Valor diferente do da mensalidade 2 (200.00) (400) "não corresponde"
+### A mensalidade 2 continua PENDENTE (a transação é desfeita)
+POST {{api}}/mensalidades/2/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 199.90,
+  "formaPagamento": "PIX"
+}
+
+### 2.2 Mensalidade 2 sem pagamentos (200) -> lista vazia
+GET {{api}}/mensalidades/2/pagamentos
+
+### 2.3 Mensalidade EM_ABERTO (id 4) (409)
+POST {{api}}/mensalidades/4/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 2.4 Mensalidade CANCELADA (id 5) (409)
+POST {{api}}/mensalidades/5/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 2.5 Mensalidade que não existe (404)
+POST {{api}}/mensalidades/999/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 2.6 Conferir o saldo (200) -> segue 300.00
+GET {{saldo}}
+
+### 2.7 Confirmar a mensalidade 2 com o valor certo (201, pagamento id 3)   Saldo: 500.00
+POST {{api}}/mensalidades/2/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 200.00,
+  "formaPagamento": "CARTAO"
+}
+
+
+### ============================================================================
+### 3. VALIDAÇÕES DE ENTRADA (DEVE RETORNAR 400)
+### ============================================================================
+
+### 3.1 Sem valor e sem forma de pagamento - fieldErrors: valor, formaPagamento
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+}
+
+### 3.2 Valor negativo - fieldErrors: valor
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": -10.00,
+  "formaPagamento": "PIX"
+}
+
+### 3.3 Mais de 2 casas decimais - fieldErrors: valor
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.005,
+  "formaPagamento": "PIX"
+}
+
+### 3.4 Forma de pagamento inexistente (enum inválido)
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "CHEQUE"
+}
+
+### 3.5 Sem o header funcionarioId
+POST {{api}}/mensalidades/1/confirmar-pagamento
+Content-Type: application/json
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+### 3.6 Id da mensalidade que não é número
+POST {{api}}/mensalidades/abc/confirmar-pagamento
+Content-Type: application/json
+funcionarioId: {{funcionarioId}}
+
+{
+  "valor": 150.00,
+  "formaPagamento": "PIX"
+}
+
+
+### ============================================================================
+### 4. CONSULTAS
+### ============================================================================
+
+### 4.1 Pagamento 1 (200) -> CONFIRMADO, PIX, 150.00, mensalidade 1
+GET {{api}}/pagamentos/1
+
+### 4.2 Pagamento que não existe (404)
+GET {{api}}/pagamentos/999
+
+### 4.3 Pagamentos da mensalidade 1 (200) -> só o pagamento 1
+GET {{api}}/mensalidades/1/pagamentos
+
+### 4.4 Pagamentos de uma mensalidade que não existe (404)
+GET {{api}}/mensalidades/999/pagamentos
+
+### 4.5 Pagamentos do titular 1 (200) -> pagamentos 1 e 2 (mensalidades 1 e 3)
+GET {{api}}/pagamentos?associadoId=1
+
+### 4.6 Titular sem pagamentos (200) -> lista vazia
+GET {{api}}/pagamentos?associadoId=3
+
+### 4.7 Sem o parâmetro associadoId (400)
+GET {{api}}/pagamentos
+
+### 4.8 Conferir o saldo final (200) -> 500.00
+GET {{saldo}}

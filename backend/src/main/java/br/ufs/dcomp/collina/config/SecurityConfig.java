@@ -59,6 +59,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
+                        // Webhook de pagamento externo: comunicação servidor-servidor sem token Firebase
+                        .requestMatchers(HttpMethod.POST, "/api/webhooks/pagamentos").permitAll()
+                        .requestMatchers("/api/stub-gateway/**").permitAll()
+
                         // Gestão de usuários e perfis: somente administrador
                         .requestMatchers("/api/auth/usuarios/**").hasRole("ADMIN")
                         // /me e /sincronizar: qualquer usuário autenticado (mesmo sem perfil ainda)
@@ -84,6 +88,20 @@ public class SecurityConfig {
                         // Módulo de associados: administrador e funcionário de recepção.
                         .requestMatchers("/api/associados/**", "/api/dependentes/**").hasAnyRole("ADMIN", "RECEPCAO")
 
+                        // Módulo financeiro e mensalidades: permissões granulares por operação
+                        // 1. Iniciar cobrança via gateway para sua mensalidade: ASSOCIADO (e ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/mensalidades/*/cobrancas").hasAnyRole("ASSOCIADO", "ADMIN")
+                        // 2. Confirmar pagamento manual: ADMIN e RECEPCAO
+                        .requestMatchers(HttpMethod.POST, "/api/mensalidades/*/confirmar-pagamento").hasAnyRole("ADMIN", "RECEPCAO")
+                        // 3. Cancelar e reemitir mensalidade: ADMIN, RECEPCAO e FINANCEIRO
+                        .requestMatchers(HttpMethod.POST, "/api/mensalidades/*/cancelar-e-reemitir").hasAnyRole("ADMIN", "RECEPCAO", "FINANCEIRO")
+                        // 4. Consultar mensalidades de qualquer titular e lançar gastos avulsos no atendimento
+                        .requestMatchers(HttpMethod.GET, "/api/mensalidades").hasAnyRole("ADMIN", "FINANCEIRO", "RECEPCAO")
+                        .requestMatchers(HttpMethod.POST, "/api/mensalidades/gastos-avulsos").hasAnyRole("ADMIN", "FINANCEIRO", "RECEPCAO")
+                        // 5. Relatórios financeiros e inadimplentes
+                        .requestMatchers("/api/financeiro/relatorio/**").hasAnyRole("ADMIN", "FINANCEIRO")
+                        // 6. Demais rotas financeiras, histórico e pagamentos administrativos: restrito a ADMIN e FINANCEIRO
+                        .requestMatchers("/api/financeiro/**", "/api/pagamentos", "/api/pagamentos/**", "/api/mensalidades/**").hasAnyRole("ADMIN", "FINANCEIRO")
                         // Módulo de espaços e reservas. As regras mais específicas vêm primeiro.
                         // Consulta de espaços/blocos/disponibilidade: associado e funcionários (o associado só enxerga
                         // os espaços reserváveis: filtro no EspacoService).

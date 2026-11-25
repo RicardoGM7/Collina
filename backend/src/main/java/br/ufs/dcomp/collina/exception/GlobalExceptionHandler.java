@@ -9,6 +9,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -105,5 +109,53 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    // 6. Header obrigatório ausente (ex: funcionarioId) (400)
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiError> handleMissingHeader(MissingRequestHeaderException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Requisição inválida",
+                "O header '" + ex.getHeaderName() + "' é obrigatório.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // 7. Parâmetro obrigatório ausente (ex.: motivo, competencia) (400)
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Requisição inválida",
+                "O parâmetro '" + ex.getParameterName() + "' é obrigatório.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // 8. Valor de tipo errado no caminho ou na query (ex.: /movimentacoes/abc) (400)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Requisição inválida",
+                "O valor '" + ex.getValue() + "' é inválido para o parâmetro '" + ex.getName() + "'.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // 9. Corpo ilegível: JSON malformado, enum inexistente, data em formato errado (400)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Requisição inválida",
+                "O corpo da requisição está malformado ou contém um valor inválido.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }

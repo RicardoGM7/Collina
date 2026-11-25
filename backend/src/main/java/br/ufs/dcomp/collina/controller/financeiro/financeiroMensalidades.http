@@ -1,0 +1,106 @@
+### ========================================================
+### TESTES DAS ROTAS DA API - FINANCEIRO / MENSALIDADES (IntelliJ HTTP Client)
+### ========================================================
+
+@baseUrl = http://localhost:8080/api
+@tokenAdmin = seu_token_firebase_admin_ou_financeiro_aqui
+@tokenAssociado = seu_token_firebase_associado_aqui
+
+
+### ========================================================
+### 1. CANCELAR E REEMITIR MENSALIDADE (/api/mensalidades)
+### ========================================================
+
+### 1.1 Cancelar e reemitir a mensalidade 1 (200 OK, devolve a substituta PENDENTE)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "justificativa": "Valor cobrado incorretamente",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.2 Repetir o mesmo cancelamento (409 Conflict: a mensalidade 1 já está CANCELADA)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "justificativa": "Tentativa repetida",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.3 Mensalidade inexistente (404 Not Found)
+POST {{baseUrl}}/mensalidades/9999/cancelar-e-reemitir
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "justificativa": "Teste",
+  "novoVencimento": "2026-12-10",
+  "novoValor": 90.00,
+  "funcionarioId": 1
+}
+
+### 1.4 Validação do corpo (400 Bad Request: justificativa em branco, valor negativo, sem vencimento)
+POST {{baseUrl}}/mensalidades/1/cancelar-e-reemitir
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "justificativa": "",
+  "novoValor": -10.00,
+  "funcionarioId": 1
+}
+
+
+### ========================================================
+### 2. GASTOS AVULSOS (/api/mensalidades/gastos-avulsos)
+### ========================================================
+
+### 2.1 Incluir gasto avulso para pessoa (titular ou dependente ativo) (200 OK)
+POST {{baseUrl}}/mensalidades/gastos-avulsos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "pessoaId": 1,
+  "valor": 45.50,
+  "descricao": "Consumo no restaurante do clube",
+  "funcionarioId": 1
+}
+
+### 2.2 Listar mensalidades de um titular (Admin/Financeiro) (200 OK)
+GET {{baseUrl}}/mensalidades?associadoId=1&competencia=2026-11
+Authorization: Bearer {{tokenAdmin}}
+
+
+### ========================================================
+### 3. FECHAMENTO MENSAL MANUAL (/api/financeiro/fechamento)
+### ========================================================
+
+### 3.1 Executar fechamento mensal da competência atual (200 OK)
+POST {{baseUrl}}/financeiro/fechamento
+Authorization: Bearer {{tokenAdmin}}
+
+
+### ========================================================
+### 4. ÁREA DO ASSOCIADO AUTENTICADO (/api/associados/me)
+### ========================================================
+
+### 4.1 Minhas mensalidades (perfil ASSOCIADO) (200 OK)
+GET {{baseUrl}}/associados/me/mensalidades
+Authorization: Bearer {{tokenAssociado}}
+
+### 4.2 Minhas mensalidades filtradas por competência (200 OK)
+GET {{baseUrl}}/associados/me/mensalidades?competencia=2026-11
+Authorization: Bearer {{tokenAssociado}}
+
+### 4.3 Meus pagamentos (200 OK)
+GET {{baseUrl}}/associados/me/pagamentos
+Authorization: Bearer {{tokenAssociado}}
