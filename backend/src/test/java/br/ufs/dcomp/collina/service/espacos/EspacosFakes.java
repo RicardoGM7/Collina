@@ -85,6 +85,11 @@ final class EspacosFakes {
         public Optional<EspacoFisico> findWithLockById(Integer id) {
             return findById(id);
         }
+
+        @Override
+        public void delete(EspacoFisico espaco) {
+            dados.remove(espaco.getId());
+        }
     }
 
     static class BlocoRepoFake implements BlocoHorarioRepository {
@@ -113,6 +118,23 @@ final class EspacosFakes {
             return dados.stream()
                     .filter(b -> b.getEspaco().getId().equals(espacoId) && ids.contains(b.getId()))
                     .toList();
+        }
+
+        @Override
+        public Optional<BlocoHorario> findByIdAndEspacoId(Integer id, Integer espacoId) {
+            return dados.stream()
+                    .filter(b -> b.getId().equals(id) && b.getEspaco().getId().equals(espacoId))
+                    .findFirst();
+        }
+
+        @Override
+        public void delete(BlocoHorario bloco) {
+            dados.remove(bloco);
+        }
+
+        @Override
+        public void deleteByEspacoId(Integer espacoId) {
+            dados.removeIf(b -> b.getEspaco().getId().equals(espacoId));
         }
     }
 
@@ -177,6 +199,16 @@ final class EspacosFakes {
                     .filter(r -> r.getTitular().getId().equals(titularId) && r.getStatus() == status
                             && !r.getDataUso().isBefore(inicio) && r.getDataUso().isBefore(fim))
                     .count();
+        }
+
+        @Override
+        public boolean existsByEspacoId(Integer espacoId) {
+            return dados.stream().anyMatch(r -> r.getEspaco().getId().equals(espacoId));
+        }
+
+        @Override
+        public boolean existsByBlocoId(Integer blocoId) {
+            return dados.stream().anyMatch(r -> r.getBloco().getId().equals(blocoId));
         }
     }
 

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +75,13 @@ public class EspacoController {
         return ResponseEntity.ok(espacoService.alterarEstado(id, dto.estado()));
     }
 
+    // 5b. Remover espaço (204 No Content) - RECEPCAO / ADMIN
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> remover(@PathVariable Integer id) {
+        espacoService.remover(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // 6. Listar blocos de horário do espaço
     @GetMapping("/{id}/blocos")
     public ResponseEntity<List<BlocoResponseDTO>> listarBlocos(@AuthenticationPrincipal UsuarioAutenticado usuario,
@@ -91,6 +99,14 @@ public class EspacoController {
                 .buildAndExpand(novo.id())
                 .toUri();
         return ResponseEntity.created(location).body(novo);
+    }
+
+    // 7b. Remover bloco de 2h (204 No Content) - somente ADMIN
+    @DeleteMapping("/{id}/blocos/{blocoId}")
+    public ResponseEntity<Void> removerBloco(@PathVariable Integer id,
+                                             @PathVariable Integer blocoId) {
+        espacoService.removerBloco(id, blocoId);
+        return ResponseEntity.noContent().build();
     }
 
     // 8. Disponibilidade do dia: ?data=AAAA-MM-DD

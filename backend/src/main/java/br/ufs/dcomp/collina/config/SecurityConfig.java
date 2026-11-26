@@ -110,6 +110,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/espacos/**").hasAnyRole("ADMIN", "RECEPCAO", "ASSOCIADO")
                         // UC-GE05: só o administrador configura blocos de horário
                         .requestMatchers(HttpMethod.POST, "/api/espacos/*/blocos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/espacos/*/blocos/*").hasRole("ADMIN")
                         // UC-GE04: cadastro, edição e estado dos espaços
                         .requestMatchers("/api/espacos/**").hasAnyRole("ADMIN", "RECEPCAO")
                         // RF-AS08: só o titular solicita reserva; consulta das próprias reservas

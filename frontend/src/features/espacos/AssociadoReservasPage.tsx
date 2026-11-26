@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { AlertCircle, CalendarDays, Check, CheckCircle2, Clock, Info, MapPin, Minus, Plus, UserPlus, Users } from 'lucide-react'
+import { AlertCircle, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Info, MapPin, Minus, Plus, UserPlus, Users } from 'lucide-react'
 import { getApiErrorMessage } from '../../services/api'
 import { associadoService } from '../../services/associadoService'
 import {
@@ -273,7 +274,21 @@ export function AssociadoReservasPage() {
   }
 
   return (
-    <div className="esp-page">
+    <div className="esp-shell">
+      <div className="esp-topbar">
+        <Link to="/associado" className="esp-btn-back">
+          <ChevronLeft size={14} strokeWidth={2.5} />
+          <span>Voltar ao Início</span>
+        </Link>
+
+        <nav className="esp-breadcrumb" aria-label="Breadcrumb">
+          <span>Visão geral</span>
+          <ChevronRight size={14} />
+          <span className="esp-breadcrumb-active">Reservar espaço</span>
+        </nav>
+      </div>
+
+      <div className="esp-page">
       <header className="esp-hero">
         <div className="esp-hero-main">
           <span className="esp-eyebrow"><CalendarDays size={13} /> Espaços do clube</span>
@@ -539,6 +554,7 @@ export function AssociadoReservasPage() {
         onClose={() => setParaCancelar(null)}
         onCancelada={() => { void carregarMinhas(); void carregarDisponibilidade(); setVersao((v) => v + 1) }}
       />
+      </div>
     </div>
   )
 }

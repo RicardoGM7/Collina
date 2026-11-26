@@ -24,4 +24,6 @@ public interface EspacoFisicoRepository extends Repository<EspacoFisico, Integer
     // Trava a linha do espaço até o fim da transação: serializa reservas concorrentes do mesmo espaço
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<EspacoFisico> findWithLockById(Integer id);
+
+    void delete(EspacoFisico espaco);
 }
