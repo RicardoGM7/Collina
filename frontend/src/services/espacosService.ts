@@ -109,6 +109,10 @@ export const espacosService = {
     return data
   },
 
+  async removerEspaco(id: number): Promise<void> {
+    await api.delete(`/api/espacos/${id}`)
+  },
+
   // ===== Blocos e disponibilidade =====
 
   async listarBlocos(espacoId: number): Promise<Bloco[]> {
@@ -120,6 +124,11 @@ export const espacosService = {
   async adicionarBloco(espacoId: number, dto: BlocoPayload): Promise<Bloco> {
     const { data } = await api.post<Bloco>(`/api/espacos/${espacoId}/blocos`, dto)
     return data
+  },
+
+  // Somente ADMIN
+  async removerBloco(espacoId: number, blocoId: number): Promise<void> {
+    await api.delete(`/api/espacos/${espacoId}/blocos/${blocoId}`)
   },
 
   // Associado recebe só os blocos livres; recepção/admin recebem a agenda completa

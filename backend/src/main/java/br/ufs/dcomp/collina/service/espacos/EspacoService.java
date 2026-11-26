@@ -96,6 +96,18 @@ public class EspacoService {
         return new EspacoResponseDTO(espacoRepository.save(espaco));
     }
 
+    @Transactional
+    public void remover(Integer id) {
+        EspacoFisico espaco = espacoRepository.findWithLockById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado."));
+        if (reservaRepository.existsByEspacoId(id)) {
+            throw new IllegalStateException(
+                    "Não é possível remover um espaço que já possui reservas registradas. Altere o estado para Inativo.");
+        }
+        blocoRepository.deleteByEspacoId(id);
+        espacoRepository.delete(espaco);
+    }
+
     private void aplicar(EspacoFisico espaco, String nome, EspacoRequestDTO dto) {
         boolean publico = Boolean.TRUE.equals(dto.publico());
         ReservaRegras.validarEspaco(publico, dto.limiteConvidados(), dto.capacidadeMaxima());
@@ -139,6 +151,19 @@ public class EspacoService {
         bloco.setHoraFim(fim);
         bloco.setTipo(dto.tipo() != null ? dto.tipo() : TipoBlocoEnum.LIVRE);
         return new BlocoResponseDTO(blocoRepository.save(bloco));
+    }
+
+    @Transactional
+    public void removerBloco(Integer espacoId, Integer blocoId) {
+        espacoRepository.findWithLockById(espacoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado."));
+        BlocoHorario bloco = blocoRepository.findByIdAndEspacoId(blocoId, espacoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bloco de horário não encontrado."));
+        if (reservaRepository.existsByBlocoId(blocoId)) {
+            throw new IllegalStateException(
+                    "Não é possível remover um bloco que já possui reservas registradas.");
+        }
+        blocoRepository.delete(bloco);
     }
 
     // ---------------------------------------------------------- disponibilidade

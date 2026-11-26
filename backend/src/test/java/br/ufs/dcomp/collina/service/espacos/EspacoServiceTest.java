@@ -117,6 +117,35 @@ class EspacoServiceTest {
         assertEquals("Sauna", s.buscarPorId(PerfilUsuarioEnum.ADMIN, inativo.getId()).nome());
     }
 
+    @Test
+    void remover_semReservas_removeEspacoESeusBlocos() {
+        Cenario c = new Cenario();
+        EspacoService s = c.espacoService();
+        s.remover(c.piscina.getId());
+        assertThrows(ResourceNotFoundException.class, () -> s.buscarPorId(PerfilUsuarioEnum.ADMIN, c.piscina.getId()));
+        assertTrue(c.blocos.findByEspacoIdOrderByHoraInicioAsc(c.piscina.getId()).isEmpty());
+        assertThrows(ResourceNotFoundException.class, () -> s.remover(999));
+    }
+
+    @Test
+    void remover_comReservasRegistradas_409() {
+        Cenario c = new Cenario();
+        c.reservaService().solicitar("uid-1", new ReservaRequestDTO(c.quadra.getId(), DIA, List.of(c.b0810.getId()), 0, null));
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> c.espacoService().remover(c.quadra.getId()));
+        assertTrue(e.getMessage().contains("reservas registradas"));
+    }
+
+    @Test
+    void removerBloco_semReservas_remove_eComReserva_409() {
+        Cenario c = new Cenario();
+        EspacoService s = c.espacoService();
+        c.reservaService().solicitar("uid-1", new ReservaRequestDTO(c.quadra.getId(), DIA, List.of(c.b0810.getId()), 0, null));
+        assertThrows(IllegalStateException.class, () -> s.removerBloco(c.quadra.getId(), c.b0810.getId()));
+        s.removerBloco(c.quadra.getId(), c.b1012.getId());
+        assertTrue(c.blocos.findByIdAndEspacoId(c.b1012.getId(), c.quadra.getId()).isEmpty());
+        assertThrows(ResourceNotFoundException.class, () -> s.removerBloco(c.quadra.getId(), 999));
+    }
+
     // ----------------------------------------------------------------- blocos
 
     private static BlocoRequestDTO bloco(String ini, String fim, TipoBlocoEnum tipo) {

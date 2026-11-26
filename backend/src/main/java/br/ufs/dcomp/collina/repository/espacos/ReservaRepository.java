@@ -32,4 +32,8 @@ public interface ReservaRepository extends Repository<Reserva, Integer> {
     // Cota mensal: reservas confirmadas do titular com data de uso em [inicio, fim)
     long countByTitularIdAndStatusAndDataUsoGreaterThanEqualAndDataUsoLessThan(
             Integer titularId, StatusReservaEnum status, LocalDate inicio, LocalDate fim);
+
+    boolean existsByEspacoId(Integer espacoId);
+
+    boolean existsByBlocoId(Integer blocoId);
 }
