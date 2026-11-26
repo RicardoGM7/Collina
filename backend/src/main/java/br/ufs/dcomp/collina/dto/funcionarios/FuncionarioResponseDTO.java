@@ -10,6 +10,7 @@ import java.time.LocalDate;
 
 public record FuncionarioResponseDTO(
         Integer id,
+        Integer pessoaId,
         String nome,
         String cpf,
         LocalDate dataNascimento,
@@ -26,9 +27,10 @@ public record FuncionarioResponseDTO(
     public FuncionarioResponseDTO(Funcionario f, RelacaoContratual contratoVigente) {
         this(
                 f.getId(),
-                f.getNome(),
-                f.getCpf(),
-                f.getDataNascimento(),
+                f.getPessoa() != null ? f.getPessoa().getId() : null,
+                f.getPessoa() != null ? f.getPessoa().getNome() : null,
+                f.getPessoa() != null ? f.getPessoa().getCpf() : null,
+                f.getPessoa() != null ? f.getPessoa().getDataNascimento() : null,
                 f.getDataAdmissao(),
                 f.getCargo(),
                 f.getStatus(),

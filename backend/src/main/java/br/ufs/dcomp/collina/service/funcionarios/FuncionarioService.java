@@ -3,9 +3,11 @@ package br.ufs.dcomp.collina.service.funcionarios;
 import br.ufs.dcomp.collina.dto.funcionarios.FuncionarioRequestDTO;
 import br.ufs.dcomp.collina.dto.funcionarios.FuncionarioResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
+import br.ufs.dcomp.collina.model.associados.Pessoa;
 import br.ufs.dcomp.collina.model.funcionarios.Funcionario;
 import br.ufs.dcomp.collina.model.funcionarios.RelacaoContratual;
 import br.ufs.dcomp.collina.model.funcionarios.StatusFuncionario;
+import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.FuncionarioRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.RelacaoContratualRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class FuncionarioService {
     private FuncionarioRepository funcionarioRepository;
 
     @Autowired
+    private PessoaRepository pessoaRepository;
+
+    @Autowired
     private RelacaoContratualRepository relacaoContratualRepository;
 
     @Transactional
@@ -30,20 +35,43 @@ public class FuncionarioService {
         }
 
         String cpfLimpo = dto.cpf().replaceAll("\\D", "");
-        if (funcionarioRepository.existsByCpf(cpfLimpo)) {
+        if (funcionarioRepository.existsByPessoaCpf(cpfLimpo)) {
             throw new IllegalArgumentException("Já existe um funcionário cadastrado com este CPF.");
         }
 
+        // Localiza ou cria a entidade Pessoa (relação 1:1)
+        Pessoa pessoa = pessoaRepository.findByCpf(cpfLimpo).orElseGet(() -> {
+            Pessoa novaPessoa = new Pessoa();
+            novaPessoa.setCpf(cpfLimpo);
+            novaPessoa.setNome(dto.nome().trim());
+            novaPessoa.setDataNascimento(dto.dataNascimento());
+            return pessoaRepository.save(novaPessoa);
+        });
+
+        // Atualiza os dados civis caso já existisse previamente no banco
+        pessoa.setNome(dto.nome().trim());
+        pessoa.setDataNascimento(dto.dataNascimento());
+        pessoa = pessoaRepository.save(pessoa);
+
         Funcionario f = new Funcionario();
-        f.setNome(dto.nome().trim());
-        f.setCpf(cpfLimpo);
-        f.setDataNascimento(dto.dataNascimento());
+        f.setPessoa(pessoa);
         f.setDataAdmissao(dto.dataAdmissao());
         f.setCargo(dto.cargo().trim());
         f.setStatus(dto.status() != null ? dto.status() : StatusFuncionario.ATIVO);
 
         Funcionario salvo = funcionarioRepository.save(f);
-        return new FuncionarioResponseDTO(salvo);
+
+        RelacaoContratual contratoCriado = null;
+        if (dto.salario() != null && dto.tipoContrato() != null) {
+            RelacaoContratual contrato = new RelacaoContratual();
+            contrato.setFuncionario(salvo);
+            contrato.setSalario(dto.salario());
+            contrato.setTipo(dto.tipoContrato());
+            contrato.setDataInicio(dto.dataAdmissao());
+            contratoCriado = relacaoContratualRepository.save(contrato);
+        }
+
+        return new FuncionarioResponseDTO(salvo, contratoCriado);
     }
 
     @Transactional
@@ -52,13 +80,16 @@ public class FuncionarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Funcionário não encontrado com ID: " + id));
 
         String cpfLimpo = dto.cpf().replaceAll("\\D", "");
-        if (!f.getCpf().equals(cpfLimpo) && funcionarioRepository.existsByCpf(cpfLimpo)) {
+        if (!f.getPessoa().getCpf().equals(cpfLimpo) && funcionarioRepository.existsByPessoaCpf(cpfLimpo)) {
             throw new IllegalArgumentException("Já existe outro funcionário cadastrado com este CPF.");
         }
 
-        f.setNome(dto.nome().trim());
-        f.setCpf(cpfLimpo);
-        f.setDataNascimento(dto.dataNascimento());
+        Pessoa pessoa = f.getPessoa();
+        pessoa.setNome(dto.nome().trim());
+        pessoa.setCpf(cpfLimpo);
+        pessoa.setDataNascimento(dto.dataNascimento());
+        pessoaRepository.save(pessoa);
+
         f.setDataAdmissao(dto.dataAdmissao());
         f.setCargo(dto.cargo().trim());
         if (dto.status() != null) {

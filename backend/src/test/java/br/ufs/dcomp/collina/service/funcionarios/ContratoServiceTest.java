@@ -4,6 +4,7 @@ import br.ufs.dcomp.collina.dto.funcionarios.EncerramentoContratoDTO;
 import br.ufs.dcomp.collina.dto.funcionarios.RescisaoResponseDTO;
 import br.ufs.dcomp.collina.model.funcionarios.Funcionario;
 import br.ufs.dcomp.collina.model.funcionarios.RelacaoContratual;
+import br.ufs.dcomp.collina.model.funcionarios.StatusFuncionario;
 import br.ufs.dcomp.collina.model.funcionarios.TipoContrato;
 import br.ufs.dcomp.collina.repository.funcionarios.FuncionarioRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.RelacaoContratualRepository;
@@ -41,7 +42,8 @@ public class ContratoServiceTest {
     void setUp() {
         funcionario = new Funcionario();
         funcionario.setId(1);
-        funcionario.setNome("Fernanda Lima");
+        funcionario.setPessoa(new br.ufs.dcomp.collina.model.associados.Pessoa(1, "Fernanda Lima", "55566677788", LocalDate.of(1993, 2, 2)));
+        funcionario.setStatus(StatusFuncionario.ATIVO);
 
         contrato = new RelacaoContratual();
         contrato.setId(10);
@@ -77,5 +79,7 @@ public class ContratoServiceTest {
         assertEquals(20, resposta.diasTrabalhados());
         assertEquals(0, new BigDecimal("2000.00").compareTo(resposta.valorRescisaoProporcional()));
         assertEquals(LocalDate.of(2026, 11, 20), contrato.getDataFim());
+        assertEquals(StatusFuncionario.INATIVO, funcionario.getStatus());
+        verify(funcionarioRepository, times(1)).save(funcionario);
     }
 }

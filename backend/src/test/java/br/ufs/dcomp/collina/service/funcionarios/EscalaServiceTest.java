@@ -54,19 +54,20 @@ public class EscalaServiceTest {
 
     @BeforeEach
     void setUp() {
+        br.ufs.dcomp.collina.model.associados.Pessoa p1 = new br.ufs.dcomp.collina.model.associados.Pessoa(1, "Carlos Silva", "12345678901", LocalDate.of(1990, 5, 20));
         funcionarioAtivo = new Funcionario();
         funcionarioAtivo.setId(1);
-        funcionarioAtivo.setNome("Carlos Silva");
-        funcionarioAtivo.setCpf("12345678901");
-        funcionarioAtivo.setDataNascimento(LocalDate.of(1990, 5, 20));
+        funcionarioAtivo.setPessoa(p1);
         funcionarioAtivo.setDataAdmissao(LocalDate.of(2020, 1, 10));
         funcionarioAtivo.setCargo("Guarda-vidas");
         funcionarioAtivo.setStatus(StatusFuncionario.ATIVO);
 
+        br.ufs.dcomp.collina.model.associados.Pessoa p2 = new br.ufs.dcomp.collina.model.associados.Pessoa(2, "Maria Souza", "98765432100", LocalDate.of(1995, 3, 10));
         funcionarioInativo = new Funcionario();
         funcionarioInativo.setId(2);
-        funcionarioInativo.setNome("Maria Souza");
-        funcionarioInativo.setCpf("98765432100");
+        funcionarioInativo.setPessoa(p2);
+        funcionarioInativo.setDataAdmissao(LocalDate.of(2021, 2, 1));
+        funcionarioInativo.setCargo("Atendente");
         funcionarioInativo.setStatus(StatusFuncionario.INATIVO);
 
         turnoManha = new Turno(1, "Manhã", LocalTime.of(8, 0), LocalTime.of(14, 0)); // 6 horas

@@ -2,11 +2,11 @@ package br.ufs.dcomp.collina;
 
 import br.ufs.dcomp.collina.service.funcionarios.ContratoServiceTest;
 import br.ufs.dcomp.collina.service.funcionarios.EscalaServiceTest;
+import br.ufs.dcomp.collina.service.funcionarios.FuncionarioServiceTest;
 import br.ufs.dcomp.collina.service.funcionarios.RHServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -14,6 +14,7 @@ public class StandaloneTestRunner {
 
     public static void main(String[] args) {
         List<Class<?>> testClasses = List.of(
+                FuncionarioServiceTest.class,
                 EscalaServiceTest.class,
                 RHServiceTest.class,
                 ContratoServiceTest.class
@@ -36,10 +37,10 @@ public class StandaloneTestRunner {
                     try {
                         Object instance = clazz.getDeclaredConstructor().newInstance();
 
-                        // Executa mocks e @InjectMocks manualmente ou mockito se inicializado
+                        // Executa mocks e @InjectMocks com Mockito
                         org.mockito.MockitoAnnotations.openMocks(instance).close();
 
-                        // Chama @BeforeEach
+                        // Executa métodos @BeforeEach
                         for (Method m : clazz.getDeclaredMethods()) {
                             if (m.isAnnotationPresent(BeforeEach.class)) {
                                 m.setAccessible(true);
@@ -47,7 +48,7 @@ public class StandaloneTestRunner {
                             }
                         }
 
-                        // Chama o método de teste
+                        // Executa o método de teste
                         method.setAccessible(true);
                         method.invoke(instance);
 
@@ -55,12 +56,9 @@ public class StandaloneTestRunner {
                         System.out.println("  [PASS] " + method.getName());
                     } catch (Throwable t) {
                         failed++;
-                        System.err.println("  [FAIL] " + method.getName() + " -> " + (t.getCause() != null ? t.getCause().getMessage() : t.getMessage()));
-                        if (t.getCause() != null) {
-                            t.getCause().printStackTrace();
-                        } else {
-                            t.printStackTrace();
-                        }
+                        Throwable cause = t.getCause() != null ? t.getCause() : t;
+                        System.err.println("  [FAIL] " + method.getName() + " -> " + cause.getMessage());
+                        cause.printStackTrace();
                     }
                 }
             }

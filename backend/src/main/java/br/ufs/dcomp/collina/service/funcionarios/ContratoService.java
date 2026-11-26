@@ -4,6 +4,7 @@ import br.ufs.dcomp.collina.dto.funcionarios.*;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.funcionarios.Funcionario;
 import br.ufs.dcomp.collina.model.funcionarios.RelacaoContratual;
+import br.ufs.dcomp.collina.model.funcionarios.StatusFuncionario;
 import br.ufs.dcomp.collina.repository.funcionarios.FuncionarioRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.RelacaoContratualRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,8 @@ public class ContratoService {
     }
 
     /**
-     * RF-FU14: Encerramento de relação contratual com cálculo de salário proporcional aos dias trabalhados.
+     * RF-FU14 e Critério de Aceite FUNC01:
+     * Encerramento de relação contratual com inativação do funcionário e cálculo de salário proporcional.
      */
     @Transactional
     public RescisaoResponseDTO encerrarContrato(Integer contratoId, EncerramentoContratoDTO dto) {
@@ -77,12 +79,19 @@ public class ContratoService {
         contrato.setDataFim(dto.dataFim());
         relacaoContratualRepository.save(contrato);
 
+        // Inativa o funcionário ao encerrar a relação contratual vigente
+        Funcionario funcionario = contrato.getFuncionario();
+        if (funcionario != null) {
+            funcionario.setStatus(StatusFuncionario.INATIVO);
+            funcionarioRepository.save(funcionario);
+        }
+
         BigDecimal valorRescisao = calcularRescisao(contrato.getSalario(), dto.diasTrabalhados());
 
         return new RescisaoResponseDTO(
                 contrato.getId(),
-                contrato.getFuncionario().getId(),
-                contrato.getFuncionario().getNome(),
+                funcionario != null ? funcionario.getId() : null,
+                funcionario != null ? funcionario.getNome() : null,
                 contrato.getSalario(),
                 dto.dataFim(),
                 dto.diasTrabalhados(),

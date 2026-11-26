@@ -1,5 +1,6 @@
 package br.ufs.dcomp.collina.model.funcionarios;
 
+import br.ufs.dcomp.collina.model.associados.Pessoa;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,14 +24,9 @@ public class Funcionario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
-    private String nome;
-
-    @Column(nullable = false, unique = true, length = 11)
-    private String cpf;
-
-    @Column(nullable = false)
-    private LocalDate dataNascimento;
+    @OneToOne(optional = false)
+    @JoinColumn(name = "pessoa_id", nullable = false, unique = true)
+    private Pessoa pessoa;
 
     @Column(nullable = false)
     private LocalDate dataAdmissao;
@@ -60,5 +56,17 @@ public class Funcionario {
 
     public boolean isAtivo() {
         return StatusFuncionario.ATIVO.equals(this.status);
+    }
+
+    public String getNome() {
+        return pessoa != null ? pessoa.getNome() : null;
+    }
+
+    public String getCpf() {
+        return pessoa != null ? pessoa.getCpf() : null;
+    }
+
+    public LocalDate getDataNascimento() {
+        return pessoa != null ? pessoa.getDataNascimento() : null;
     }
 }
