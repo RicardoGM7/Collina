@@ -102,6 +102,21 @@ public class SecurityConfig {
                         .requestMatchers("/api/financeiro/relatorio/**").hasAnyRole("ADMIN", "FINANCEIRO")
                         // 6. Demais rotas financeiras, histórico e pagamentos administrativos: restrito a ADMIN e FINANCEIRO
                         .requestMatchers("/api/financeiro/**", "/api/pagamentos", "/api/pagamentos/**", "/api/mensalidades/**").hasAnyRole("ADMIN", "FINANCEIRO")
+                        // Módulo de espaços e reservas. As regras mais específicas vêm primeiro.
+                        // Consulta de espaços/blocos/disponibilidade: associado e funcionários (o associado só enxerga
+                        // os espaços reserváveis: filtro no EspacoService).
+                        .requestMatchers(HttpMethod.GET, "/api/espacos/**").hasAnyRole("ADMIN", "RECEPCAO", "ASSOCIADO")
+                        // UC-GE05: só o administrador configura blocos de horário
+                        .requestMatchers(HttpMethod.POST, "/api/espacos/*/blocos").hasRole("ADMIN")
+                        // UC-GE04: cadastro, edição e estado dos espaços
+                        .requestMatchers("/api/espacos/**").hasAnyRole("ADMIN", "RECEPCAO")
+                        // RF-AS08: só o titular solicita reserva; consulta das próprias reservas
+                        .requestMatchers(HttpMethod.POST, "/api/reservas").hasRole("ASSOCIADO")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/minhas").hasRole("ASSOCIADO")
+                        // RF-AS09: dono cancela a sua (verificado no service); recepção/admin cancelam em nome do titular
+                        .requestMatchers(HttpMethod.PATCH, "/api/reservas/*/cancelar").hasAnyRole("ADMIN", "RECEPCAO", "ASSOCIADO")
+                        // Consulta de reservas por associado: recepção e administrador
+                        .requestMatchers("/api/reservas/**").hasAnyRole("ADMIN", "RECEPCAO")
 
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()
