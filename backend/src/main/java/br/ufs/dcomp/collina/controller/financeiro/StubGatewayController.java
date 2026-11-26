@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.ufs.dcomp.collina.dto.financeiro.PagamentoResponseDTO;
 import br.ufs.dcomp.collina.service.financeiro.CobrancaGatewayService;
 import br.ufs.dcomp.collina.service.financeiro.PagamentoService;
-import br.ufs.dcomp.collina.service.financeiro.ResultadoNotificacao;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
 import br.ufs.dcomp.collina.service.financeiro.integracao.RequisicaoWebhook;
 import br.ufs.dcomp.collina.service.financeiro.integracao.StatusNotificacaoGateway;
 import br.ufs.dcomp.collina.service.financeiro.integracao.provisorio.GatewayPagamentoClientStub;

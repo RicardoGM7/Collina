@@ -13,6 +13,7 @@ import { AdminAssociadosPage } from '../features/associados/AdminAssociadosPage'
 import { AdminEspacosPage } from '../features/espacos/AdminEspacosPage'
 import { AdminReservasPage } from '../features/espacos/AdminReservasPage'
 import { AssociadoReservasPage } from '../features/espacos/AssociadoReservasPage'
+import { FinanceiroPage } from '../features/financeiro/FinanceiroPage'
 import { HOME_POR_PERFIL, PERFIL_LABEL } from '../types/user'
 import { ProtectedRoute, PublicOnlyRoute, RootRedirect } from './ProtectedRoute'
 
@@ -89,7 +90,7 @@ export function AppRoutes() {
             <Route element={<ProtectedRoute perfis={['ADMIN', 'FINANCEIRO']} />}>
               <Route
                 path="/financeiro"
-                element={<ModulePlaceholder title="Módulo Financeiro" />}
+                element={<FinanceiroPage />}
               />
             </Route>
 

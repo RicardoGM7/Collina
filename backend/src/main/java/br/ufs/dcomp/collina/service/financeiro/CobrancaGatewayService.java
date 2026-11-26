@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import br.ufs.dcomp.collina.dto.financeiro.CobrancaResponseDTO;
 import br.ufs.dcomp.collina.dto.financeiro.IniciarCobrancaRequest;
 import br.ufs.dcomp.collina.model.financeiro.FormaPagamentoEnum;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
 import br.ufs.dcomp.collina.service.financeiro.CobrancaTransacaoService.Reserva;
 import br.ufs.dcomp.collina.service.financeiro.integracao.CobrancaGateway;
 import br.ufs.dcomp.collina.service.financeiro.integracao.GatewayPagamentoClient;

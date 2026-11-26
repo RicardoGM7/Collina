@@ -20,6 +20,7 @@ import br.ufs.dcomp.collina.model.financeiro.OrigemMovimentacaoEnum;
 import br.ufs.dcomp.collina.model.financeiro.Pagamento;
 import br.ufs.dcomp.collina.model.financeiro.StatusTransacaoEnum;
 import br.ufs.dcomp.collina.model.financeiro.TipoMovimentacaoEnum;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
 import br.ufs.dcomp.collina.repository.financeiro.MensalidadeRepository;
 import br.ufs.dcomp.collina.repository.financeiro.PagamentoRepository;
 import br.ufs.dcomp.collina.service.financeiro.integracao.CobrancaGateway;
