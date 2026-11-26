@@ -50,7 +50,8 @@ function MainLayoutShell({ children, userName, userRole }: MainLayoutProps) {
 
       <div className="app-body">
         <main className="app-main">{children ?? <Outlet />}</main>
-        <ChatSidebar />
+        {/* Carollina AI habilitada inicialmente para ADMIN; expandir quando as permissões do ASSOCIADO e demais perfis forem definidas */}
+        {usuario?.perfil === 'ADMIN' && <ChatSidebar />}
       </div>
 
       <ProfileModal

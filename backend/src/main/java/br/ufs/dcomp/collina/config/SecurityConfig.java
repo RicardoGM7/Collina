@@ -69,11 +69,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").authenticated()
 
                         // Módulo de estoque e pedidos.
-                        // Catálogo (produtos, categorias e saldo) é visível a qualquer usuário logado; o associado
-                        // só pode CRIAR pedido (RF-E01). Pedidos não têm dono no modelo atual, então listar/cancelar/pagar
-                        // continua restrito ao estoque/admin para não expor pedidos de terceiros.
+                        // Catálogo (produtos, categorias e saldo) é visível a qualquer usuário logado; qualquer
+                        // usuário autenticado pode consultar seus próprios pedidos (/meus) e o associado pode
+                        // CRIAR pedido (RF-E01) vinculado à própria conta. Gestão geral continua restrita a ADMIN/ESTOQUE.
                         .requestMatchers(HttpMethod.GET, "/api/produtos/**", "/api/categorias/**", "/api/estoques")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos/meus").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/pedidos").hasAnyRole("ADMIN", "ESTOQUE", "ASSOCIADO")
                         .requestMatchers("/api/estoques/**", "/api/produtos/**", "/api/categorias/**", "/api/pedidos/**")
                         .hasAnyRole("ADMIN", "ESTOQUE")
@@ -102,6 +103,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/financeiro/relatorio/**").hasAnyRole("ADMIN", "FINANCEIRO")
                         // 6. Demais rotas financeiras, histórico e pagamentos administrativos: restrito a ADMIN e FINANCEIRO
                         .requestMatchers("/api/financeiro/**", "/api/pagamentos", "/api/pagamentos/**", "/api/mensalidades/**").hasAnyRole("ADMIN", "FINANCEIRO")
+
                         // Módulo de espaços e reservas. As regras mais específicas vêm primeiro.
                         // Consulta de espaços/blocos/disponibilidade: associado e funcionários (o associado só enxerga
                         // os espaços reserváveis: filtro no EspacoService).
@@ -117,6 +119,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/reservas/*/cancelar").hasAnyRole("ADMIN", "RECEPCAO", "ASSOCIADO")
                         // Consulta de reservas por associado: recepção e administrador
                         .requestMatchers("/api/reservas/**").hasAnyRole("ADMIN", "RECEPCAO")
+
+                        // Assistente IA (Carollina AI): foco inicial no perfil ADMIN.
+                        // Quando as permissões de ASSOCIADO e demais perfis forem definidas, expandir esta regra.
+                        .requestMatchers("/api/chat/**").hasRole("ADMIN")
 
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()

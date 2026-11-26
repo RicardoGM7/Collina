@@ -13,15 +13,19 @@ import java.util.Optional;
 public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     @Override
-    @EntityGraph(attributePaths = {"itens", "itens.produto"})
+    @EntityGraph(attributePaths = {"itens", "itens.produto", "usuario"})
     List<Pedido> findAll();
 
     @Override
-    @EntityGraph(attributePaths = {"itens", "itens.produto"})
+    @EntityGraph(attributePaths = {"itens", "itens.produto", "usuario"})
     Optional<Pedido> findById(Integer id);
 
+    // Pedidos vinculados a um usuário específico (ordenados do mais recente ao mais antigo)
+    @EntityGraph(attributePaths = {"itens", "itens.produto", "usuario"})
+    List<Pedido> findByUsuarioIdOrderByDataDesc(Integer usuarioId);
+
     // RF-E17: Filtrar pedidos por status e período
-    @EntityGraph(attributePaths = {"itens", "itens.produto"})
+    @EntityGraph(attributePaths = {"itens", "itens.produto", "usuario"})
     @Query("""
             SELECT p FROM Pedido p
             WHERE (:status IS NULL OR p.status = :status)

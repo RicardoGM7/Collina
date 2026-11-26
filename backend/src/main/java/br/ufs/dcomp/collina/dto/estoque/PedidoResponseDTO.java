@@ -14,6 +14,9 @@ public record PedidoResponseDTO(
         Instant data,
         StatusTransacaoEnum statusPedido,
         BigDecimal total,
+        Integer usuarioId,
+        String usuarioNome,
+        String usuarioEmail,
         Set<ItemPedidoResponseDTO> itens
 ) {
 
@@ -31,6 +34,9 @@ public record PedidoResponseDTO(
                                         : BigDecimal.ZERO)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                         : BigDecimal.ZERO,
+                pedido.getUsuario() != null ? pedido.getUsuario().getId() : null,
+                pedido.getUsuario() != null ? pedido.getUsuario().getNome() : null,
+                pedido.getUsuario() != null ? pedido.getUsuario().getEmail() : null,
                 // Converte a lista de ItemPedido para o Set de DTOs
                 pedido.getItens() != null
                         ? pedido.getItens().stream().map(ItemPedidoResponseDTO::new).collect(Collectors.toSet())
