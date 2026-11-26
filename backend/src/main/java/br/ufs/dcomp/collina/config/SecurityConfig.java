@@ -124,6 +124,10 @@ public class SecurityConfig {
                         // Quando as permissões de ASSOCIADO e demais perfis forem definidas, expandir esta regra.
                         .requestMatchers("/api/chat/**").hasRole("ADMIN")
 
+                        // Módulo de funcionários e escalas: administrador e funcionário de Escala/RH.
+                        .requestMatchers("/api/funcionarios/**", "/api/escalas/**", "/api/turnos/**", "/api/rh/**")
+                        .hasAnyRole("ADMIN", "ESCALA_RH")
+
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()
                 )
