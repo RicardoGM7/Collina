@@ -33,12 +33,12 @@ public class MensalidadeController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // RF-F06: listar as mensalidades de um titular em uma competência (200 OK).
+    // RF-F06: listar as mensalidades de um titular (todas ou de uma competência) (200 OK).
     @GetMapping
     public ResponseEntity<List<MensalidadeResponseDTO>> listar(
             @RequestParam("associadoId") Integer associadoId,
-            @RequestParam("competencia") YearMonth competencia) {
-        return ResponseEntity.ok(mensalidadeService.listarMensalidades(associadoId, competencia));
+            @RequestParam(name = "competencia", required = false) YearMonth competencia) {
+        return ResponseEntity.ok(mensalidadeService.listarMensalidadesDoAssociado(associadoId, competencia));
     }
 
     // RF-F08: lançar gasto avulso (200 OK). O funcionário responsável é resolvido a partir

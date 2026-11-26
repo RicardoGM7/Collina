@@ -1,0 +1,83 @@
+.mens-rec-page {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mens-rec-header h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.mens-rec-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.mens-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .mens-rec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mens-rec-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  text-decoration: none;
+  color: #0b1f33;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.mens-rec-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(11, 31, 51, 0.08);
+}
+
+.mens-rec-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mens-rec-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: #f1f6fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b1f33;
+}
+
+.mens-rec-card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.mens-rec-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}

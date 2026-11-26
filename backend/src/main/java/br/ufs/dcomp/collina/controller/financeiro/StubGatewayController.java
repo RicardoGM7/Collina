@@ -48,12 +48,12 @@ public class StubGatewayController {
             @RequestParam(value = "valor", required = false) BigDecimal valor) {
         PagamentoResponseDTO pagamento = pagamentoService.buscarPorId(pagamentoId);
 
-        if (pagamento.getwayId() == null) {
+        if (pagamento.gatewayId() == null) {
             throw new IllegalStateException("O pagamento " + pagamentoId + " ainda não tem cobrança no gateway.");
         }
 
         BigDecimal valorNotificado = valor != null ? valor : pagamento.valor();
-        RequisicaoWebhook requisicao = stub.montarNotificacao(pagamento.getwayId(), resultado, valorNotificado);
+        RequisicaoWebhook requisicao = stub.montarNotificacao(pagamento.gatewayId(), resultado, valorNotificado);
 
         return ResponseEntity.ok(cobrancaService.processarNotificacao(requisicao));
     }

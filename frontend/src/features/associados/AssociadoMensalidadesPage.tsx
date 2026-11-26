@@ -2,10 +2,8 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronLeft,
-  Clock,
   CreditCard,
   Edit2,
-  Info,
   Save,
   ShieldCheck,
   User,
@@ -13,9 +11,9 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { associadoService } from '../../services/associadoService'
+import { MinhasMensalidadesPanel } from '../financeiro/MinhasMensalidadesPanel'
 import {
   CATEGORIA_LABEL,
   SITUACAO_LABEL,
@@ -68,7 +66,6 @@ export function AssociadoMensalidadesPage() {
   const [dependentes, setDependentes] = useState<VinculoDependencia[]>([])
   const [carregandoDeps, setCarregandoDeps] = useState(false)
   const [erroDeps, setErroDeps] = useState('')
-  const [modalPagamentoAberto, setModalPagamentoAberto] = useState(false)
 
   useEffect(() => {
     if (associado) {
@@ -268,97 +265,7 @@ export function AssociadoMensalidadesPage() {
         {/* =========================================
             ABA 1: HISTÓRICO DE PAGAMENTO / MENSALIDADES
            ========================================= */}
-        {activeTab === 'pagamentos' && (
-          <>
-            {associado && (
-              <section className="assoc-mens-kpi-grid">
-                <div className="assoc-mens-kpi-card">
-                  <div className="assoc-mens-kpi-top">
-                    <span className="assoc-mens-kpi-label">Plano Contratado</span>
-                    <span className="assoc-mens-kpi-icon">
-                      <ShieldCheck size={16} />
-                    </span>
-                  </div>
-                  <div className="assoc-mens-kpi-value">
-                    {nomePlano(associado.plano)}
-                  </div>
-                  <span className="assoc-mens-kpi-sub">
-                    Situação: {SITUACAO_LABEL[associado.situacaoCadastral]}
-                  </span>
-                </div>
-
-                <div className="assoc-mens-kpi-card">
-                  <div className="assoc-mens-kpi-top">
-                    <span className="assoc-mens-kpi-label">Valor Periódico</span>
-                    <span className="assoc-mens-kpi-icon assoc-mens-kpi-icon--green">
-                      <CreditCard size={16} />
-                    </span>
-                  </div>
-                  <div className="assoc-mens-kpi-value">
-                    {formatarMoeda(associado.plano.valorPeriodico)}
-                  </div>
-                  <span className="assoc-mens-kpi-sub">
-                    Admissão em {formatarDataBr(associado.dataAdmissao)}
-                  </span>
-                </div>
-
-                <div className="assoc-mens-kpi-card">
-                  <div className="assoc-mens-kpi-top">
-                    <span className="assoc-mens-kpi-label">Limites do Plano</span>
-                    <span className="assoc-mens-kpi-icon">
-                      <Users size={16} />
-                    </span>
-                  </div>
-                  <div className="assoc-mens-kpi-value">
-                    {dependentesAtivos.length} /{' '}
-                    {associado.plano.maxDependentesAtivos} dep.
-                  </div>
-                  <span className="assoc-mens-kpi-sub">
-                    Até {associado.plano.limiteMensalReservas} reservas / mês
-                  </span>
-                </div>
-              </section>
-            )}
-
-            <section className="assoc-mens-card">
-              <div className="assoc-mens-card-header">
-                <div>
-                  <h2 className="assoc-mens-card-title">
-                    Histórico de Pagamentos e Mensalidades
-                  </h2>
-                  <p className="assoc-mens-card-desc">
-                    Integração com o módulo Financeiro e Mensalidades
-                  </p>
-                </div>
-
-                {/* Botão reservado para integração futura com o módulo Financeiro */}
-                <button
-                  type="button"
-                  className="assoc-mens-btn-pay"
-                  onClick={() => setModalPagamentoAberto(true)}
-                >
-                  <CreditCard size={15} />
-                  <span>Fazer pagamento</span>
-                </button>
-              </div>
-
-              <div className="assoc-mens-placeholder">
-                <div className="assoc-mens-placeholder-icon">
-                  <Clock size={22} />
-                </div>
-                <div className="assoc-mens-placeholder-text">
-                  <h4>Módulo Financeiro em desenvolvimento</h4>
-                  <p>
-                    As cobranças de mensalidades, pagamento via PIX/Boleto,
-                    histórico de pagamentos e emissão de comprovantes serão
-                    exibidos aqui assim que o módulo Financeiro for implementado
-                    no back-end.
-                  </p>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
+        {activeTab === 'pagamentos' && <MinhasMensalidadesPanel />}
 
         {/* =========================================
             ABA 2: DEPENDENTES (100% BANCO DE DADOS)
@@ -693,35 +600,6 @@ export function AssociadoMensalidadesPage() {
           </section>
         )}
       </div>
-
-      {/* Modal informativa até a integração com o módulo Financeiro */}
-      <Modal
-        isOpen={modalPagamentoAberto}
-        onClose={() => setModalPagamentoAberto(false)}
-        title="Fazer Pagamento"
-        subtitle="Módulo Financeiro em desenvolvimento"
-        maxWidth={460}
-      >
-        <div className="assoc-mens-pay-modal-body">
-          <div className="assoc-mens-pay-modal-alert">
-            <Info size={20} className="assoc-mens-pay-modal-icon" />
-            <p className="assoc-mens-pay-modal-text">
-              O fluxo de pagamento de mensalidades será integrado ao módulo
-              Financeiro assim que estiver disponível.
-            </p>
-          </div>
-
-          <div className="assoc-mens-pay-modal-actions">
-            <button
-              type="button"
-              className="assoc-mens-btn-save"
-              onClick={() => setModalPagamentoAberto(false)}
-            >
-              Entendi
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }
