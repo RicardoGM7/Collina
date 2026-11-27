@@ -3,7 +3,7 @@ package br.ufs.dcomp.collina.service.espacos;
 import br.ufs.dcomp.collina.dto.associados.AssociadoResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.associados.Associado;
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import br.ufs.dcomp.collina.model.associados.Plano;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
 import br.ufs.dcomp.collina.model.associados.StatusVinculoEnum;

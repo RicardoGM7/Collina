@@ -42,7 +42,7 @@ public class ContratoServiceTest {
     void setUp() {
         funcionario = new Funcionario();
         funcionario.setId(1);
-        funcionario.setPessoa(new br.ufs.dcomp.collina.model.associados.Pessoa(1, "Fernanda Lima", "55566677788", LocalDate.of(1993, 2, 2)));
+        funcionario.setPessoa(new br.ufs.dcomp.collina.model.auth.Pessoa(1, "Fernanda Lima", "55566677788", LocalDate.of(1993, 2, 2)));
         funcionario.setStatus(StatusFuncionario.ATIVO);
 
         contrato = new RelacaoContratual();

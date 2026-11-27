@@ -1,6 +1,6 @@
 package br.ufs.dcomp.collina.dto.associados;
 
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 
 import java.time.LocalDate;
 

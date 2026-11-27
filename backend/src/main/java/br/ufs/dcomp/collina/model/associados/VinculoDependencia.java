@@ -1,5 +1,6 @@
 package br.ufs.dcomp.collina.model.associados;
 
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,8 +30,6 @@ public class VinculoDependencia {
     @ManyToOne(optional = false)
     @JoinColumn(name = "dependente_id")
     private Pessoa dependente;
-
-    private String parentesco;
 
     @Column(nullable = false)
     private LocalDate dataInicio;

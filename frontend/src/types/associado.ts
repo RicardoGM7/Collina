@@ -45,7 +45,6 @@ export interface VinculoDependencia {
   id: number
   titularId: number
   dependente: Pessoa
-  parentesco: string
   dataInicio: string
   dataFim: string | null
   status: StatusVinculo

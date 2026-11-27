@@ -6,17 +6,18 @@ import br.ufs.dcomp.collina.dto.associados.VinculoDependenciaResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.associados.Associado;
 import br.ufs.dcomp.collina.model.associados.MotivoInativacaoVinculoEnum;
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
 import br.ufs.dcomp.collina.model.associados.StatusVinculoEnum;
 import br.ufs.dcomp.collina.model.associados.VinculoDependencia;
 import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
-import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
+import br.ufs.dcomp.collina.repository.auth.PessoaRepository;
 import br.ufs.dcomp.collina.repository.associados.VinculoDependenciaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -36,6 +37,9 @@ public class VinculoDependenciaService {
     @Autowired
     private AssociadoRepository associadoRepository;
 
+    @Autowired(required = false)
+    private Clock clock;
+
     // 1. RF-AS03: cadastrar dependente vinculado a um titular (feito por funcionário da recepção)
     @Transactional
     public VinculoDependenciaResponseDTO cadastrarDependente(Integer titularId, DependenteRequestDTO dto) {
@@ -50,9 +54,6 @@ public class VinculoDependenciaService {
         }
         if (dto.dataNascimento() == null) {
             throw new IllegalArgumentException("A data de nascimento do dependente é obrigatória.");
-        }
-        if (dto.parentesco() == null || dto.parentesco().trim().isBlank()) {
-            throw new IllegalArgumentException("O parentesco com o titular é obrigatório.");
         }
         String cpf = CpfValidador.validar(dto.cpf());
 
@@ -98,7 +99,6 @@ public class VinculoDependenciaService {
         VinculoDependencia vinculo = new VinculoDependencia();
         vinculo.setTitular(titular);
         vinculo.setDependente(pessoaSalva);
-        vinculo.setParentesco(dto.parentesco().trim());
         vinculo.setDataInicio(hoje);
         vinculo.setStatus(StatusVinculoEnum.ATIVO);
 
@@ -129,7 +129,7 @@ public class VinculoDependenciaService {
         return new VinculoDependenciaResponseDTO(obterVinculo(vinculoId));
     }
 
-    // 4. RF-AS03: atualizar dados pessoais do dependente e o parentesco (funcionário autorizado)
+    // 4. RF-AS03: atualizar dados pessoais do dependente (funcionário autorizado)
     @Transactional
     public VinculoDependenciaResponseDTO atualizarDependente(Integer vinculoId, DependenteUpdateDTO dto) {
         if (vinculoId == null) {
@@ -144,16 +144,13 @@ public class VinculoDependenciaService {
         if (dto.dataNascimento() == null) {
             throw new IllegalArgumentException("A data de nascimento do dependente é obrigatória.");
         }
-        if (dto.parentesco() == null || dto.parentesco().trim().isBlank()) {
-            throw new IllegalArgumentException("O parentesco com o titular não pode ser vazio.");
-        }
 
         VinculoDependencia vinculo = obterVinculo(vinculoId);
         Pessoa pessoa = vinculo.getDependente();
 
         // Um vínculo ativo não pode passar a ter dependente com 21 anos ou mais
         if (vinculo.getStatus() == StatusVinculoEnum.ATIVO
-                && java.time.Period.between(dto.dataNascimento(), LocalDate.now()).getYears() >= IDADE_LIMITE_DEPENDENTE) {
+                && java.time.Period.between(dto.dataNascimento(), LocalDate.now(obterClock())).getYears() >= IDADE_LIMITE_DEPENDENTE) {
             throw new IllegalArgumentException("A nova data de nascimento tornaria o dependente inelegível (limite de "
                     + IDADE_LIMITE_DEPENDENTE + " anos).");
         }
@@ -162,8 +159,7 @@ public class VinculoDependenciaService {
         pessoa.setDataNascimento(dto.dataNascimento());
         pessoaRepository.save(pessoa);
 
-        vinculo.setParentesco(dto.parentesco().trim());
-        return new VinculoDependenciaResponseDTO(vinculoRepository.save(vinculo));
+        return new VinculoDependenciaResponseDTO(vinculo);
     }
 
     // 5. RF-AS03: inativar o vínculo por solicitação (o registro nunca é apagado)
@@ -181,10 +177,10 @@ public class VinculoDependenciaService {
     }
 
     // 6. RF-AS04: inativa os vínculos ativos cujo dependente já completou 21 anos.
-    // Pensado para rotina diária (agendada ou disparada manualmente). Retorna quantos vínculos foram inativados.
+    // Disparo manual (endpoint POST /api/dependentes/inativar-por-idade). Retorna quantos vínculos foram inativados.
     @Transactional
     public int inativarVinculosVencidosPorIdade() {
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = LocalDate.now(obterClock());
         int total = 0;
         for (VinculoDependencia vinculo : vinculoRepository.findByStatus(StatusVinculoEnum.ATIVO)) {
             if (vinculo.getDependente().idadeEm(hoje) >= IDADE_LIMITE_DEPENDENTE) {
@@ -193,6 +189,38 @@ public class VinculoDependenciaService {
             }
         }
         return total;
+    }
+
+    // 6.1 Usado pelo InativacaoDependenteAgendador: lista os IDs elegíveis para inativação por idade
+    @Transactional(readOnly = true)
+    public List<Integer> listarIdsVinculosVencidosPorIdade(LocalDate dataReferencia) {
+        LocalDate referencia = dataReferencia != null ? dataReferencia : LocalDate.now(obterClock());
+        return vinculoRepository.findByStatus(StatusVinculoEnum.ATIVO).stream()
+                .filter(v -> v.getDependente().idadeEm(referencia) >= IDADE_LIMITE_DEPENDENTE)
+                .map(VinculoDependencia::getId)
+                .toList();
+    }
+
+    // 6.2 Usado pelo InativacaoDependenteAgendador: inativa um único vínculo em transação independente (idempotente)
+    @Transactional
+    public boolean inativarVinculoPorIdadeSeVencido(Integer vinculoId, LocalDate dataReferencia) {
+        if (vinculoId == null) {
+            return false;
+        }
+        LocalDate referencia = dataReferencia != null ? dataReferencia : LocalDate.now(obterClock());
+        VinculoDependencia vinculo = vinculoRepository.findById(vinculoId).orElse(null);
+        if (vinculo == null || vinculo.getStatus() != StatusVinculoEnum.ATIVO) {
+            return false;
+        }
+        if (vinculo.getDependente().idadeEm(referencia) < IDADE_LIMITE_DEPENDENTE) {
+            return false;
+        }
+        inativar(vinculo, MotivoInativacaoVinculoEnum.IDADE, referencia);
+        return true;
+    }
+
+    private Clock obterClock() {
+        return clock != null ? clock : Clock.systemDefaultZone();
     }
 
     // 7. RF-AS04/AS08: elegibilidade do dependente como beneficiário de reserva na data de utilização.

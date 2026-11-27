@@ -54,7 +54,7 @@ public class EscalaServiceTest {
 
     @BeforeEach
     void setUp() {
-        br.ufs.dcomp.collina.model.associados.Pessoa p1 = new br.ufs.dcomp.collina.model.associados.Pessoa(1, "Carlos Silva", "12345678901", LocalDate.of(1990, 5, 20));
+        br.ufs.dcomp.collina.model.auth.Pessoa p1 = new br.ufs.dcomp.collina.model.auth.Pessoa(1, "Carlos Silva", "12345678901", LocalDate.of(1990, 5, 20));
         funcionarioAtivo = new Funcionario();
         funcionarioAtivo.setId(1);
         funcionarioAtivo.setPessoa(p1);
@@ -62,7 +62,7 @@ public class EscalaServiceTest {
         funcionarioAtivo.setCargo("Guarda-vidas");
         funcionarioAtivo.setStatus(StatusFuncionario.ATIVO);
 
-        br.ufs.dcomp.collina.model.associados.Pessoa p2 = new br.ufs.dcomp.collina.model.associados.Pessoa(2, "Maria Souza", "98765432100", LocalDate.of(1995, 3, 10));
+        br.ufs.dcomp.collina.model.auth.Pessoa p2 = new br.ufs.dcomp.collina.model.auth.Pessoa(2, "Maria Souza", "98765432100", LocalDate.of(1995, 3, 10));
         funcionarioInativo = new Funcionario();
         funcionarioInativo.setId(2);
         funcionarioInativo.setPessoa(p2);

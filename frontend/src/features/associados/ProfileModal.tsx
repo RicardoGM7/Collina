@@ -511,17 +511,13 @@ export function ProfileModal({
                                 >
                                   {isAtivo
                                     ? 'Vínculo Ativo'
-                                    : vinc.motivoInativacao === 'IDADE_LIMITE'
+                                    : vinc.motivoInativacao === 'IDADE'
                                       ? 'Inativo (Limite 21 anos)'
                                       : 'Inativo'}
                                 </span>
                               </div>
 
                               <div className="dependent-meta-row">
-                                <span>
-                                  Parentesco: <strong>{vinc.parentesco}</strong>
-                                </span>
-                                <span>•</span>
                                 <span>
                                   CPF: {formatarCpf(vinc.dependente.cpf)}
                                 </span>

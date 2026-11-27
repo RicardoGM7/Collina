@@ -1,6 +1,6 @@
 package br.ufs.dcomp.collina.model.funcionarios;
 
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

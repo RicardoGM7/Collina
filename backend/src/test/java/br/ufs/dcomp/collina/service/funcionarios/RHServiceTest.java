@@ -50,7 +50,7 @@ public class RHServiceTest {
     void setUp() {
         funcionario = new Funcionario();
         funcionario.setId(1);
-        funcionario.setPessoa(new br.ufs.dcomp.collina.model.associados.Pessoa(1, "Roberto Alves", "11122233344", LocalDate.of(1992, 1, 1)));
+        funcionario.setPessoa(new br.ufs.dcomp.collina.model.auth.Pessoa(1, "Roberto Alves", "11122233344", LocalDate.of(1992, 1, 1)));
         funcionario.setStatus(StatusFuncionario.ATIVO);
 
         turno = new Turno(1, "Integral", LocalTime.of(8, 0), LocalTime.of(17, 0));

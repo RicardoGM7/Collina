@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
-// RF-AS03: nome, CPF, data de nascimento e vínculo (parentesco) com o titular
+// RF-AS03: nome, CPF e data de nascimento do dependente vinculado ao titular
 public record DependenteRequestDTO(
         @NotBlank(message = "O nome do dependente é obrigatório.")
         String nome,
@@ -18,9 +18,6 @@ public record DependenteRequestDTO(
 
         @NotNull(message = "A data de nascimento do dependente é obrigatória.")
         @Past(message = "A data de nascimento deve estar no passado.")
-        LocalDate dataNascimento,
-
-        @NotBlank(message = "O parentesco com o titular é obrigatório.")
-        String parentesco
+        LocalDate dataNascimento
 ) {
 }

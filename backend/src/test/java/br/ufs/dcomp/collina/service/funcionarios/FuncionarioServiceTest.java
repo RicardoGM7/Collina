@@ -2,12 +2,12 @@ package br.ufs.dcomp.collina.service.funcionarios;
 
 import br.ufs.dcomp.collina.dto.funcionarios.FuncionarioRequestDTO;
 import br.ufs.dcomp.collina.dto.funcionarios.FuncionarioResponseDTO;
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import br.ufs.dcomp.collina.model.funcionarios.Funcionario;
 import br.ufs.dcomp.collina.model.funcionarios.RelacaoContratual;
 import br.ufs.dcomp.collina.model.funcionarios.StatusFuncionario;
 import br.ufs.dcomp.collina.model.funcionarios.TipoContrato;
-import br.ufs.dcomp.collina.repository.associados.PessoaRepository;
+import br.ufs.dcomp.collina.repository.auth.PessoaRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.FuncionarioRepository;
 import br.ufs.dcomp.collina.repository.funcionarios.RelacaoContratualRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -13,9 +13,6 @@ public record DependenteUpdateDTO(
 
         @NotNull(message = "A data de nascimento do dependente é obrigatória.")
         @Past(message = "A data de nascimento deve estar no passado.")
-        LocalDate dataNascimento,
-
-        @NotBlank(message = "O parentesco com o titular é obrigatório.")
-        String parentesco
+        LocalDate dataNascimento
 ) {
 }

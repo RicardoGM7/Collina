@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 
 public interface VinculoDependenciaRepository extends JpaRepository<VinculoDependencia, Integer> {
     long countByTitularIdAndStatus(Integer titularId, StatusVinculoEnum status);

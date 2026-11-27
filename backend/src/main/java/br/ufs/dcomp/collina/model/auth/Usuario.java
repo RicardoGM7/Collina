@@ -1,6 +1,5 @@
 package br.ufs.dcomp.collina.model.auth;
 
-import br.ufs.dcomp.collina.model.associados.Pessoa;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

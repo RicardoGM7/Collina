@@ -4,7 +4,7 @@ import br.ufs.dcomp.collina.dto.auth.UsuarioCriarRequestDTO;
 import br.ufs.dcomp.collina.dto.auth.UsuarioResponseDTO;
 import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
 import br.ufs.dcomp.collina.model.associados.Associado;
-import br.ufs.dcomp.collina.model.associados.Pessoa;
+import br.ufs.dcomp.collina.model.auth.Pessoa;
 import br.ufs.dcomp.collina.model.auth.PerfilUsuarioEnum;
 import br.ufs.dcomp.collina.model.auth.StatusUsuarioEnum;
 import br.ufs.dcomp.collina.model.auth.Usuario;

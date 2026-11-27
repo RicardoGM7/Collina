@@ -340,17 +340,13 @@ export function AssociadoMensalidadesPage() {
                               >
                                 {isAtivo
                                   ? 'Vínculo Ativo'
-                                  : vinc.motivoInativacao === 'IDADE_LIMITE'
+                                  : vinc.motivoInativacao === 'IDADE'
                                     ? 'Inativo (Limite 21 anos)'
                                     : 'Inativo'}
                               </span>
                             </div>
 
                             <div className="assoc-mens-dep-meta">
-                              <span>
-                                Parentesco: <strong>{vinc.parentesco}</strong>
-                              </span>
-                              <span className="assoc-mens-dep-dot">•</span>
                               <span>
                                 CPF: {formatarCpf(vinc.dependente.cpf)}
                               </span>
@@ -382,7 +378,7 @@ export function AssociadoMensalidadesPage() {
                               <div className="assoc-mens-dep-warning">
                                 <AlertCircle size={13} />
                                 <span>
-                                  Dependente com 21 anos completados (RF-AS04).
+                                  Dependente com 21 anos completados.
                                 </span>
                               </div>
                             )}
@@ -441,7 +437,7 @@ export function AssociadoMensalidadesPage() {
                   <span>
                     Sua conta ainda não está vinculada a um cadastro de associado
                     titular no clube. Procure a recepção ou administração para
-                    concluir seu cadastro (RF-AS01).
+                    concluir seu cadastro.
                   </span>
                 </div>
               </>

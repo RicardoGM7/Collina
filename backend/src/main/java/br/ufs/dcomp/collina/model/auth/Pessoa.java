@@ -1,4 +1,4 @@
-package br.ufs.dcomp.collina.model.associados;
+package br.ufs.dcomp.collina.model.auth;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +24,7 @@ public class Pessoa {
     @Column(nullable = false)
     private String nome;
 
-    // RF-AS01: o CPF identifica unicamente a pessoa (titular ou dependente)
+    // RF-AS01: o CPF identifica unicamente a pessoa (titular, dependente ou funcionário)
     @Column(nullable = false, unique = true, length = 11)
     private String cpf;
 

@@ -99,8 +99,7 @@ Content-Type: application/json
 {
   "nome": "Pedro Souza",
   "cpf": "11122233344",
-  "dataNascimento": "2012-05-01",
-  "parentesco": "Filho"
+  "dataNascimento": "2012-05-01"
 }
 
 ### 3.2 Listar dependentes ativos do titular
@@ -115,8 +114,7 @@ Content-Type: application/json
 
 {
   "nome": "Pedro Souza Lima",
-  "dataNascimento": "2012-05-01",
-  "parentesco": "Filho"
+  "dataNascimento": "2012-05-01"
 }
 
 ### 3.5 Inativar vínculo por solicitação

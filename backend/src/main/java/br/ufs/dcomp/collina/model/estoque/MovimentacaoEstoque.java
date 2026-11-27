@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_movimentacaoEstoque")
+@Table(name = "tb_movimentacao_estoque")
 public class MovimentacaoEstoque {
 
     @Id

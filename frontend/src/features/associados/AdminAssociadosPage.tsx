@@ -97,10 +97,13 @@ export function AdminAssociadosPage() {
   const [depNome, setDepNome] = useState('')
   const [depCpf, setDepCpf] = useState('')
   const [depDataNasc, setDepDataNasc] = useState('')
-  const [depParentesco, setDepParentesco] = useState('Filho(a)')
   const [salvandoDep, setSalvandoDep] = useState(false)
   const [depErro, setDepErro] = useState('')
   const [depSucesso, setDepSucesso] = useState('')
+  const [depEditandoId, setDepEditandoId] = useState<number | null>(null)
+  const [depEditNome, setDepEditNome] = useState('')
+  const [depEditDataNasc, setDepEditDataNasc] = useState('')
+  const [salvandoEdicaoDep, setSalvandoEdicaoDep] = useState(false)
 
   // Modal Editar Parâmetros do Plano (somente ADMIN)
   const [planoEditando, setPlanoEditando] = useState<Plano | null>(null)
@@ -182,7 +185,9 @@ export function AdminAssociadosPage() {
     setDepNome('')
     setDepCpf('')
     setDepDataNasc('')
-    setDepParentesco('Filho(a)')
+    setDepEditandoId(null)
+    setDepEditNome('')
+    setDepEditDataNasc('')
     setCarregandoDeps(true)
     try {
       const lista = await associadoService.listarDependentes(assoc.id)
@@ -305,7 +310,6 @@ export function AdminAssociadosPage() {
           nome: depNome.trim(),
           cpf: cleanCpf,
           dataNascimento: depDataNasc,
-          parentesco: depParentesco,
         },
       )
       setDependentesTitular((prev) => [...prev, vinculo])
@@ -318,6 +322,46 @@ export function AdminAssociadosPage() {
       setDepErro(mensagemErroApi(err, 'Erro ao cadastrar dependente.'))
     } finally {
       setSalvandoDep(false)
+    }
+  }
+
+  function iniciarEdicaoDependente(vinc: VinculoDependencia) {
+    setDepErro('')
+    setDepSucesso('')
+    setDepEditandoId(vinc.id)
+    setDepEditNome(vinc.dependente.nome)
+    setDepEditDataNasc(vinc.dependente.dataNascimento)
+  }
+
+  async function handleSalvarEdicaoDependente(vinculoId: number) {
+    setDepErro('')
+    setDepSucesso('')
+    if (!depEditNome.trim()) {
+      setDepErro('O nome do dependente não pode ser vazio.')
+      return
+    }
+    if (!depEditDataNasc) {
+      setDepErro('A data de nascimento do dependente é obrigatória.')
+      return
+    }
+    setSalvandoEdicaoDep(true)
+    try {
+      const atualizado = await associadoService.atualizarDependente(vinculoId, {
+        nome: depEditNome.trim(),
+        dataNascimento: depEditDataNasc,
+      })
+      setDependentesTitular((prev) =>
+        prev.map((d) => (d.id === atualizado.id ? atualizado : d)),
+      )
+      setDepEditandoId(null)
+      setDepSucesso('Dados do dependente atualizados com sucesso!')
+      setTimeout(() => setDepSucesso(''), 2500)
+    } catch (err) {
+      setDepErro(
+        mensagemErroApi(err, 'Erro ao atualizar dados do dependente.'),
+      )
+    } finally {
+      setSalvandoEdicaoDep(false)
     }
   }
 
@@ -1012,42 +1056,134 @@ export function AdminAssociadosPage() {
                         vinc.dependente.dataNascimento,
                       )
                       const isAtivo = vinc.status === 'ATIVO'
+                      const estaEditando = depEditandoId === vinc.id
 
                       return (
                         <div
                           key={vinc.id}
                           className={`dep-manage-row ${isAtivo ? '' : 'inactive'}`}
+                          style={
+                            estaEditando
+                              ? {
+                                  flexDirection: 'column',
+                                  alignItems: 'stretch',
+                                  gap: '10px',
+                                }
+                              : undefined
+                          }
                         >
-                          <div className="dep-manage-info">
-                            <div className="dep-manage-name-row">
-                              <strong>{vinc.dependente.nome}</strong>
-                              <span
-                                className={`status-pill ${isAtivo ? 'status-ativo' : 'status-inativo'}`}
+                          {estaEditando ? (
+                            <>
+                              <div className="dep-form-grid">
+                                <div className="profile-field">
+                                  <label className="profile-label">
+                                    Nome Completo *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="profile-input"
+                                    value={depEditNome}
+                                    onChange={(e) =>
+                                      setDepEditNome(e.target.value)
+                                    }
+                                  />
+                                </div>
+                                <div className="profile-field">
+                                  <label className="profile-label">
+                                    Data de Nascimento *
+                                  </label>
+                                  <input
+                                    type="date"
+                                    className="profile-input"
+                                    value={depEditDataNasc}
+                                    onChange={(e) =>
+                                      setDepEditDataNasc(e.target.value)
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'flex-end',
+                                  gap: '8px',
+                                }}
                               >
-                                {isAtivo
-                                  ? 'Ativo'
-                                  : vinc.motivoInativacao === 'IDADE_LIMITE'
-                                    ? 'Inativo (21 anos)'
-                                    : 'Inativo'}
-                              </span>
-                            </div>
-                            <span className="dep-manage-sub">
-                              {vinc.parentesco} • CPF:{' '}
-                              {formatarCpf(vinc.dependente.cpf)} • {idade} anos
-                              ({formatarDataBr(vinc.dependente.dataNascimento)})
-                            </span>
-                          </div>
+                                <button
+                                  type="button"
+                                  className="profile-btn-cancel"
+                                  onClick={() => setDepEditandoId(null)}
+                                  disabled={salvandoEdicaoDep}
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="profile-btn-save"
+                                  disabled={salvandoEdicaoDep}
+                                  onClick={() =>
+                                    void handleSalvarEdicaoDependente(vinc.id)
+                                  }
+                                >
+                                  {salvandoEdicaoDep ? 'Salvando...' : 'Salvar'}
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="dep-manage-info">
+                                <div className="dep-manage-name-row">
+                                  <strong>{vinc.dependente.nome}</strong>
+                                  <span
+                                    className={`status-pill ${isAtivo ? 'status-ativo' : 'status-inativo'}`}
+                                  >
+                                    {isAtivo
+                                      ? 'Ativo'
+                                      : vinc.motivoInativacao === 'IDADE'
+                                        ? 'Inativo (21 anos)'
+                                        : 'Inativo'}
+                                  </span>
+                                </div>
+                                <span className="dep-manage-sub">
+                                  CPF: {formatarCpf(vinc.dependente.cpf)} •{' '}
+                                  {idade} anos (
+                                  {formatarDataBr(
+                                    vinc.dependente.dataNascimento,
+                                  )}
+                                  )
+                                </span>
+                              </div>
 
-                          {isAtivo && (
-                            <button
-                              type="button"
-                              className="btn-inativar-dep"
-                              onClick={() =>
-                                void handleInativarDependente(vinc.id)
-                              }
-                            >
-                              Inativar
-                            </button>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="btn-action-small"
+                                  onClick={() => iniciarEdicaoDependente(vinc)}
+                                  title="Editar dados pessoais do dependente"
+                                >
+                                  <Edit2 size={12} />
+                                  <span>Editar</span>
+                                </button>
+
+                                {isAtivo && (
+                                  <button
+                                    type="button"
+                                    className="btn-inativar-dep"
+                                    onClick={() =>
+                                      void handleInativarDependente(vinc.id)
+                                    }
+                                  >
+                                    Inativar
+                                  </button>
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
                       )
@@ -1068,7 +1204,10 @@ export function AdminAssociadosPage() {
                 className="dep-form"
               >
                 <div className="dep-form-grid">
-                  <div className="profile-field">
+                  <div
+                    className="profile-field"
+                    style={{ gridColumn: '1 / -1' }}
+                  >
                     <label className="profile-label">Nome Completo *</label>
                     <input
                       type="text"
@@ -1107,20 +1246,6 @@ export function AdminAssociadosPage() {
                     <span className="field-hint">
                       Deve ter menos de 21 anos.
                     </span>
-                  </div>
-
-                  <div className="profile-field">
-                    <label className="profile-label">Parentesco *</label>
-                    <select
-                      className="profile-input"
-                      value={depParentesco}
-                      onChange={(e) => setDepParentesco(e.target.value)}
-                    >
-                      <option value="Filho(a)">Filho(a)</option>
-                      <option value="Cônjuge">Cônjuge</option>
-                      <option value="Enteado(a)">Enteado(a)</option>
-                      <option value="Outro">Outro Vínculo Legal</option>
-                    </select>
                   </div>
                 </div>
 

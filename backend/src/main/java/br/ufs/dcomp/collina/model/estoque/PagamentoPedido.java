@@ -14,7 +14,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_PagamentoPedido")
+@Table(name = "tb_pagamento_pedido")
 public class PagamentoPedido {
 
     @Id

@@ -203,7 +203,7 @@ export function MensalidadesAssociadoPage() {
       if (dep.status === 'ATIVO') {
         opcoes.push({
           pessoaId: dep.dependente.id,
-          rotulo: `${dep.dependente.nome} (${dep.parentesco})`,
+          rotulo: `Dependente: ${dep.dependente.nome}`,
         })
       }
     }

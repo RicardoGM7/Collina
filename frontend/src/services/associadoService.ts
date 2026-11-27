@@ -25,7 +25,11 @@ export interface CadastrarDependenteDTO {
   nome: string
   cpf: string
   dataNascimento: string
-  parentesco: string
+}
+
+export interface AtualizarDependenteDTO {
+  nome: string
+  dataNascimento: string
 }
 
 export interface AtualizarDadosPessoaisDTO {
@@ -120,6 +124,17 @@ export const associadoService = {
     const { data } = await api.post<VinculoDependencia>(
       `/api/associados/${titularId}/dependentes`,
       { ...dto, cpf: dto.cpf.replace(/\D/g, '') },
+    )
+    return data
+  },
+
+  async atualizarDependente(
+    vinculoId: number,
+    dto: AtualizarDependenteDTO,
+  ): Promise<VinculoDependencia> {
+    const { data } = await api.put<VinculoDependencia>(
+      `/api/dependentes/${vinculoId}`,
+      dto,
     )
     return data
   },
