@@ -237,4 +237,19 @@ public class EscalaServiceTest {
         assertEquals(StatusEscala.PUBLICADA, resposta.status());
         assertEquals(StatusAlocacao.CONFIRMADA, alocPendente.getStatus());
     }
+
+    @Test
+    @DisplayName("Atualizar status da alocação com sucesso")
+    void testAtualizarStatusAlocacao() {
+        Alocacao alocacao = new Alocacao(1, LocalDate.of(2026, 11, 5), StatusAlocacao.PENDENTE, funcionarioAtivo, escalaNovembro, turnoManha, null);
+
+        when(alocacaoRepository.findById(1)).thenReturn(Optional.of(alocacao));
+        when(alocacaoRepository.save(any(Alocacao.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AlocacaoResponseDTO resposta = escalaService.atualizarStatusAlocacao(1, StatusAlocacao.CONFIRMADA);
+
+        assertNotNull(resposta);
+        assertEquals(StatusAlocacao.CONFIRMADA, resposta.status());
+        assertEquals(StatusAlocacao.CONFIRMADA, alocacao.getStatus());
+    }
 }

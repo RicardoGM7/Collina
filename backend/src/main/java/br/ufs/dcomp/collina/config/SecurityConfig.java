@@ -84,9 +84,27 @@ public class SecurityConfig {
                         // Módulo de associados: administrador e funcionário de recepção.
                         .requestMatchers("/api/associados/**", "/api/dependentes/**").hasAnyRole("ADMIN", "RECEPCAO")
 
-                        // Módulo de funcionários e escalas: administrador e funcionário de Escala/RH.
-                        .requestMatchers("/api/funcionarios/**", "/api/escalas/**", "/api/turnos/**", "/api/rh/**")
-                        .hasAnyRole("ADMIN", "ESCALA_RH")
+                        // Módulo de funcionários e escalas:
+                        // 1. Ações de escrita exclusivas do Administrador:
+                        //    - Cadastrar e alterar funcionário (POST /api/funcionarios, PUT /api/funcionarios/**)
+                        //    - Cadastrar e encerrar contratos (POST /api/funcionarios/contratos, PATCH /api/funcionarios/contratos/**)
+                        //    - Cadastrar afastamento (POST /api/rh/afastamentos)
+                        .requestMatchers(HttpMethod.POST, "/api/funcionarios", "/api/funcionarios/contratos", "/api/rh/afastamentos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/funcionarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/funcionarios/contratos/**").hasRole("ADMIN")
+
+                        // 2. Ações de alocação e atualização de status permitidas para ADMIN e ESCALA_RH:
+                        //    - Alocar funcionário em turno e validar alocação
+                        //    - Atualizar status de alocação e cancelar
+                        .requestMatchers(HttpMethod.POST, "/api/escalas/alocacoes", "/api/escalas/alocacoes/validar").hasAnyRole("ADMIN", "ESCALA_RH")
+                        .requestMatchers(HttpMethod.PATCH, "/api/escalas/alocacoes/**").hasAnyRole("ADMIN", "ESCALA_RH")
+                        .requestMatchers(HttpMethod.DELETE, "/api/escalas/alocacoes/**").hasAnyRole("ADMIN", "ESCALA_RH")
+
+                        // 3. Consultas gerais de funcionários, escalas, turnos e RH: permitidas para ADMIN e ESCALA_RH
+                        .requestMatchers(HttpMethod.GET, "/api/funcionarios/**", "/api/escalas/**", "/api/turnos/**", "/api/rh/**").hasAnyRole("ADMIN", "ESCALA_RH")
+
+                        // 4. Demais operações de escrita (criação de escalas, turnos, férias, etc.): restritas a ADMIN
+                        .requestMatchers("/api/funcionarios/**", "/api/escalas/**", "/api/turnos/**", "/api/rh/**").hasRole("ADMIN")
 
                         // Qualquer outra rota exige login. Novos módulos: adicione a regra de perfil acima desta linha.
                         .anyRequest().authenticated()

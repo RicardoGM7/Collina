@@ -342,6 +342,19 @@ public class EscalaService {
     }
 
     @Transactional
+    public AlocacaoResponseDTO atualizarStatusAlocacao(Integer id, StatusAlocacao novoStatus) {
+        if (novoStatus == null) {
+            throw new IllegalArgumentException("O novo status da alocação é obrigatório.");
+        }
+        Alocacao alocacao = alocacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Alocação não encontrada com ID: " + id));
+
+        alocacao.setStatus(novoStatus);
+        Alocacao atualizada = alocacaoRepository.save(alocacao);
+        return new AlocacaoResponseDTO(atualizada);
+    }
+
+    @Transactional
     public void cancelarAlocacao(Integer id) {
         Alocacao alocacao = alocacaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Alocação não encontrada com ID: " + id));

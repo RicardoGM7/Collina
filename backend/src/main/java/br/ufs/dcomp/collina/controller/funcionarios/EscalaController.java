@@ -82,6 +82,13 @@ public class EscalaController {
         return ResponseEntity.ok(escalaService.listarAlocacoesPorFuncionario(funcionarioId));
     }
 
+    @PatchMapping("/alocacoes/{id}/status")
+    public ResponseEntity<AlocacaoResponseDTO> atualizarStatusAlocacao(
+            @PathVariable Integer id,
+            @RequestParam br.ufs.dcomp.collina.model.funcionarios.StatusAlocacao status) {
+        return ResponseEntity.ok(escalaService.atualizarStatusAlocacao(id, status));
+    }
+
     @DeleteMapping("/alocacoes/{id}")
     public ResponseEntity<Void> cancelarAlocacao(@PathVariable Integer id) {
         escalaService.cancelarAlocacao(id);
