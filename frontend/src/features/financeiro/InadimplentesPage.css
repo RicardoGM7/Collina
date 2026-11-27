@@ -1,0 +1,59 @@
+.mens-report-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+}
+
+.mens-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mens-report-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1f33;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mens-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.mens-sort-btn:hover {
+  color: #0b1f33;
+}
+
+.mens-report-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 14px;
+  color: #0b1f33;
+}
+
+.mens-report-footer strong {
+  font-weight: 800;
+}

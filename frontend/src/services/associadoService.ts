@@ -87,6 +87,12 @@ export const associadoService = {
     return data.map(normalizarAssociado)
   },
 
+  async buscarPorCpf(cpf: string): Promise<Associado> {
+    const cpfLimpo = cpf.replace(/\D/g, '')
+    const { data } = await api.get<Associado>(`/api/associados/cpf/${cpfLimpo}`)
+    return normalizarAssociado(data)
+  },
+
   async cadastrar(dto: CadastrarAssociadoDTO): Promise<Associado> {
     const { data } = await api.post<Associado>('/api/associados', {
       ...dto,

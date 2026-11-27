@@ -5,6 +5,7 @@ import java.time.YearMonth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,5 +31,12 @@ public class FechamentoMensalidadeController {
         YearMonth comp = (competencia != null) ? competencia : YearMonth.now();
         LocalDate venc = (vencimento != null) ? vencimento : FechamentoMensalidadeService.calcularUltimoDiaUtil(comp);
         return ResponseEntity.ok(fechamentoService.fecharEAbrirCompetencia(comp, venc));
+    }
+
+    @GetMapping("/ultimo")
+    public ResponseEntity<ResumoFechamentoDTO> ultimo() {
+        return fechamentoService.buscarUltimoFechamento()
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }

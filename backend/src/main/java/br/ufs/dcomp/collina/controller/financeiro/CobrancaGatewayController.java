@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.ufs.dcomp.collina.dto.financeiro.CobrancaResponseDTO;
 import br.ufs.dcomp.collina.dto.financeiro.IniciarCobrancaRequest;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
 import br.ufs.dcomp.collina.service.financeiro.CobrancaGatewayService;
 import jakarta.validation.Valid;
 
@@ -27,14 +29,15 @@ public class CobrancaGatewayController {
     // Devolve o que o pagador precisa (código Pix ou link do checkout) e a validade. Se já existe uma
     // cobrança vigente da mesma forma, devolve a mesma. Erros (tratados pelo GlobalExceptionHandler):
     //   400 -> corpo inválido ou forma diferente de PIX/CARTAO
+    //   403 -> associado tentando cobrar mensalidade de outro titular
     //   404 -> mensalidade inexistente
     //   409 -> mensalidade que não está PENDENTE
-    // TODO: vincular ao usuário autenticado (hoje qualquer um pode iniciar a cobrança de qualquer mensalidade).
     @PostMapping("/{mensalidadeId}/cobrancas")
     public ResponseEntity<CobrancaResponseDTO> iniciar(
             @PathVariable Long mensalidadeId,
-            @Valid @RequestBody IniciarCobrancaRequest dto) {
-        CobrancaResponseDTO cobranca = cobrancaService.iniciarCobranca(mensalidadeId, dto);
+            @Valid @RequestBody IniciarCobrancaRequest dto,
+            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        CobrancaResponseDTO cobranca = cobrancaService.iniciarCobranca(mensalidadeId, dto, usuario);
 
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/pagamentos/{id}")

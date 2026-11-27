@@ -16,7 +16,7 @@ public record PagamentoResponseDTO(
     FormaPagamentoEnum formaPagamento,
     StatusTransacaoEnum status,
     String comprovante,
-    String getwayId
+    String gatewayId
 ) {
     public PagamentoResponseDTO(Pagamento dados){
         this(

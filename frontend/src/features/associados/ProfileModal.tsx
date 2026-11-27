@@ -1,7 +1,6 @@
 import {
   AlertCircle,
   CheckCircle2,
-  Clock,
   CreditCard,
   Edit2,
   Save,
@@ -13,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { Modal } from '../../components/Modal/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { associadoService } from '../../services/associadoService'
+import { MinhasMensalidadesPanel } from '../financeiro/MinhasMensalidadesPanel'
 import {
   CATEGORIA_LABEL,
   SITUACAO_LABEL,
@@ -559,62 +559,8 @@ export function ProfileModal({
           </div>
         )}
 
-        {/* TAB 3: HISTÓRICO DE PAGAMENTO (Placeholder até o módulo Financeiro existir no back) */}
-        {activeTab === 'pagamentos' && (
-          <div className="profile-section">
-            <div className="profile-section-header">
-              <div>
-                <h3 className="profile-section-title">
-                  Histórico de Pagamentos e Mensalidades
-                </h3>
-                <p className="profile-section-desc">
-                  Integração com o módulo Financeiro e Mensalidades
-                </p>
-              </div>
-            </div>
-
-            {associado && (
-              <div className="profile-pending-invoice">
-                <div className="pending-invoice-left">
-                  <div className="pending-invoice-icon">
-                    <CreditCard size={20} />
-                  </div>
-                  <div>
-                    <span className="pending-invoice-badge">
-                      Valor-base do Plano Atual
-                    </span>
-                    <h4 className="pending-invoice-ref">
-                      {nomePlano(associado.plano)}
-                    </h4>
-                    <p className="pending-invoice-sub">
-                      Definido nos parâmetros vigentes do back-end
-                    </p>
-                  </div>
-                </div>
-                <div className="pending-invoice-right">
-                  <span className="pending-invoice-value">
-                    {formatarMoeda(associado.plano.valorPeriodico)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="profile-placeholder-box">
-              <div className="profile-placeholder-icon">
-                <Clock size={24} />
-              </div>
-              <div className="profile-placeholder-text">
-                <h4>Módulo Financeiro em desenvolvimento</h4>
-                <p>
-                  As cobranças de mensalidades, pagamento via PIX/Boleto,
-                  histórico de pagamentos e emissão de comprovantes serão
-                  exibidos aqui assim que o módulo Financeiro for implementado no
-                  back-end.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* TAB 3: HISTÓRICO DE PAGAMENTO / MENSALIDADES */}
+        {activeTab === 'pagamentos' && <MinhasMensalidadesPanel />}
       </div>
     </Modal>
   )

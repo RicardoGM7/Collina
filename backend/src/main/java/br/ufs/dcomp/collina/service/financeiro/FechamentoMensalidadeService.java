@@ -2,20 +2,25 @@ package br.ufs.dcomp.collina.service.financeiro;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.ufs.dcomp.collina.dto.financeiro.ResumoFechamentoDTO;
 import br.ufs.dcomp.collina.model.associados.Associado;
 import br.ufs.dcomp.collina.model.associados.SituacaoCadastralEnum;
+import br.ufs.dcomp.collina.model.financeiro.ExecucaoFechamento;
 import br.ufs.dcomp.collina.model.financeiro.Mensalidade;
 import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
+import br.ufs.dcomp.collina.repository.financeiro.ExecucaoFechamentoRepository;
 
 /**
  * Orquestrador do fechamento mensal.
@@ -35,6 +40,9 @@ public class FechamentoMensalidadeService {
 
     @Autowired
     private FechamentoTitularService fechamentoTitularService;
+
+    @Autowired
+    private ExecucaoFechamentoRepository execucaoFechamentoRepository;
 
     @Autowired
     private Clock clock;
@@ -92,6 +100,31 @@ public class FechamentoMensalidadeService {
         log.info("Fechamento de {} concluído: {} processados, {} ignorados, {} com falha.",
                 novaCompetencia, processados, ignorados, titularesComFalha.size());
 
-        return new ResumoFechamentoDTO(novaCompetencia.toString(), processados, ignorados, titularesComFalha);
+        LocalDateTime agora = LocalDateTime.now(clock);
+        ExecucaoFechamento registro = execucaoFechamentoRepository.save(new ExecucaoFechamento(
+                novaCompetencia.toString(),
+                processados,
+                ignorados,
+                titularesComFalha,
+                agora
+        ));
+
+        return toResumoDto(registro);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ResumoFechamentoDTO> buscarUltimoFechamento() {
+        return execucaoFechamentoRepository.findTopByOrderByDataExecucaoDescIdDesc()
+                .map(this::toResumoDto);
+    }
+
+    private ResumoFechamentoDTO toResumoDto(ExecucaoFechamento execucao) {
+        return new ResumoFechamentoDTO(
+                execucao.getCompetencia(),
+                execucao.getProcessados(),
+                execucao.getIgnorados(),
+                List.copyOf(execucao.getTitularesComFalha()),
+                execucao.getDataExecucao()
+        );
     }
 }

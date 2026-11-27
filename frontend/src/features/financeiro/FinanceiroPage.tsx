@@ -35,6 +35,7 @@ import {
   RelatorioFechamentoModal,
   SolicitacaoGastoModal,
 } from './FinanceiroModals'
+import { MensalidadesResumoSection } from './components/MensalidadesResumoSection'
 import {
   lastMonths,
   monthBounds,
@@ -449,6 +450,8 @@ export function FinanceiroPage() {
           </ul>
         )}
       </section>
+
+      <MensalidadesResumoSection />
 
       <MovimentacaoModal tipoNovo={tipoNovo} editando={editando} onClose={() => { setTipoNovo(null); setEditando(null) }} onSaved={recarregar} />
       <CancelarMovimentacaoModal movimentacao={cancelando} onClose={() => setCancelando(null)} onSaved={recarregar} />
