@@ -1,0 +1,126 @@
+.mens-page {
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mens-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mens-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mens-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #0b1724;
+  color: #ffffff;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mens-btn-back:hover {
+  background-color: #16324f;
+}
+
+.mens-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.mens-breadcrumb a {
+  color: #64748b;
+  text-decoration: none;
+}
+
+.mens-breadcrumb a:hover {
+  color: #0b1f33;
+  text-decoration: underline;
+}
+
+.mens-breadcrumb-active {
+  color: #0b1f33;
+  font-weight: 700;
+}
+
+.mens-cpf-bar {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+}
+
+.mens-cpf-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mens-cpf-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mens-cpf-input {
+  padding: 9px 12px 9px 32px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #0b1f33;
+  width: 230px;
+}
+
+.mens-titular-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background-color: #f1f6fa;
+  color: #0b1f33;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mens-btn-cancel-sm {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mens-btn-cancel-sm:hover {
+  background-color: #15803d;
+}

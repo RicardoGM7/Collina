@@ -13,6 +13,11 @@ import { AdminAssociadosPage } from '../features/associados/AdminAssociadosPage'
 import { AdminEspacosPage } from '../features/espacos/AdminEspacosPage'
 import { AdminReservasPage } from '../features/espacos/AdminReservasPage'
 import { AssociadoReservasPage } from '../features/espacos/AssociadoReservasPage'
+import { FinanceiroPage } from '../features/financeiro/FinanceiroPage'
+import { InadimplentesPage } from '../features/financeiro/InadimplentesPage'
+import { MensalidadesAssociadoPage } from '../features/financeiro/MensalidadesAssociadoPage'
+import { ProcessamentoMensalidadesPage } from '../features/financeiro/ProcessamentoMensalidadesPage'
+import { RecepcaoHomePage } from '../features/financeiro/RecepcaoHomePage'
 import { HOME_POR_PERFIL, PERFIL_LABEL } from '../types/user'
 import { ProtectedRoute, PublicOnlyRoute, RootRedirect } from './ProtectedRoute'
 
@@ -87,10 +92,20 @@ export function AppRoutes() {
 
             {/* Financeiro */}
             <Route element={<ProtectedRoute perfis={['ADMIN', 'FINANCEIRO']} />}>
+              <Route path="/financeiro" element={<FinanceiroPage />} />
               <Route
-                path="/financeiro"
-                element={<ModulePlaceholder title="Módulo Financeiro" />}
+                path="/financeiro/mensalidades/inadimplentes"
+                element={<InadimplentesPage />}
               />
+              <Route
+                path="/financeiro/mensalidades/processamento"
+                element={<ProcessamentoMensalidadesPage />}
+              />
+            </Route>
+
+            {/* Mensalidades de associado (atendimento) */}
+            <Route element={<ProtectedRoute perfis={['ADMIN', 'RECEPCAO', 'FINANCEIRO']} />}>
+              <Route path="/mensalidades" element={<MensalidadesAssociadoPage />} />
             </Route>
 
             {/* Estoque e pedidos */}
@@ -113,10 +128,7 @@ export function AppRoutes() {
               <Route path="/espacos" element={<AdminEspacosPage />} />
             </Route>
             <Route element={<ProtectedRoute perfis={['RECEPCAO']} />}>
-              <Route
-                path="/recepcao"
-                element={<ModulePlaceholder title="Painel da Recepção" />}
-              />
+              <Route path="/recepcao" element={<RecepcaoHomePage />} />
             </Route>
 
             {/* Somente associado */}

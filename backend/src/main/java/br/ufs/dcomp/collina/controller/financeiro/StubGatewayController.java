@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.ufs.dcomp.collina.dto.financeiro.PagamentoResponseDTO;
 import br.ufs.dcomp.collina.service.financeiro.CobrancaGatewayService;
 import br.ufs.dcomp.collina.service.financeiro.PagamentoService;
-import br.ufs.dcomp.collina.service.financeiro.ResultadoNotificacao;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
 import br.ufs.dcomp.collina.service.financeiro.integracao.RequisicaoWebhook;
 import br.ufs.dcomp.collina.service.financeiro.integracao.StatusNotificacaoGateway;
 import br.ufs.dcomp.collina.service.financeiro.integracao.provisorio.GatewayPagamentoClientStub;
@@ -48,12 +48,12 @@ public class StubGatewayController {
             @RequestParam(value = "valor", required = false) BigDecimal valor) {
         PagamentoResponseDTO pagamento = pagamentoService.buscarPorId(pagamentoId);
 
-        if (pagamento.getwayId() == null) {
+        if (pagamento.gatewayId() == null) {
             throw new IllegalStateException("O pagamento " + pagamentoId + " ainda não tem cobrança no gateway.");
         }
 
         BigDecimal valorNotificado = valor != null ? valor : pagamento.valor();
-        RequisicaoWebhook requisicao = stub.montarNotificacao(pagamento.getwayId(), resultado, valorNotificado);
+        RequisicaoWebhook requisicao = stub.montarNotificacao(pagamento.gatewayId(), resultado, valorNotificado);
 
         return ResponseEntity.ok(cobrancaService.processarNotificacao(requisicao));
     }

@@ -1,0 +1,165 @@
+/* Tela do módulo financeiro. Segue o visual do estoque: cards brancos, cantos arredondados e verde #2BB673. */
+
+.fin-page { width: 100%; display: flex; flex-direction: column; gap: 20px; }
+
+/* Barra de navegação da tela */
+.fin-breadcrumb-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.fin-btn-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background-color: #0B1724; color: #FFFFFF; border-radius: 9999px; font-size: 12px; font-weight: 700; text-decoration: none; transition: background-color var(--ui-control-duration) var(--modal-ease), transform 120ms var(--modal-ease); }
+.fin-btn-back:hover { background-color: #16324F; }
+.fin-btn-back:active { transform: scale(0.98); }
+.fin-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748B; font-weight: 500; }
+.fin-breadcrumb-ativo { color: #0B1724; font-weight: 700; }
+
+.fin-aviso { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 12px; background-color: #FFF1F2; border: 1px solid #FECDD3; color: #991B1B; font-size: 13px; font-weight: 600; }
+.fin-link { background: none; border: none; color: #991B1B; font-weight: 700; text-decoration: underline; cursor: pointer; font-size: 13px; }
+
+/* Cartões de resumo */
+.fin-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.fin-kpi { border-radius: 18px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.fin-kpi-branco { background-color: #FFFFFF; border: 1px solid rgba(226, 232, 240, 0.9); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03); }
+.fin-kpi-verde { background-color: #ECFDF5; border: 1px solid #D1FAE5; }
+.fin-kpi-azul { background-color: #EAF0F7; border: 1px solid #D5E0EE; }
+.fin-kpi-ambar { background-color: #FFFBEB; border: 1px solid #FDE68A; }
+.fin-kpi-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fin-kpi-label { font-size: 12.5px; font-weight: 500; color: #64748B; }
+.fin-kpi-valor { font-size: 24px; font-weight: 800; color: #0B1724; line-height: 1.15; }
+.fin-kpi-valor.fin-verde { color: #0B6B43; }
+.fin-kpi-nota { font-size: 11.5px; color: #64748B; }
+.fin-kpi-icone { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fin-icone-verde { background-color: #D1FAE5; color: #059669; }
+.fin-icone-azul { background-color: #D5E0EE; color: #0B1F33; }
+.fin-icone-ambar { background-color: #FEF3C7; color: #D97706; }
+
+/* Cards */
+.fin-card { background-color: #FFFFFF; border-radius: 18px; padding: 20px; border: 1px solid rgba(226, 232, 240, 0.9); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03); }
+.fin-duo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fin-titulo { font-size: 16px; font-weight: 800; color: #0B1724; margin-bottom: 14px; }
+.fin-card-topo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.fin-card-topo .fin-titulo { margin-bottom: 0; }
+.fin-vazio { font-size: 13px; color: #64748B; padding: 14px 0; text-align: center; }
+
+/* Pizza */
+.fin-pizza-area { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.fin-pizza { width: 150px; height: 150px; border-radius: 50%; flex-shrink: 0; }
+.fin-pizza-legenda { display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.fin-pizza-legenda > div { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+/* Últimas movimentações */
+.fin-ultimas { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.fin-ultimas li { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.fin-data { border-radius: 8px; padding: 6px 10px; font-weight: 700; color: #FFFFFF; min-width: 52px; text-align: center; }
+.fin-data-entrada { background-color: #1F9D6B; }
+.fin-data-saida { background-color: #0B1F33; }
+.fin-pilula { background-color: #F1F5F9; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #0B1724; }
+.fin-ultimas-desc { margin-left: auto; color: #64748B; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
+
+/* Barras por mês */
+.fin-periodo { background-color: #0B1F33; color: #FFFFFF; border-radius: 9999px; padding: 4px 12px; font-size: 11px; font-weight: 700; }
+.fin-legenda { margin-left: auto; display: flex; gap: 8px; }
+.fin-barras { display: flex; gap: 8px; align-items: flex-end; border-bottom: 1px solid #E2E8F0; padding: 0 8px; min-height: 170px; }
+.fin-barras-mes { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; }
+.fin-barras-par { display: flex; align-items: flex-end; gap: 4px; height: 140px; }
+.fin-barra { width: 18px; border-radius: 4px 4px 0 0; display: inline-block; }
+.fin-barra-entrada { background-color: #2BB673; }
+.fin-barra-saida { background-color: #0B1F33; }
+.fin-barras-rotulo { font-size: 11px; color: #64748B; padding-bottom: 6px; }
+
+/* Chips */
+.fin-chip { display: inline-block; border-radius: 9999px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+.fin-chip-entrada { background-color: #DCFCE7; color: #166534; }
+.fin-chip-saida { background-color: #E2E8F0; color: #0B1F33; }
+.fin-chip-alerta { background-color: #FEE2E2; color: #991B1B; }
+.fin-prioridade { border-radius: 9999px; padding: 5px 16px; font-size: 12px; font-weight: 700; min-width: 64px; text-align: center; }
+.fin-prio-alta { background-color: #DC2626; color: #FFFFFF; }
+.fin-prio-media { background-color: #FBBF24; color: #3D2C00; }
+.fin-prio-baixa { background-color: #5D6B82; color: #FFFFFF; }
+
+/* Botões */
+.fin-acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.fin-btn { height: 34px; padding: 0 14px; border-radius: 9999px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid transparent; background-color: #FFFFFF; transition: background-color var(--ui-control-duration) var(--modal-ease), border-color var(--ui-control-duration) var(--modal-ease), transform 120ms var(--modal-ease); }
+.fin-btn:active:not(:disabled) { transform: scale(0.98); }
+.fin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.fin-btn-receita { border-color: #2BB673; color: #15803D; }
+.fin-btn-receita:hover:not(:disabled) { background-color: #ECFDF5; }
+.fin-btn-despesa { border-color: #FB7185; color: #E11D48; }
+.fin-btn-despesa:hover:not(:disabled) { background-color: #FFF1F2; }
+.fin-btn-neutro { border-color: #E2E8F0; color: #0B1F33; background-color: #F8FAFC; }
+.fin-btn-neutro:hover:not(:disabled) { background-color: #EEF2F7; }
+
+/* Filtros e busca */
+.fin-filtros { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.fin-select { height: 34px; padding: 0 12px; border-radius: 12px; border: 1px solid #E2E8F0; background-color: #FFFFFF; font-size: 12px; font-weight: 500; color: #475569; outline: none; cursor: pointer; }
+.fin-select:focus, .fin-busca-input:focus, .fin-input:focus { border-color: #2BB673; }
+.fin-busca { position: relative; display: inline-flex; align-items: center; }
+.fin-busca-icone { position: absolute; left: 11px; color: #94A3B8; pointer-events: none; }
+.fin-busca-input { height: 34px; width: 190px; padding: 0 12px 0 32px; border-radius: 12px; border: 1px solid #E2E8F0; font-size: 12px; color: #0B1724; outline: none; }
+
+/* Tabela */
+.fin-tabela-wrap { overflow-x: auto; }
+.fin-tabela { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 720px; }
+.fin-tabela thead tr { background-color: #F8FAFC; border-bottom: 1px solid #F1F5F9; }
+.fin-tabela th { padding: 12px 14px; font-weight: 500; color: #64748B; text-align: left; }
+.fin-tabela td { padding: 13px 14px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; color: #0B1724; }
+.fin-tabela tbody tr:last-child td { border-bottom: none; }
+.fin-th-acoes { text-align: right; }
+.fin-td-acoes { text-align: right; white-space: nowrap; }
+.fin-linha-cancelada td { color: #94A3B8; background-color: #FAFBFC; }
+.fin-motivo { display: block; font-size: 11px; color: #94A3B8; margin-top: 2px; }
+.fin-valor-entrada { color: #0B6B43; font-weight: 700; white-space: nowrap; }
+.fin-valor-saida { color: #0B1F33; font-weight: 700; white-space: nowrap; }
+.fin-linha-cancelada .fin-valor-entrada, .fin-linha-cancelada .fin-valor-saida { color: #94A3B8; text-decoration: line-through; }
+.fin-icone-btn { width: 30px; height: 30px; border-radius: 9px; border: 1px solid #E2E8F0; background-color: #FFFFFF; color: #475569; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 6px; }
+.fin-icone-btn:hover { background-color: #F1F5F9; }
+.fin-icone-perigo { color: #E11D48; }
+.fin-icone-perigo:hover { background-color: #FFF1F2; border-color: #FECDD3; }
+
+/* Paginação */
+.fin-paginacao { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; }
+.fin-paginacao-botoes { display: flex; align-items: center; gap: 8px; }
+.fin-pagina-btn { width: 30px; height: 30px; border-radius: 9px; border: 1px solid #E2E8F0; background-color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; }
+.fin-pagina-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.fin-pagina-atual { font-size: 12px; color: #64748B; }
+
+/* Solicitações */
+.fin-solicitacoes { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.fin-solicitacoes li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fin-sol-desc { flex: 1; min-width: 180px; }
+
+/* Formulários dos modais */
+.fin-form { display: flex; flex-direction: column; gap: 14px; }
+.fin-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fin-label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #475569; }
+.fin-input { height: 38px; padding: 0 12px; border-radius: 12px; border: 1px solid #E2E8F0; font-size: 13px; color: #0B1724; outline: none; background-color: #FFFFFF; font-family: inherit; }
+.fin-textarea { height: 88px; padding: 10px 12px; resize: vertical; }
+.fin-erro { font-size: 12.5px; font-weight: 600; color: #B91C1C; background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 10px; padding: 9px 12px; }
+.fin-resumo { font-size: 13px; color: #334155; line-height: 1.5; }
+.fin-modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+.fin-btn-cancel, .fin-btn-save { height: 38px; padding: 0 18px; border-radius: 9999px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.fin-btn-cancel { background-color: #FFFFFF; border: 1px solid #E2E8F0; color: #475569; }
+.fin-btn-cancel:hover:not(:disabled) { background-color: #F8FAFC; }
+.fin-btn-save { background-color: #2BB673; border: 1px solid #2BB673; color: #FFFFFF; }
+.fin-btn-save:hover:not(:disabled) { background-color: #249A62; }
+.fin-btn-cancel:disabled, .fin-btn-save:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Relatório de fechamento */
+.fin-rel-totais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.fin-rel-totais > div { display: flex; flex-direction: column; gap: 4px; background-color: #F8FAFC; border-radius: 12px; padding: 12px; }
+.fin-rel-label { font-size: 11px; color: #64748B; }
+.fin-rel-totais strong { font-size: 15px; color: #0B1724; }
+.fin-rel-entrada { color: #0B6B43 !important; }
+.fin-rel-saida { color: #B91C1C !important; }
+.fin-rel-lista { list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.fin-rel-lista li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+.fin-rel-lista li strong { margin-left: auto; }
+
+@media (max-width: 1100px) {
+  .fin-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fin-duo-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .fin-kpi-grid, .fin-form-row, .fin-rel-totais { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fin-btn, .fin-btn-back { transition: none; }
+  .fin-btn:active, .fin-btn-back:active { transform: none; }
+}

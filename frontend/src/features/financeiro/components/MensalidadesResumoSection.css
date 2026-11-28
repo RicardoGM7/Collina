@@ -1,0 +1,70 @@
+.mens-painel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 960px) {
+  .mens-painel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mens-painel-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+}
+
+.mens-painel-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.mens-painel-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mens-painel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mens-painel-row strong {
+  color: #0b1f33;
+  font-weight: 800;
+}
+
+.mens-painel-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: #e2e8f0;
+  color: #334155;
+}
+
+.mens-painel-pill-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.mens-painel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

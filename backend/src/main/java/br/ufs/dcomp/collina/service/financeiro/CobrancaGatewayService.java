@@ -3,11 +3,20 @@ package br.ufs.dcomp.collina.service.financeiro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import br.ufs.dcomp.collina.dto.financeiro.CobrancaResponseDTO;
 import br.ufs.dcomp.collina.dto.financeiro.IniciarCobrancaRequest;
+import br.ufs.dcomp.collina.exception.ResourceNotFoundException;
+import br.ufs.dcomp.collina.model.associados.Associado;
+import br.ufs.dcomp.collina.model.auth.PerfilUsuarioEnum;
+import br.ufs.dcomp.collina.model.auth.UsuarioAutenticado;
 import br.ufs.dcomp.collina.model.financeiro.FormaPagamentoEnum;
+import br.ufs.dcomp.collina.model.financeiro.Mensalidade;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
+import br.ufs.dcomp.collina.repository.associados.AssociadoRepository;
+import br.ufs.dcomp.collina.repository.financeiro.MensalidadeRepository;
 import br.ufs.dcomp.collina.service.financeiro.CobrancaTransacaoService.Reserva;
 import br.ufs.dcomp.collina.service.financeiro.integracao.CobrancaGateway;
 import br.ufs.dcomp.collina.service.financeiro.integracao.GatewayPagamentoClient;
@@ -33,14 +42,25 @@ public class CobrancaGatewayService {
     @Autowired
     private CobrancaTransacaoService transacoes;
 
+    @Autowired
+    private MensalidadeRepository mensalidadeRepository;
+
+    @Autowired
+    private AssociadoRepository associadoRepository;
+
     // RF-F12: inicia o pagamento de uma mensalidade PENDENTE pelo gateway.
     public CobrancaResponseDTO iniciarCobranca(Long mensalidadeId, IniciarCobrancaRequest dto) {
+        return iniciarCobranca(mensalidadeId, dto, null);
+    }
+
+    public CobrancaResponseDTO iniciarCobranca(Long mensalidadeId, IniciarCobrancaRequest dto, UsuarioAutenticado usuario) {
         if (mensalidadeId == null) {
             throw new IllegalArgumentException("Id da mensalidade não informado");
         }
         if (dto == null || dto.formaPagamento() == null) {
             throw new IllegalArgumentException("A forma de pagamento é obrigatória.");
         }
+        validarTitularidade(mensalidadeId, usuario);
         FormaPagamentoEnum forma = dto.formaPagamento();
         // Validado ANTES de reservar, para uma forma inválida não deixar um pagamento recusado para trás.
         if (forma != FormaPagamentoEnum.PIX && forma != FormaPagamentoEnum.CARTAO) {
@@ -76,5 +96,21 @@ public class CobrancaGatewayService {
 
         NotificacaoGateway notificacao = gateway.interpretarNotificacao(requisicao);
         return transacoes.processarNotificacao(notificacao);
+    }
+
+    private void validarTitularidade(Long mensalidadeId, UsuarioAutenticado usuario) {
+        if (usuario == null || usuario.perfil() != PerfilUsuarioEnum.ASSOCIADO) {
+            return;
+        }
+        Mensalidade mensalidade = mensalidadeRepository.findById(mensalidadeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mensalidade não encontrada com o ID: " + mensalidadeId));
+        Associado titular = associadoRepository.findByUsuarioId(usuario.uid())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Nenhum cadastro de associado vinculado ao usuário autenticado."));
+        if (mensalidade.getAssociadoTitular() == null
+                || !mensalidade.getAssociadoTitular().getId().equals(titular.getId())) {
+            throw new AccessDeniedException(
+                    "Você não tem permissão para iniciar cobrança de mensalidade de outro associado.");
+        }
     }
 }

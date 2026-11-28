@@ -1,0 +1,245 @@
+.mens-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.mens-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .mens-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mens-summary-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+}
+
+.mens-summary-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b1f33;
+  text-align: center;
+}
+
+.mens-situacao-pill {
+  align-self: center;
+  padding: 8px 24px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mens-situacao-inadimplente {
+  background-color: #ef4444;
+}
+
+.mens-situacao-pendente {
+  background-color: #f59e0b;
+}
+
+.mens-situacao-em-dia {
+  background-color: #16a34a;
+}
+
+.mens-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.mens-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mens-summary-row strong {
+  color: #0b1f33;
+}
+
+.mens-summary-muted {
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+}
+
+.mens-summary-gastos {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.mens-summary-gastos li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mens-total-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background-color: #0b1f33;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.mens-total-pill strong {
+  font-size: 15px;
+}
+
+.mens-section-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(11, 31, 51, 0.04);
+}
+
+.mens-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mens-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1f33;
+}
+
+.mens-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mens-select {
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #0b1f33;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mens-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mens-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.mens-search-input {
+  padding: 7px 10px 7px 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #0b1f33;
+  width: 210px;
+}
+
+.mens-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mens-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.mens-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mens-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0b1f33;
+  vertical-align: middle;
+}
+
+.mens-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mens-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mens-btn-pay-sm {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mens-btn-pay-sm:hover {
+  background-color: #15803d;
+}
+
+.mens-loading {
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+}

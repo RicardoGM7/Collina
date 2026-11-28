@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufs.dcomp.collina.service.financeiro.CobrancaGatewayService;
-import br.ufs.dcomp.collina.service.financeiro.ResultadoNotificacao;
+import br.ufs.dcomp.collina.model.financeiro.ResultadoNotificacao;
 import br.ufs.dcomp.collina.service.financeiro.integracao.RequisicaoWebhook;
 
 @RestController

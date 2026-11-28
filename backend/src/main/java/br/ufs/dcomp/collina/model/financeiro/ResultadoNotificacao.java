@@ -1,4 +1,4 @@
-package br.ufs.dcomp.collina.service.financeiro;
+package br.ufs.dcomp.collina.model.financeiro;
 
 /** O que aconteceu com uma notificação do gateway. Só ASSINATURA_INVALIDA vira erro (401). */
 public enum ResultadoNotificacao {

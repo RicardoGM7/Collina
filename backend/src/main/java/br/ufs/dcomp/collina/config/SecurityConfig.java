@@ -85,7 +85,9 @@ public class SecurityConfig {
                         // Próprio associado consultando/alterando seu cadastro (RF-AS05). O dono é resolvido pelo uid do token.
                         .requestMatchers("/api/associados/me", "/api/associados/me/**").hasRole("ASSOCIADO")
 
-                        // Módulo de associados: administrador e funcionário de recepção.
+                        // Módulo de associados: consulta por CPF e dependentes também acessível ao FINANCEIRO para atendimento de mensalidades.
+                        .requestMatchers(HttpMethod.GET, "/api/associados/cpf/*", "/api/associados/*/dependentes")
+                        .hasAnyRole("ADMIN", "RECEPCAO", "FINANCEIRO")
                         .requestMatchers("/api/associados/**", "/api/dependentes/**").hasAnyRole("ADMIN", "RECEPCAO")
 
                         // Módulo financeiro e mensalidades: permissões granulares por operação
